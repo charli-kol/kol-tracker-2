@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KOL 推广数据管理系统（Spark增强版）</title>
+<title>KOL 推广数据管理系统（全兼容文件上传版）</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -75,7 +75,7 @@
   
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th { text-align: left; padding: 8px 10px; color: var(--text2); font-weight: 400; border-bottom: 0.5px solid var(--border); white-space: nowrap; }
-  td { padding: 9px 10px; border-bottom: 0.5px solid var(--border); }
+  td { padding: 9px 10px; border-bottom: 0.5px solid var(--border); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: var(--bg2); }
   
@@ -85,7 +85,6 @@
   .b-ES { background: #EAF3DE; color: #27500A; }
   .b-BR { background: #FAECE7; color: #712B13; }
   .b-c { background: #EAEAEA; color: #333333; }
-  .b-spark { background: #EEF2FF; color: #4338CA; border: 0.5px solid #C7D2FE; font-size: 10px; }
   
   .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 1rem; }
   .form-group { display: flex; flex-direction: column; gap: 5px; }
@@ -95,12 +94,9 @@
     background: var(--bg); color: var(--text); font-size: 13px; font-family: inherit;
   }
   .form-group input:focus, .form-group select:focus { outline: 2px solid #378ADD44; border-color: #378ADD; }
-  
-  /* Spark 自定义板块样式 */
-  .spark-panel { display: none; background: var(--bg2); padding: 12px; border-radius: var(--radius); border-left: 3px solid #4338CA; margin-bottom: 1rem; animation: fadeIn 0.2s ease-out; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
 
-  .upload-box { border: 2px dashed var(--border2); border-radius: var(--radius-lg); padding: 2rem; text-align: center; background: var(--bg2); cursor: pointer; transition: all 0.2s; margin-bottom: 1rem; }
+  /* 💡 核心样式：新增的批量拖拽文件上传箱 */
+  .upload-box { border: 2px dashed var(--border2); border-radius: var(--radius-lg); padding: 2.2rem; text-align: center; background: var(--bg2); cursor: pointer; transition: all 0.2s; margin-bottom: 1.5rem; }
   .upload-box:hover { background: var(--bg); border-color: var(--text); }
   .upload-box i { font-size: 32px; color: var(--text2); margin-bottom: 8px; display: block; }
   .upload-box p { font-size: 13px; color: var(--text2); }
@@ -117,13 +113,15 @@
   .action-btn.del:hover { color: var(--danger); }
   .empty { text-align: center; padding: 2rem; color: var(--text2); font-size: 13px; }
   .week-label { font-size: 12px; color: var(--text2); background: var(--bg2); padding: 2px 8px; border-radius: 10px; }
+  .note-link { color: var(--info); text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; gap: 3px; }
+  .note-link:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
 <div class="container">
   <div class="topbar">
     <div class="topbar-left">
-      <div class="subtitle">KOL 推广管理系统 3.2</div>
+      <div class="subtitle">KOL 推广管理系统 3.5 (高容错文件智能识别版)</div>
       <h1><i class="ti ti-chart-bar"></i>数据看板</h1>
     </div>
     <div class="topbar-right">
@@ -198,7 +196,7 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>日期</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗(USD)</th><th>新增</th><th>CPA</th><th>备注 / Spark投放</th><th>操作</th></tr></thead>
+          <thead><tr><th>日期</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗(USD)</th><th>新增</th><th>CPA</th><th>备注 / 链接</th><th>操作</th></tr></thead>
           <tbody id="daily-tbody"></tbody>
         </table>
       </div>
@@ -224,9 +222,19 @@
 
   <div id="view-add" class="view">
     <div class="section">
+      <div class="section-header"><span class="section-title"><i class="ti ti-file-upload"></i>批量上传数据报表</span></div>
+      <div class="upload-box" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
+        <i class="ti ti-cloud-upload"></i>
+        <p>支持拖拽或点击上传 <b>CSV</b> 或 <b>Excel (.xlsx, .xls)</b> 文件</p>
+        <p style="font-size:11px; margin-top:5px; color:var(--text2)">💡 已开启全自动模糊识别（智能抓取“主播发布日期”、“推广类型”及链接并自动完成缺失数字兼容）</p>
+        <input type="file" id="file-input" accept=".csv, .xlsx, .xls" onchange="handleFileSelect(event)">
+      </div>
+    </div>
+
+    <div class="section">
       <div class="section-header">
-        <span class="section-title" id="form-title"><i class="ti ti-edit"></i>录入推广数据</span>
-        <span id="edit-indicator" style="display:none;" class="badge b-TW">正在编辑修改模式</span>
+        <span class="section-title" id="form-title"><i class="ti ti-edit"></i>手动录入推广数据</span>
+        <span id="edit-indicator" style="display:none;" class="badge b-TW">编辑模式</span>
       </div>
       <input type="hidden" id="f-id">
       
@@ -243,7 +251,7 @@
         </div>
         <div class="form-group">
           <label>渠道 *</label>
-          <select id="f-channel" onchange="toggleSparkPanel()">
+          <select id="f-channel">
             <option value="TikTok">TikTok</option>
             <option value="YouTube">YouTube</option>
             <option value="Instagram">Instagram</option>
@@ -251,51 +259,24 @@
         </div>
         <div class="form-group">
           <label>内容形式 *</label>
-          <select id="f-content-type" onchange="toggleSparkPanel()">
-            <option value="reel">reel</option>
+          <select id="f-content-type">
             <option value="video">video</option>
+            <option value="reel">reel</option>
             <option value="story">story</option>
             <option value="post">post</option>
             <option value="shorts">shorts</option>
-            <option value="comments">comments</option>
+            <option value="comment">comment</option>
           </select>
         </div>
-        <div class="form-group"><label>推广数量（条）</label><input type="number" id="f-count" placeholder="0" min="0"></div>
+        <div class="form-group"><label>推广数量（条）</label><input type="number" id="f-count" placeholder="1" min="0"></div>
         <div class="form-group"><label>消耗（USD）</label><input type="number" id="f-cost" placeholder="0.00" min="0" step="0.01"></div>
         <div class="form-group"><label>新增用户</label><input type="number" id="f-users" placeholder="0" min="0"></div>
-        <div class="form-group"><label>备注（可选）</label><input type="text" id="f-note" placeholder="活动名、KOL等"></div>
-      </div>
-
-      <div class="spark-panel" id="spark-panel">
-        <div style="font-size:12px; font-weight:600; color:#4338CA; margin-bottom:8px; display:flex; align-items:center; gap:4px;">
-          <i class="ti ti-brand-tiktok"></i> TikTok Spark 广告投放数据 (自定义/非必填)
-        </div>
-        <div class="form-grid" style="margin-bottom:0;">
-          <div class="form-group">
-            <label>是否为 Spark 视频？</label>
-            <select id="f-is-spark">
-              <option value="否">否</option>
-              <option value="是">是</option>
-            </select>
-          </div>
-          <div class="form-group"><label>Spark 投放消耗 (USD)</label><input type="number" id="f-spark-cost" placeholder="0.00" min="0" step="0.01"></div>
-          <div class="form-group"><label>Spark 带来新增</label><input type="number" id="f-spark-users" placeholder="0" min="0"></div>
-        </div>
+        <div class="form-group"><label>备注/链接</label><input type="text" id="f-note" placeholder="粘贴推广URL链接或活动描述"></div>
       </div>
 
       <div style="display:flex;gap:8px;margin-top:0.5rem;">
         <button class="btn btn-primary" onclick="saveRecord()"><i class="ti ti-check"></i>保存数据</button>
-        <button class="btn" onclick="clearForm()"><i class="ti ti-x"></i>取消/清空</button>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-header"><span class="section-title"><i class="ti ti-file-upload"></i>批量上传文件进行分析</span></div>
-      <div class="upload-box" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
-        <i class="ti ti-cloud-upload"></i>
-        <p>支持拖拽或点击上传 <b>CSV</b> 或 <b>Excel (.xlsx, .xls)</b> 文件</p>
-        <p style="font-size:11px; margin-top:5px; color:var(--text2)">标准列名需包含：日期, 地区, 渠道, 内容形式, 推广数量, 消耗, 新增用户, 备注 (可追列: 是否Spark, Spark消耗, Spark新增)</p>
-        <input type="file" id="file-input" accept=".csv, .xlsx, .xls" onchange="handleFileSelect(event)">
+        <button class="btn" onclick="clearForm()"><i class="ti ti-x"></i>清空</button>
       </div>
     </div>
 
@@ -306,7 +287,7 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>日期</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗</th><th>新增</th><th>备注 / Spark</th><th>操作</th></tr></thead>
+          <thead><tr><th>日期</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗</th><th>新增</th><th>备注 / 链接</th><th>操作</th></tr></thead>
           <tbody id="recent-tbody"></tbody>
         </table>
       </div>
@@ -325,14 +306,7 @@ const REGIONS = {
 };
 
 const CHANNEL_COLORS = { 'TikTok': '#FE2C55', 'YouTube': '#FF0000', 'Instagram': '#E1306C' };
-const CONTENT_COLORS = { 
-  'reel': '#4EA8DE', 
-  'video': '#5E60CE', 
-  'story': '#48CAE4', 
-  'post': '#70E000',
-  'shorts': '#FF0000',
-  'comments': '#BA7517'
-};
+const CONTENT_COLORS = { 'reel': '#4EA8DE', 'video': '#5E60CE', 'story': '#48CAE4', 'post': '#70E000', 'shorts': '#FF0000', 'comment': '#BA7517' };
 
 let records = [];
 let currentRegion = 'all';
@@ -365,18 +339,6 @@ function getWeekStr(ds) {
 function sum(arr, key) { return arr.reduce((s, r) => s + (parseFloat(r[key]) || 0), 0); }
 function pct(a, b) { return b === 0 ? 0 : Math.round((a - b) / b * 100); }
 
-// 控制 Spark 板块的显示与隐藏
-function toggleSparkPanel() {
-  const chan = document.getElementById('f-channel').value;
-  const type = document.getElementById('f-content-type').value;
-  const panel = document.getElementById('spark-panel');
-  if (chan === 'TikTok' && type === 'video') {
-    panel.style.display = 'block';
-  } else {
-    panel.style.display = 'none';
-  }
-}
-
 function showView(v) {
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   document.getElementById('view-' + v).classList.add('active');
@@ -385,7 +347,7 @@ function showView(v) {
   if (v === 'dashboard') renderDashboard();
   if (v === 'daily') renderDaily();
   if (v === 'weekly') renderWeekly();
-  if (v === 'add') { renderRecent(); toggleSparkPanel(); }
+  if (v === 'add') renderRecent();
 }
 
 function setRegion(r) {
@@ -474,19 +436,12 @@ function renderDistributionCharts() {
     type: 'doughnut',
     data: {
       labels: channels,
-      datasets: [{
-        data: channelData,
-        backgroundColor: channels.map(c => CHANNEL_COLORS[c] || '#888'),
-        borderWidth: 0
-      }]
+      datasets: [{ data: channelData, backgroundColor: channels.map(c => CHANNEL_COLORS[c] || '#888'), borderWidth: 0 }]
     },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { position: 'right', labels: { color: tickColor, font: { size: 12 } } } }
-    }
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: tickColor, font: { size: 12 } } } } }
   });
 
-  const contentTypes = ['reel', 'video', 'story', 'post', 'shorts', 'comments'];
+  const contentTypes = ['video', 'reel', 'story', 'post', 'shorts', 'comment'];
   const contentCPA = contentTypes.map(t => {
     const matched = base.filter(r => r.contentType === t);
     const totalCost = sum(matched, 'cost');
@@ -499,34 +454,22 @@ function renderDistributionCharts() {
     type: 'bar',
     data: {
       labels: contentTypes,
-      datasets: [{
-        label: '平均 CPA (USD)',
-        data: contentCPA,
-        backgroundColor: contentTypes.map(t => CONTENT_COLORS[t] || '#888'),
-        borderRadius: 4
-      }]
+      datasets: [{ label: 'CPA (USD)', data: contentCPA, backgroundColor: contentTypes.map(t => CONTENT_COLORS[t] || '#888'), borderRadius: 4 }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { color: tickColor } },
-        y: { ticks: { color: tickColor }, grid: { color: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)' } }
-      }
+      scales: { x: { ticks: { color: tickColor } }, y: { ticks: { color: tickColor }, grid: { color: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)' } } }
     }
   });
 }
 
-// 格式化 Spark 单元格信息的辅助函数
-function getSparkMetaHtml(r) {
-  let html = r.note || '—';
-  if (r.channel === 'TikTok' && r.contentType === 'video' && r.isSpark === '是') {
-    html = `<span class="badge b-spark">Spark</span> ` + html;
-    if(r.sparkCost > 0 || r.sparkUsers > 0) {
-      html += `<div style="font-size:11px;color:var(--text2);margin-top:2px;">投放: $${r.sparkCost} | 新增: ${r.sparkUsers}</div>`;
-    }
+function getNoteHtml(r) {
+  let text = r.note || '—';
+  if (text.startsWith('http://') || text.startsWith('https://')) {
+    return `<a href="${text}" target="_blank" class="note-link" title="${text}"><i class="ti ti-link"></i> 打开链接</a>`;
   }
-  return html;
+  return text;
 }
 
 function renderDaily() {
@@ -551,7 +494,7 @@ function renderDaily() {
       <td>$${(+r.cost || 0).toLocaleString()}</td>
       <td>${(+r.users || 0).toLocaleString()}</td>
       <td>${r.users > 0 ? '$' + (r.cost/r.users).toFixed(2) : '—'}</td>
-      <td>${getSparkMetaHtml(r)}</td>
+      <td>${getNoteHtml(r)}</td>
       <td>
         <button class="action-btn edit" onclick="editRecord('${r.id}')" title="编辑"><i class="ti ti-edit"></i></button>
         <button class="action-btn del" onclick="deleteRecord('${r.id}')" title="删除"><i class="ti ti-trash"></i></button>
@@ -592,10 +535,7 @@ function renderWeekly() {
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { labels: { color: tickColor, font: { size: 11 }, boxWidth: 10, boxHeight: 10 } } },
-      scales: {
-        x: { grid: { display: false }, ticks: { color: tickColor } },
-        y: { grid: { color: gridColor }, ticks: { color: tickColor } }
-      }
+      scales: { x: { grid: { display: false }, ticks: { color: tickColor } }, y: { grid: { color: gridColor }, ticks: { color: tickColor } } }
     }
   });
 
@@ -623,7 +563,7 @@ function renderRecent() {
   }
   const recent = [...records].sort((a,b) => b.date.localeCompare(a.date)).slice(0, 10);
   document.getElementById('recent-tbody').innerHTML = recent.length === 0
-    ? `<tr><td colspan="9" class="empty">还没有数据，快来录入或上传第一条吧</td></tr>`
+    ? `<tr><td colspan="9" class="empty">暂无录入数据，请在上方手动录入或拖拽表格导入</td></tr>`
     : recent.map(r => `<tr>
       <td>${r.date}</td>
       <td><span class="badge b-${r.region}">${(REGIONS[r.region]||{}).flag||''} ${(REGIONS[r.region]||{name:r.region}).name}</span></td>
@@ -632,7 +572,7 @@ function renderRecent() {
       <td>${r.count}</td>
       <td>$${(+r.cost).toLocaleString()}</td>
       <td>${r.users}</td>
-      <td>${getSparkMetaHtml(r)}</td>
+      <td>${getNoteHtml(r)}</td>
       <td>
         <button class="action-btn edit" onclick="editRecord('${r.id}')" title="修改"><i class="ti ti-edit"></i></button>
         <button class="action-btn del" onclick="deleteRecord('${r.id}')" title="删除"><i class="ti ti-trash"></i></button>
@@ -640,37 +580,26 @@ function renderRecent() {
     </tr>`).join('');
 }
 
-// 保存或更新记录（支持包含Spark自定义内容）
 function saveRecord() {
   const id = document.getElementById('f-id').value;
   const date = document.getElementById('f-date').value;
   const region = document.getElementById('f-region').value;
   const channel = document.getElementById('f-channel').value;
   const contentType = document.getElementById('f-content-type').value;
-  const count = parseFloat(document.getElementById('f-count').value) || 0;
+  const count = parseFloat(document.getElementById('f-count').value) || 1;
   const cost = parseFloat(document.getElementById('f-cost').value) || 0;
   const users = parseFloat(document.getElementById('f-users').value) || 0;
   const note = document.getElementById('f-note').value.trim();
 
-  // 获取 Spark 自定义内容
-  const isSpark = document.getElementById('f-is-spark').value;
-  const sparkCost = parseFloat(document.getElementById('f-spark-cost').value) || 0;
-  const sparkUsers = parseFloat(document.getElementById('f-spark-users').value) || 0;
-
   if (!date) { toast('❌ 请填写日期'); return; }
-
-  const payload = { id, date, region, channel, contentType, count, cost, users, note, isSpark, sparkCost, sparkUsers };
+  const payload = { id, date, region, channel, contentType, count, cost, users, note };
 
   if (id) {
     const index = records.findIndex(r => r.id === id);
-    if (index > -1) {
-      records[index] = payload;
-      toast('✓ 数据已成功修改');
-    }
+    if (index > -1) { records[index] = payload; toast('✓ 数据已成功修改'); }
   } else {
     payload.id = Date.now() + Math.random().toString(36).slice(2);
-    records.push(payload);
-    toast('✓ 新增数据已保存');
+    records.push(payload); toast('✓ 新增数据已保存');
   }
 
   persistRecords();
@@ -693,24 +622,16 @@ function editRecord(id) {
   document.getElementById('f-users').value = r.users;
   document.getElementById('f-note').value = r.note || '';
 
-  // 回显 Spark 信息
-  document.getElementById('f-is-spark').value = r.isSpark || '否';
-  document.getElementById('f-spark-cost').value = r.sparkCost || '';
-  document.getElementById('f-spark-users').value = r.sparkUsers || '';
-
   document.getElementById('form-title').innerHTML = `<i class="ti ti-edit"></i> 修改推广数据`;
   document.getElementById('edit-indicator').style.display = 'inline-block';
-  toggleSparkPanel();
 }
 
 function clearForm() {
   document.getElementById('f-id').value = '';
-  ['f-count','f-cost','f-users','f-note','f-spark-cost','f-spark-users'].forEach(id => document.getElementById(id).value = '');
+  ['f-count','f-cost','f-users','f-note'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
-  document.getElementById('f-is-spark').value = '否';
-  document.getElementById('form-title').innerHTML = `<i class="ti ti-edit"></i> 录入推广数据`;
+  document.getElementById('form-title').innerHTML = `<i class="ti ti-edit"></i> 手动录入推广数据`;
   document.getElementById('edit-indicator').style.display = 'none';
-  toggleSparkPanel();
 }
 
 function deleteRecord(id) {
@@ -733,10 +654,21 @@ function clearAll() {
 function handleDrop(e) { e.preventDefault(); const files = e.dataTransfer.files; if (files.length > 0) processFile(files[0]); }
 function handleFileSelect(e) { const files = e.target.files; if (files.length > 0) processFile(files[0]); }
 
+// ⭐ 核心模糊算法：支持对“主播发布日期”、“推广类型”词根进行精准智能归类
+function findValueByKeys(row, keys) {
+  const rowKeys = Object.keys(row);
+  for (const k of keys) {
+    const target = k.toLowerCase().trim();
+    const foundKey = rowKeys.find(rk => rk.toLowerCase().trim().includes(target));
+    if (foundKey !== undefined) return row[foundKey];
+  }
+  return null;
+}
+
 function processFile(file) {
   const reader = new FileReader();
   const extension = file.name.split('.').pop().toLowerCase();
-  toast('⏳ 正在解析文件，请稍候...');
+  toast('⏳ 正在智能化解析文件...');
   
   reader.onload = function(e) {
     const data = e.target.result;
@@ -752,43 +684,50 @@ function processFile(file) {
       
       let successCount = 0;
       importedRows.forEach(row => {
-        const date = row['日期'] || row['date'] || row['Date'];
-        let region = row['地区'] || row['region'] || row['Region'];
-        const channel = row['渠道'] || row['channel'] || row['Channel'] || 'TikTok';
-        const contentType = row['内容形式'] || row['content_type'] || row['ContentType'] || 'video';
-        const count = parseFloat(row['推广数量'] || row['推广数'] || row['count']) || 0;
-        const cost = parseFloat(row['消耗'] || row['cost'] || row['Cost']) || 0;
-        const users = parseFloat(row['新增用户'] || row['新增'] || row['users']) || 0;
-        const note = row['备注'] || row['note'] || row['Note'] || '';
+        // 智能词根模糊匹配 (融合您表格中的独特列名)
+        const dateVal = findValueByKeys(row, ['日期', 'date', 'time', 'day', '发布']); 
+        let regionVal = findValueByKeys(row, ['地区', '国家', 'region', 'country', 'site']);
+        const channelVal = findValueByKeys(row, ['渠道', '平台', 'channel', 'platform']);
+        const contentTypeVal = findValueByKeys(row, ['内容形式', '形式', 'content', 'type', '类型']); 
+        const countVal = findValueByKeys(row, ['推广数量', '数量', '推广数', 'count', 'num']);
+        const costVal = findValueByKeys(row, ['消耗', '花费', 'cost', 'spend', 'price']);
+        const usersVal = findValueByKeys(row, ['新增用户', '新增', '用户', 'users', 'install', 'reg']);
+        const noteVal = findValueByKeys(row, ['url', '链接', '备注', 'note', 'desc', 'comment']);
 
-        // 文件导入对 Spark 可选字段的兼容
-        const isSpark = row['是否Spark'] || row['是否为Spark'] || row['isSpark'] || '否';
-        const sparkCost = parseFloat(row['Spark消耗'] || row['spark_cost']) || 0;
-        const sparkUsers = parseFloat(row['Spark新增'] || row['spark_users']) || 0;
-
-        if (date) {
-          if (region === '土耳其') region = 'TR';
-          if (region === '台湾') region = 'TW';
-          if (region === '西语') region = 'ES';
-          if (region === '巴西') region = 'BR';
+        if (dateVal) {
+          let region = String(regionVal || '').trim();
+          if (region.includes('土耳其') || region.toUpperCase() === 'TR') region = 'TR';
+          else if (region.includes('台湾') || region.toUpperCase() === 'TW') region = 'TW';
+          else if (region.includes('西语') || region.toUpperCase() === 'ES') region = 'ES';
+          else if (region.includes('巴西') || region.toUpperCase() === 'BR') region = 'BR';
+          else region = 'TR'; // 针对上传的表格，若地区解析为空，则兜底默认为土耳其
           
+          // 对缺失列进行智能默认值供给，防止报错
+          const finalCount = countVal !== null ? (parseFloat(countVal) || 0) : 1;
+          const finalUsers = usersVal !== null ? (parseFloat(usersVal) || 0) : 0;
+
           records.push({
             id: Date.now() + Math.random().toString(36).slice(2),
-            date: formatUploadedDate(date),
-            region: ['TR','TW','ES','BR'].includes(region) ? region : 'TW',
-            channel, contentType, count, cost, users, note, isSpark, sparkCost, sparkUsers
+            date: formatUploadedDate(dateVal),
+            region: region,
+            channel: channelVal ? String(channelVal).trim() : 'TikTok',
+            contentType: contentTypeVal ? String(contentTypeVal).trim() : 'video',
+            count: finalCount,
+            cost: parseFloat(costVal) || 0,
+            users: finalUsers,
+            note: noteVal ? String(noteVal).trim() : ''
           });
           successCount++;
         }
       });
 
       if(successCount > 0) {
-        persistRecords(); renderRecent(); toast(`✓ 成功导入 ${successCount} 条推广数据！`);
+        persistRecords(); renderRecent(); toast(`✓ 智能解析成功！已成功导入 ${successCount} 条数据`);
       } else {
-        toast('❌ 未能解析到有效数据');
+        toast('❌ 无法识别有效的“日期”或“发布”列，请检查首行');
       }
     } catch (err) {
-      toast('❌ 文件解析失败');
+      toast('❌ 文件解析失败，请检查格式');
     }
   };
   reader.readAsArrayBuffer(file);
@@ -814,16 +753,16 @@ function parseCSVToArray(text) {
 
 function exportCSV() {
   if (records.length === 0) { toast('暂无数据可导出'); return; }
-  const header = '日期,地区,渠道,内容形式,推广数量,消耗(USD),新增用户,是否Spark,Spark消耗,Spark新增,备注';
+  const header = '日期,地区,渠道,内容形式,推广数量,消耗(USD),新增用户,备注/链接';
   const rows = records
     .sort((a,b) => b.date.localeCompare(a.date))
-    .map(r => `${r.date},${(REGIONS[r.region]||{}).name||r.region},${r.channel},${r.contentType},${r.count},${r.cost},${r.users},${r.isSpark||'否'},${r.sparkCost||0},${r.sparkUsers||0},"${r.note||''}"`);
+    .map(r => `${r.date},${REGIONS[r.region].name},${r.channel},${r.contentType},${r.count},${r.cost},${r.users},"${r.note||''}"`);
   const csv = '\uFEFF' + [header, ...rows].join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-  a.download = 'KOL推广数据(含Spark)_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.download = 'KOL推广数据分析表_' + new Date().toISOString().slice(0,10) + '.csv';
   a.click();
-  toast('✓ 包含 Spark 维度的 CSV 已成功导出');
+  toast('✓ CSV 报表已成功下载');
 }
 
 let toastTimer;
