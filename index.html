@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KOL 推广数据管理系统 v5.1</title>
+<title>KOL 推广数据管理系统 v6.0</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -44,7 +44,9 @@
   .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius); border: 1px solid var(--border2); background: var(--bg); color: var(--text); cursor: pointer; font-size: 13px; font-weight: 500; transition: all .2s; }
   .btn:hover { background: var(--bg2); border-color: var(--text2); }
   .btn-primary { background: #3b82f6; color: #ffffff; border-color: #3b82f6; }
-  .btn-primary:hover { background: #2563eb; border-color: #2563eb; opacity: 1; }
+  .btn-primary:hover { background: #2563eb; border-color: #2563eb; }
+  .btn-danger { background: var(--danger); color: #ffffff; border-color: var(--danger); }
+  .btn-danger:hover { opacity: 0.9; }
   
   .tabs { display: flex; gap: 4px; background: var(--bg2); border-radius: var(--radius); padding: 5px; margin-bottom: 2rem; width: fit-content; border: 1px solid var(--border); }
   .tab { padding: 8px 18px; border-radius: 6px; border: none; background: transparent; cursor: pointer; font-size: 13px; color: var(--text2); font-weight: 500; transition: all .15s; display: flex; align-items: center; gap: 6px; }
@@ -58,7 +60,7 @@
   .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 2rem; }
   .metric-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
   .metric-label { font-size: 12px; color: var(--text2); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; font-weight: 500; }
-  .metric-value { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+  .metric-value { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
   .metric-sub { font-size: 12px; color: var(--text2); margin-top: 6px; }
   .up { color: var(--success); font-weight: 600; }
   .dn { color: var(--danger); font-weight: 600; }
@@ -87,7 +89,7 @@
   .b-BR { background: #fff0f6; color: #d6336c; }
   .b-c { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
   
-  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 1.5rem; }
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 1.5rem; }
   .form-group { display: flex; flex-direction: column; gap: 6px; }
   .form-group label { font-size: 12px; color: var(--text2); font-weight: 500; }
   .form-group input, .form-group select, .form-group textarea {
@@ -197,7 +199,7 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>日期</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗(USD)</th><th>新增用户</th><th>播放数据</th><th>CPA</th><th>备注 / 链接</th><th>操作</th></tr></thead>
+          <thead><tr><th>日期</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗(USD)</th><th>新增用户</th><th>总预估收益</th><th>播放数据</th><th>CPA</th><th>ROI</th><th>备注/链接</th><th>操作</th></tr></thead>
           <tbody id="daily-tbody"></tbody>
         </table>
       </div>
@@ -227,7 +229,7 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>具体周区间段 (周一 至 周日)</th><th>地区</th><th>推广条数</th><th>总消耗 (USD)</th><th>总播放量</th><th>新增用户</th><th>核算 CPA</th></tr></thead>
+          <thead><tr><th>具体周区间段 (周一 至 周日)</th><th>地区</th><th>推广条数</th><th>总消耗 (USD)</th><th>总播放量</th><th>新增用户</th><th>核算 CPA</th><th>综合 ROI</th></tr></thead>
           <tbody id="weekly-tbody"></tbody>
         </table>
       </div>
@@ -284,24 +286,35 @@
         <div class="form-group"><label>推广数量</label><input type="number" id="f-count" placeholder="1" min="0"></div>
         <div class="form-group"><label>消耗（USD）</label><input type="number" id="f-cost" placeholder="0.00" min="0" step="0.01"></div>
         <div class="form-group"><label>新增用户量</label><input type="number" id="f-users" placeholder="0" min="0"></div>
+        <div class="form-group"><label>预估收益/回款(USD)</label><input type="number" id="f-revenue" placeholder="0.00" min="0" step="0.01"></div>
         <div class="form-group"><label>总播放量</label><input type="number" id="f-views" placeholder="0" min="0"></div>
         <div class="form-group"><label>备注/链接</label><input type="text" id="f-note" placeholder="URL链接或说明"></div>
       </div>
 
       <div style="display:flex;gap:10px;margin-top:0.5rem;">
-        <button class="btn btn-primary" onclick="saveRecord()"><i class="ti ti-device-floppy"></i>保存</button>
+        <button class="btn btn-primary" onclick="saveRecord()"><i class="ti ti-device-floppy"></i>保存表单</button>
         <button class="btn" onclick="clearForm()"><i class="ti ti-refresh"></i>重置</button>
       </div>
     </div>
 
     <div class="section">
       <div class="section-header">
-        <span class="section-title"><i class="ti ti-history-toggle"></i>最新录入数据（Top 10）</span>
-        <button class="btn" style="color:var(--danger); border-color:rgba(201,42,42,0.2)" onclick="if(confirm('是否确定清空本地所有数据？'))clearAll()"><i class="ti ti-trash"></i>清空全部数据</button>
+        <span class="section-title"><i class="ti ti-history-toggle"></i>最新历史录入明细（条件过滤与清洗）</span>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <select id="clean-filter-region" onchange="renderRecent()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);">
+            <option value="">筛选删除地区：全部</option>
+            <option value="TR">土耳其</option>
+            <option value="TW">台湾</option>
+            <option value="ES">西语</option>
+            <option value="BR">巴西</option>
+          </select>
+          <button class="btn btn-danger" style="padding:4px 12px; font-size:12px;" onclick="batchDeleteFiltered()"><i class="ti ti-layers-subtract"></i>批量删除当前筛选</button>
+          <button class="btn" style="color:var(--danger); border-color:rgba(201,42,42,0.2); padding:4px 12px; font-size:12px;" onclick="if(confirm('🚨 危险操作！是否确定全量清空系统本地所有历史对账数据？'))clearAll()"><i class="ti ti-trash"></i>清空全部数据</button>
+        </div>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>日期</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗</th><th>新增用户</th><th>播放量</th><th>备注 / 链接</th><th>操作</th></tr></thead>
+          <thead><tr><th>日期</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗</th><th>新增用户</th><th>收益</th><th>播放量</th><th>备注</th><th>操作</th></tr></thead>
           <tbody id="recent-tbody"></tbody>
         </table>
       </div>
@@ -327,16 +340,15 @@ let charts = {};
 
 function loadRecords() {
   try { 
-    const s = localStorage.getItem('kol_records_v5') || localStorage.getItem('kol_records_v4') || localStorage.getItem('kol_records'); 
+    const s = localStorage.getItem('kol_records_v6') || localStorage.getItem('kol_records_v5') || localStorage.getItem('kol_records'); 
     records = s ? JSON.parse(s) : []; 
     if(!Array.isArray(records)) records = [];
   } catch(e) { records = []; }
 }
 function persistRecords() {
-  try { localStorage.setItem('kol_records_v5', JSON.stringify(records)); } catch(e) {}
+  try { localStorage.setItem('kol_records_v6', JSON.stringify(records)); } catch(e) {}
 }
 
-// 🗓️ 计算具体周一到周日区间的解析函数
 function getWeekRangeLabel(weekStr) {
   if(!weekStr || !weekStr.includes('-W')) return weekStr;
   try {
@@ -349,11 +361,9 @@ function getWeekRangeLabel(weekStr) {
     const targetMonday = new Date(firstMonday.getTime() + (week - 1) * 7 * 24 * 60 * 60 * 1000);
     const targetSunday = new Date(targetMonday.getTime() + 6 * 24 * 60 * 60 * 1000);
     
-    const f = (d) => `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+    const f = (d) => `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
     return `${f(targetMonday)}-${f(targetSunday)}`;
-  } catch(e) {
-    return weekStr;
-  }
+  } catch(e) { return weekStr; }
 }
 
 function getWeekStr(ds) {
@@ -403,15 +413,17 @@ function renderMetrics() {
   const pw = base.filter(r => prevWeek.includes(r.date));
   const tMonth = base.filter(r => r.date.startsWith(today));
   
-  const twCost = sum(tw, 'cost'), twUsers = sum(tw, 'users');
-  const tmCost = sum(tMonth, 'cost'), tmUsers = sum(tMonth, 'users');
+  const twCost = sum(tw, 'cost'), twUsers = sum(tw, 'users'), twRev = sum(tw, 'revenue');
+  const tmCost = sum(tMonth, 'cost'), tmUsers = sum(tMonth, 'users'), tmRev = sum(tMonth, 'revenue');
+  
   const monthCPA = tmUsers > 0 ? '$' + (tmCost / tmUsers).toFixed(2) : '—';
+  const monthROI = tmCost > 0 ? (tmRev / tmCost).toFixed(2) : '—';
 
   const items = [
     { label: '本周总消耗', icon: 'ti-coin', val: '$' + twCost.toLocaleString(), diff: pct(twCost, sum(pw,'cost')) },
     { label: '本周新增用户', icon: 'ti-users-plus', val: twUsers.toLocaleString() + ' 人', diff: pct(twUsers, sum(pw,'users')) },
-    { label: '本周总播放量', icon: 'ti-device-tv', val: sum(tw, 'views').toLocaleString() + ' 次', diff: pct(sum(tw,'views'), sum(pw,'views')) },
-    { label: '本月核算成本 (CPA)', icon: 'ti-calculator', val: monthCPA, diff: null, subText: '当月总消耗 / 总新增' },
+    { label: '月度核算 CPA', icon: 'ti-calculator', val: monthCPA, diff: null, subText: '当月总转化成本' },
+    { label: '月度大盘 ROI', icon: 'ti-chart-arcs', val: monthROI + ' x', diff: null, subText: '当月总回款/总推广消耗' },
   ];
   
   document.getElementById('metrics-grid').innerHTML = items.map(m => `
@@ -523,23 +535,30 @@ function renderDaily() {
   
   document.getElementById('daily-count').textContent = '共 ' + data.length + ' 条记录';
   document.getElementById('daily-tbody').innerHTML = data.length === 0
-    ? `<tr><td colspan="11" class="empty">无匹配过滤数据</td></tr>`
-    : data.map(r => `<tr>
-      <td>${r.date}</td>
-      <td><span class="badge b-${r.region}">${(REGIONS[r.region] || {flag:'', name: r.region}).flag} ${(REGIONS[r.region] || {name:r.region}).name}</span></td>
-      <td><span class="badge b-c">${r.channel || '—'}</span></td>
-      <td><strong>${r.contentType || '—'}</strong></td>
-      <td>${(+r.count || 0).toLocaleString()}</td>
-      <td>$${(+r.cost || 0).toLocaleString()}</td>
-      <td><span style="color:#2b8a3e; font-weight:600;">${(+r.users || 0).toLocaleString()}</span></td>
-      <td style="color:#6366f1;">${(+r.views || 0).toLocaleString()}</td>
-      <td><strong>${r.users > 0 ? '$' + (r.cost/r.users).toFixed(2) : '—'}</strong></td>
-      <td>${getNoteHtml(r)}</td>
-      <td>
-        <button class="action-btn edit" onclick="editRecord('${r.id}')"><i class="ti ti-edit"></i></button>
-        <button class="action-btn del" onclick="deleteRecord('${r.id}')"><i class="ti ti-trash"></i></button>
-      </td>
-    </tr>`).join('');
+    ? `<tr><td colspan="13" class="empty">无匹配过滤数据</td></tr>`
+    : data.map(r => {
+        const cost = +r.cost || 0;
+        const users = +r.users || 0;
+        const rev = +r.revenue || 0;
+        return `<tr>
+          <td>${r.date}</td>
+          <td><span class="badge b-${r.region}">${(REGIONS[r.region] || {flag:'', name: r.region}).flag} ${(REGIONS[r.region] || {name:r.region}).name}</span></td>
+          <td><span class="badge b-c">${r.channel || '—'}</span></td>
+          <td><strong>${r.contentType || '—'}</strong></td>
+          <td>${(+r.count || 0).toLocaleString()}</td>
+          <td>$${cost.toLocaleString()}</td>
+          <td><span style="color:#2b8a3e; font-weight:600;">${users.toLocaleString()}</span></td>
+          <td style="color:#e67e22;">$${rev.toLocaleString()}</td>
+          <td style="color:#6366f1;">${(+r.views || 0).toLocaleString()}</td>
+          <td><strong>${users > 0 ? '$' + (cost/users).toFixed(2) : '—'}</strong></td>
+          <td><span class="${rev >= cost ? 'up' : 'dn'}">${cost > 0 ? (rev/cost).toFixed(2) + 'x' : '—'}</span></td>
+          <td>${getNoteHtml(r)}</td>
+          <td>
+            <button class="action-btn edit" onclick="editRecord('${r.id}')"><i class="ti ti-edit"></i></button>
+            <button class="action-btn del" onclick="deleteRecord('${r.id}')"><i class="ti ti-trash"></i></button>
+          </td>
+        </tr>`;
+    }).join('');
 }
 
 function updateWeeklyFilters() {
@@ -570,18 +589,18 @@ function renderWeekly() {
   records.forEach(r => {
     const wk = getWeekStr(r.date);
     if (!weekMap[wk]) weekMap[wk] = {};
-    if (!weekMap[wk][r.region]) weekMap[wk][r.region] = { count:0, cost:0, users:0, views:0 };
+    if (!weekMap[wk][r.region]) weekMap[wk][r.region] = { count:0, cost:0, users:0, views:0, revenue:0 };
     weekMap[wk][r.region].count += +r.count || 0;
     weekMap[wk][r.region].cost  += +r.cost || 0;
     weekMap[wk][r.region].users += +r.users || 0;
     weekMap[wk][r.region].views += +r.views || 0;
+    weekMap[wk][r.region].revenue += +r.revenue || 0;
   });
 
   const allWeeks = Object.keys(weekMap).sort();
   const chartWeeks = allWeeks.slice(-6); 
   const rks = Object.keys(REGIONS);
 
-  // 1. 更新柱状图（横轴全同步为具体周次段）
   if (charts['chart-weekly']) charts['chart-weekly'].destroy();
   charts['chart-weekly'] = new Chart(document.getElementById('chart-weekly'), {
     type: 'bar',
@@ -601,7 +620,6 @@ function renderWeekly() {
     }
   });
 
-  // 2. 渲染并动态过滤表格
   let rows = '';
   allWeeks.slice().reverse().forEach(w => {
     if (wFilter && w !== wFilter) return; 
@@ -616,18 +634,26 @@ function renderWeekly() {
         <td>$${d.cost.toLocaleString()}</td>
         <td style="color:#6366f1;font-weight:600;">${Math.round(d.views).toLocaleString()}</td>
         <td style="color:#2b8a3e;font-weight:600;">${Math.round(d.users).toLocaleString()}</td>
-        <td><span style="font-size:14px; color:#c92a2a; font-weight:700;">${d.users > 0 ? '$' + (d.cost/d.users).toFixed(2) : '—'}</span></td>
+        <td><span style="font-size:13px; color:#c92a2a; font-weight:700;">${d.users > 0 ? '$' + (d.cost/d.users).toFixed(2) : '—'}</span></td>
+        <td><span class="${d.revenue >= d.cost ? 'up' : 'dn'}" style="font-weight:700;">${d.cost > 0 ? (d.revenue/d.cost).toFixed(2) + 'x' : '—'}</span></td>
       </tr>`;
     });
   });
-  document.getElementById('weekly-tbody').innerHTML = rows || `<tr><td colspan="7" class="empty">无匹配多维周对账数据</td></tr>`;
+  document.getElementById('weekly-tbody').innerHTML = rows || `<tr><td colspan="8" class="empty">无匹配多维周对账数据</td></tr>`;
 }
 
 function renderRecent() {
   if (!document.getElementById('f-date').value) document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
-  const recent = [...records].sort((a,b) => b.date.localeCompare(a.date)).slice(0, 10);
+  
+  const cleanFilter = document.getElementById('clean-filter-region').value;
+  let list = [...records].sort((a,b) => b.date.localeCompare(a.date));
+  if(cleanFilter) {
+    list = list.filter(r => r.region === cleanFilter);
+  }
+  
+  const recent = list.slice(0, 15);
   document.getElementById('recent-tbody').innerHTML = recent.length === 0
-    ? `<tr><td colspan="10" class="empty">暂无回溯行</td></tr>`
+    ? `<tr><td colspan="11" class="empty">未检索到上传单据文件行</td></tr>`
     : recent.map(r => `<tr>
       <td>${r.date}</td>
       <td><span class="badge b-${r.region}">${REGIONS[r.region]?REGIONS[r.region].flag:''} ${REGIONS[r.region]?REGIONS[r.region].name:r.region}</span></td>
@@ -636,6 +662,7 @@ function renderRecent() {
       <td>${r.count}</td>
       <td>$${(+r.cost).toLocaleString()}</td>
       <td>${r.users}</td>
+      <td>$${(+r.revenue || 0).toLocaleString()}</td>
       <td>${r.views || 0}</td>
       <td>${getNoteHtml(r)}</td>
       <td>
@@ -643,6 +670,23 @@ function renderRecent() {
         <button class="action-btn del" onclick="deleteRecord('${r.id}')"><i class="ti ti-trash"></i></button>
       </td>
     </tr>`).join('');
+}
+
+function batchDeleteFiltered() {
+  const cleanFilter = document.getElementById('clean-filter-region').value;
+  if (!cleanFilter) {
+    toast('⚠️ 请先在下拉框选择具体的地区条件再执行批量删除');
+    return;
+  }
+  const targetName = REGIONS[cleanFilter].name;
+  if (confirm(`🚨 安全确认：是否确定批量删除所有属于【${targetName}】的上传/录入数据？\n此操作不可逆！`)) {
+    const beforeLen = records.length;
+    records = records.filter(r => r.region !== cleanFilter);
+    const deletedCount = beforeLen - records.length;
+    persistRecords();
+    renderRecent();
+    toast(`✓ 已成功清理【${targetName}】维度的 ${deletedCount} 条历史上传数据`);
+  }
 }
 
 function saveRecord() {
@@ -654,11 +698,12 @@ function saveRecord() {
   const count = parseFloat(document.getElementById('f-count').value) || 1;
   const cost = parseFloat(document.getElementById('f-cost').value) || 0;
   const users = parseFloat(document.getElementById('f-users').value) || 0;
+  const revenue = parseFloat(document.getElementById('f-revenue').value) || 0;
   const views = parseFloat(document.getElementById('f-views').value) || 0;
   const note = document.getElementById('f-note').value.trim();
 
   if (!date) { toast('❌ 日期不能为空'); return; }
-  const payload = { id, date, region, channel, contentType, count, cost, users, views, note };
+  const payload = { id, date, region, channel, contentType, count, cost, users, revenue, views, note };
 
   if (id) {
     const idx = records.findIndex(r => r.id === id);
@@ -682,6 +727,7 @@ function editRecord(id) {
   document.getElementById('f-count').value = r.count;
   document.getElementById('f-cost').value = r.cost;
   document.getElementById('f-users').value = r.users;
+  document.getElementById('f-revenue').value = r.revenue || 0;
   document.getElementById('f-views').value = r.views || 0;
   document.getElementById('f-note').value = r.note || '';
   document.getElementById('form-title').innerHTML = `<i class="ti ti-edit"></i> 修改覆盖模式`;
@@ -690,7 +736,7 @@ function editRecord(id) {
 
 function clearForm() {
   document.getElementById('f-id').value = '';
-  ['f-count','f-cost','f-users','f-views','f-note'].forEach(id => document.getElementById(id).value = '');
+  ['f-count','f-cost','f-users','f-revenue','f-views','f-note'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
   document.getElementById('form-title').innerHTML = `<i class="ti ti-ballpen"></i> 单条数据录入`;
   document.getElementById('edit-indicator').style.display = 'none';
@@ -717,7 +763,7 @@ function getNoteHtml(r) {
 
 function parseRowByRadar(row) {
   const keys = Object.keys(row);
-  const matched = { date: null, region: 'TR', channel: 'TikTok', type: 'video', count: 1, cost: 0, users: 0, views: 0, note: '' };
+  const matched = { date: null, region: 'TR', channel: 'TikTok', type: 'video', count: 1, cost: 0, users: 0, revenue: 0, views: 0, note: '' };
 
   const findVal = (keywords) => {
     const foundKey = keys.find(k => {
@@ -734,6 +780,7 @@ function parseRowByRadar(row) {
   const cnVal = findVal(['推广数', '条数', '数量', 'count', 'num']);
   const csVal = findVal(['消耗', '花费', 'cost', 'spend', 'price', '金额', '折算单价']);
   const uVal  = findVal(['新增', '用户', 'users', 'install', 'reg', '激活', '注册']);
+  const revVal = findVal(['收益', '回款', 'revenue', 'income', '赚取']);
   const vVal  = findVal(['播放', '观看', 'views', 'play', 'click', '流量']);
   const nVal  = findVal(['url', '链接', '备注', 'note', 'desc']);
 
@@ -754,6 +801,7 @@ function parseRowByRadar(row) {
   if (cnVal !== null) matched.count = parseFloat(cnVal) || 1;
   if (csVal !== null) matched.cost = parseFloat(csVal) || 0;
   if (uVal !== null) matched.users = parseFloat(uVal) || 0;
+  if (revVal !== null) matched.revenue = parseFloat(revVal) || 0;
   if (vVal !== null) matched.views = parseFloat(vVal) || 0;
   if (nVal) matched.note = String(nVal).trim();
 
@@ -775,13 +823,14 @@ function processFile(file) {
       if (target) {
         if(parsed.users > 0) target.users = (target.users || 0) + parsed.users;
         if(parsed.views > 0) target.views = (target.views || 0) + parsed.views;
+        if(parsed.revenue > 0) target.revenue = (target.revenue || 0) + parsed.revenue;
         mergeCount++;
       } else {
         records.push({
           id: Date.now() + Math.random().toString(36).slice(2),
           date: parsed.date, region: parsed.region, channel: parsed.channel,
           contentType: parsed.type, count: parsed.count, cost: parsed.cost,
-          users: parsed.users, views: parsed.views, note: parsed.note
+          users: parsed.users, revenue: parsed.revenue, views: parsed.views, note: parsed.note
         });
         successCount++;
       }
@@ -805,9 +854,9 @@ function processFile(file) {
       }
 
       persistRecords(); renderRecent();
-      toast(`✓ 新增单据 ${successCount} 条，对齐合并已有日期数据 ${mergeCount} 条`);
+      toast(`✓ 新增单据 ${successCount} 条，智能对齐合并日期数据 ${mergeCount} 条`);
     } catch (err) {
-      toast('❌ 解析冲突，请检查文件编码或格式');
+      toast('❌ 解析冲突，请检查文件格式');
     }
   };
   reader.readAsArrayBuffer(file);
@@ -835,14 +884,14 @@ function parseCSVToArray(text) {
 
 function exportCSV() {
   if (records.length === 0) { toast('暂无数据导出'); return; }
-  const header = '日期,地区,渠道,内容形式,推广数量,消耗(USD),新增注册用户,播放量,CPA,备注';
+  const header = '日期,地区,渠道,内容形式,推广数量,消耗(USD),新增注册用户,总预估收益,播放量,CPA,备注';
   const rows = records
     .sort((a,b) => b.date.localeCompare(a.date))
-    .map(r => `${r.date},${REGIONS[r.region]?REGIONS[r.region].name:r.region},${r.channel},${r.contentType},${r.count},${r.cost},${r.users},${r.views||0},${r.users>0?(r.cost/r.users).toFixed(2):'0'},"${r.note||''}"`);
+    .map(r => `${r.date},${REGIONS[r.region]?REGIONS[r.region].name:r.region},${r.channel},${r.contentType},${r.count},${r.cost},${r.users},${r.revenue||0},${r.views||0},${r.users>0?(r.cost/r.users).toFixed(2):'0'},"${r.note||''}"`);
   const csv = '\uFEFF' + [header, ...rows].join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-  a.download = 'KOL_Export_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.download = 'KOL_Comprehensive_Export_' + new Date().toISOString().slice(0,10) + '.csv';
   a.click();
   toast('✓ 导出成功');
 }
