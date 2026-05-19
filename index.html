@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KOL 推广数据管理系统（全兼容文件上传版）</title>
+<title>KOL 推广数据管理系统（智能表头雷达版）</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -93,13 +93,11 @@
     padding: 7px 10px; border: 0.5px solid var(--border2); border-radius: var(--radius);
     background: var(--bg); color: var(--text); font-size: 13px; font-family: inherit;
   }
-  .form-group input:focus, .form-group select:focus { outline: 2px solid #378ADD44; border-color: #378ADD; }
-
-  /* 💡 核心样式：新增的批量拖拽文件上传箱 */
-  .upload-box { border: 2px dashed var(--border2); border-radius: var(--radius-lg); padding: 2.2rem; text-align: center; background: var(--bg2); cursor: pointer; transition: all 0.2s; margin-bottom: 1.5rem; }
+  
+  .upload-box { border: 2px dashed var(--border2); border-radius: var(--radius-lg); padding: 2.5rem; text-align: center; background: var(--bg2); cursor: pointer; transition: all 0.2s; margin-bottom: 1.5rem; }
   .upload-box:hover { background: var(--bg); border-color: var(--text); }
-  .upload-box i { font-size: 32px; color: var(--text2); margin-bottom: 8px; display: block; }
-  .upload-box p { font-size: 13px; color: var(--text2); }
+  .upload-box i { font-size: 36px; color: var(--text2); margin-bottom: 8px; display: block; }
+  .upload-box p { font-size: 13px; color: var(--text2); font-weight: 500; }
   .upload-box input { display: none; }
 
   .view { display: none; }
@@ -121,7 +119,7 @@
 <div class="container">
   <div class="topbar">
     <div class="topbar-left">
-      <div class="subtitle">KOL 推广管理系统 3.5 (高容错文件智能识别版)</div>
+      <div class="subtitle">KOL 推广管理系统 4.0 (智能表头动态搜寻版)</div>
       <h1><i class="ti ti-chart-bar"></i>数据看板</h1>
     </div>
     <div class="topbar-right">
@@ -149,11 +147,11 @@
     
     <div class="two-col">
       <div class="section">
-        <div class="section-header"><span class="section-title"><i class="ti ti-brand-tiktok"></i>渠道流量分布 (新增用户)</span></div>
+        <div class="section-header"><span class="section-title"><i class="ti ti-brand-tiktok"></i>渠道流量分布 (消耗占比)</span></div>
         <div class="chart-wrap"><canvas id="chart-channels"></canvas></div>
       </div>
       <div class="section">
-        <div class="section-header"><span class="section-title"><i class="ti ti-video"></i>内容形式转化率 (CPA)</span></div>
+        <div class="section-header"><span class="section-title"><i class="ti ti-video"></i>不同内容形式的总消耗 (USD)</span></div>
         <div class="chart-wrap"><canvas id="chart-content-types"></canvas></div>
       </div>
     </div>
@@ -205,7 +203,7 @@
 
   <div id="view-weekly" class="view">
     <div class="section">
-      <div class="section-header"><span class="section-title"><i class="ti ti-chart-bar"></i>各地区周度新增用户</span></div>
+      <div class="section-header"><span class="section-title"><i class="ti ti-chart-bar"></i>各地区周度总消耗</span></div>
       <div class="chart-wrap" style="height:260px;margin-bottom:1rem;">
         <canvas id="chart-weekly"></canvas></div>
     </div>
@@ -222,11 +220,11 @@
 
   <div id="view-add" class="view">
     <div class="section">
-      <div class="section-header"><span class="section-title"><i class="ti ti-file-upload"></i>批量上传数据报表</span></div>
+      <div class="section-header"><span class="section-title"><i class="ti ti-file-upload"></i>全智能雷达识别上传箱</span></div>
       <div class="upload-box" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
         <i class="ti ti-cloud-upload"></i>
-        <p>支持拖拽或点击上传 <b>CSV</b> 或 <b>Excel (.xlsx, .xls)</b> 文件</p>
-        <p style="font-size:11px; margin-top:5px; color:var(--text2)">💡 已开启全自动模糊识别（智能抓取“主播发布日期”、“推广类型”及链接并自动完成缺失数字兼容）</p>
+        <p>支持拖拽或选择上传 <b>Excel (.xlsx, .xls)</b> 或 <b>CSV</b> 文件</p>
+        <p style="font-size:11px; margin-top:6px; color:var(--text2)">💡 智能雷达模式已激活：表头顺序不限、数量不限、有啥取啥、缺啥智补</p>
         <input type="file" id="file-input" accept=".csv, .xlsx, .xls" onchange="handleFileSelect(event)">
       </div>
     </div>
@@ -271,7 +269,7 @@
         <div class="form-group"><label>推广数量（条）</label><input type="number" id="f-count" placeholder="1" min="0"></div>
         <div class="form-group"><label>消耗（USD）</label><input type="number" id="f-cost" placeholder="0.00" min="0" step="0.01"></div>
         <div class="form-group"><label>新增用户</label><input type="number" id="f-users" placeholder="0" min="0"></div>
-        <div class="form-group"><label>备注/链接</label><input type="text" id="f-note" placeholder="粘贴推广URL链接或活动描述"></div>
+        <div class="form-group"><label>备注/链接</label><input type="text" id="f-note" placeholder="可填写推广 URL 链接"></div>
       </div>
 
       <div style="display:flex;gap:8px;margin-top:0.5rem;">
@@ -313,10 +311,16 @@ let currentRegion = 'all';
 let charts = {};
 
 function loadRecords() {
-  try { const s = localStorage.getItem('kol_records_v3'); records = s ? JSON.parse(s) : []; } catch(e) { records = []; }
+  try { 
+    const s = localStorage.getItem('kol_records_v4') || localStorage.getItem('kol_records_v3') || localStorage.getItem('kol_records'); 
+    records = s ? JSON.parse(s) : []; 
+    if(!Array.isArray(records)) records = [];
+  } catch(e) { 
+    records = []; 
+  }
 }
 function persistRecords() {
-  try { localStorage.setItem('kol_records_v3', JSON.stringify(records)); } catch(e) {}
+  try { localStorage.setItem('kol_records_v4', JSON.stringify(records)); } catch(e) {}
 }
 
 function getLast7Dates() {
@@ -396,10 +400,10 @@ function renderTrendCharts() {
   const tickColor = isDark ? '#888' : '#999';
 
   const makeDS = (key) => rks.map(r => ({
-    label: REGIONS[r].flag + ' ' + REGIONS[r].name,
+    label: REGIONS[r] ? REGIONS[r].flag + ' ' + REGIONS[r].name : r,
     data: dates.map(d => sum(records.filter(x => x.date === d && x.region === r), key)),
-    borderColor: REGIONS[r].color,
-    backgroundColor: REGIONS[r].color + '28',
+    borderColor: REGIONS[r] ? REGIONS[r].color : '#888',
+    backgroundColor: REGIONS[r] ? REGIONS[r].color + '28' : '#88828',
     tension: 0.35, pointRadius: 3, borderWidth: 2,
     fill: rks.length === 1,
   }));
@@ -416,7 +420,7 @@ function renderTrendCharts() {
   ['chart-users', 'chart-cost'].forEach(id => { if (charts[id]) { charts[id].destroy(); delete charts[id]; } });
 
   document.getElementById('legend-users').innerHTML = rks.map(r =>
-    `<span class="legend-item"><span class="legend-dot" style="background:${REGIONS[r].color}"></span>${REGIONS[r].flag} ${REGIONS[r].name}</span>`).join('');
+    REGIONS[r] ? `<span class="legend-item"><span class="legend-dot" style="background:${REGIONS[r].color}"></span>${REGIONS[r].flag} ${REGIONS[r].name}</span>` : '').join('');
   document.getElementById('legend-cost').innerHTML = document.getElementById('legend-users').innerHTML;
 
   charts['chart-users'] = new Chart(document.getElementById('chart-users'), { type: 'line', data: { labels, datasets: makeDS('users') }, options: opts });
@@ -429,7 +433,7 @@ function renderDistributionCharts() {
   const tickColor = isDark ? '#888' : '#999';
 
   const channels = ['TikTok', 'YouTube', 'Instagram'];
-  const channelData = channels.map(c => sum(base.filter(r => r.channel === c), 'users'));
+  const channelData = channels.map(c => sum(base.filter(r => r.channel === c), 'cost')); // 切换为更稳妥的消耗占比
   
   if (charts['chart-channels']) charts['chart-channels'].destroy();
   charts['chart-channels'] = new Chart(document.getElementById('chart-channels'), {
@@ -442,19 +446,14 @@ function renderDistributionCharts() {
   });
 
   const contentTypes = ['video', 'reel', 'story', 'post', 'shorts', 'comment'];
-  const contentCPA = contentTypes.map(t => {
-    const matched = base.filter(r => r.contentType === t);
-    const totalCost = sum(matched, 'cost');
-    const totalUsers = sum(matched, 'users');
-    return totalUsers > 0 ? parseFloat((totalCost / totalUsers).toFixed(2)) : 0;
-  });
+  const contentCostSums = contentTypes.map(t => sum(base.filter(r => r.contentType === t), 'cost'));
 
   if (charts['chart-content-types']) charts['chart-content-types'].destroy();
   charts['chart-content-types'] = new Chart(document.getElementById('chart-content-types'), {
     type: 'bar',
     data: {
       labels: contentTypes,
-      datasets: [{ label: 'CPA (USD)', data: contentCPA, backgroundColor: contentTypes.map(t => CONTENT_COLORS[t] || '#888'), borderRadius: 4 }]
+      datasets: [{ label: '总消耗 (USD)', data: contentCostSums, backgroundColor: contentTypes.map(t => CONTENT_COLORS[t] || '#888'), borderRadius: 4 }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
@@ -526,7 +525,7 @@ function renderWeekly() {
       labels: weeks,
       datasets: rks.map(r => ({
         label: REGIONS[r].flag + ' ' + REGIONS[r].name,
-        data: weeks.map(w => weekMap[w] && weekMap[w][r] ? weekMap[w][r].users : 0),
+        data: weeks.map(w => weekMap[w] && weekMap[w][r] ? weekMap[w][r].cost : 0), // 以最可靠的消耗进行可视化呈现
         backgroundColor: REGIONS[r].color + 'cc',
         borderColor: REGIONS[r].color,
         borderWidth: 1,
@@ -563,10 +562,10 @@ function renderRecent() {
   }
   const recent = [...records].sort((a,b) => b.date.localeCompare(a.date)).slice(0, 10);
   document.getElementById('recent-tbody').innerHTML = recent.length === 0
-    ? `<tr><td colspan="9" class="empty">暂无录入数据，请在上方手动录入或拖拽表格导入</td></tr>`
+    ? `<tr><td colspan="9" class="empty">暂无数据，请在上方手动录入或拖入报表导入</td></tr>`
     : recent.map(r => `<tr>
       <td>${r.date}</td>
-      <td><span class="badge b-${r.region}">${(REGIONS[r.region]||{}).flag||''} ${(REGIONS[r.region]||{name:r.region}).name}</span></td>
+      <td><span class="badge b-${r.region}">${REGIONS[r.region]?REGIONS[r.region].flag:''} ${REGIONS[r.region]?REGIONS[r.region].name:r.region}</span></td>
       <td>${r.channel}</td>
       <td>${r.contentType}</td>
       <td>${r.count}</td>
@@ -654,21 +653,58 @@ function clearAll() {
 function handleDrop(e) { e.preventDefault(); const files = e.dataTransfer.files; if (files.length > 0) processFile(files[0]); }
 function handleFileSelect(e) { const files = e.target.files; if (files.length > 0) processFile(files[0]); }
 
-// ⭐ 核心模糊算法：支持对“主播发布日期”、“推广类型”词根进行精准智能归类
-function findValueByKeys(row, keys) {
-  const rowKeys = Object.keys(row);
-  for (const k of keys) {
-    const target = k.toLowerCase().trim();
-    const foundKey = rowKeys.find(rk => rk.toLowerCase().trim().includes(target));
-    if (foundKey !== undefined) return row[foundKey];
+// ⭐⭐⭐ 终极智能算法：雷达多层级模糊检测，不限顺序，不限字段，有啥拿啥，缺啥智补
+function parseRowByRadar(row) {
+  const keys = Object.keys(row);
+  const matched = { date: null, region: 'TR', channel: 'TikTok', type: 'video', count: 1, cost: 0, users: 0, note: '' };
+
+  // 辅助清洗核心：清理空格及特殊不可见字符，降低对比难度
+  const findVal = (keywords) => {
+    const foundKey = keys.find(k => {
+      const cleanKey = k.toLowerCase().replace(/[\s\uFEFF\xa0]/g, '');
+      return keywords.some(kw => cleanKey.includes(kw));
+    });
+    return foundKey !== undefined ? row[foundKey] : null;
+  };
+
+  // 1. 动态雷达定位
+  const dVal  = findVal(['日期', 'date', 'time', 'day', '发布']);
+  const rVal  = findVal(['地区', '国家', 'region', 'country', 'site']);
+  const cVal  = findVal(['渠道', '平台', 'channel', 'platform']);
+  const tVal  = findVal(['形式', '类型', 'type', 'content', '内容']);
+  const cnVal = findVal(['推广数', '条数', '数量', 'count', 'num']);
+  const csVal = findVal(['消耗', '花费', 'cost', 'spend', 'price', '金额']);
+  const uVal  = findVal(['新增', '用户', 'users', 'install', 'reg', '激活']);
+  const nVal  = findVal(['url', '链接', '备注', 'note', 'desc', 'comment']);
+
+  // 2. 日期判定（如果没有日期核心主轴，跳过该行）
+  if (!dVal) return null;
+  matched.date = formatUploadedDate(dVal);
+
+  // 3. 地区智能转化归纳
+  if (rVal) {
+    const rs = String(rVal).trim();
+    if (rs.includes('土耳其') || rs.toUpperCase() === 'TR') matched.region = 'TR';
+    else if (rs.includes('台湾') || rs.toUpperCase() === 'TW') matched.region = 'TW';
+    else if (rs.includes('西语') || rs.toUpperCase() === 'ES') matched.region = 'ES';
+    else if (rs.includes('巴西') || rs.toUpperCase() === 'BR') matched.region = 'BR';
   }
-  return null;
+
+  // 4. 其它字段安全过渡（有啥拿啥，缺啥使用基础默认值）
+  if (cVal) matched.channel = String(cVal).trim();
+  if (tVal) matched.type = String(tVal).trim();
+  if (cnVal !== null) matched.count = parseFloat(cnVal) || 1;
+  if (csVal !== null) matched.cost = parseFloat(csVal) || 0;
+  if (uVal !== null) matched.users = parseFloat(uVal) || 0;
+  if (nVal) matched.note = String(nVal).trim();
+
+  return matched;
 }
 
 function processFile(file) {
   const reader = new FileReader();
   const extension = file.name.split('.').pop().toLowerCase();
-  toast('⏳ 正在智能化解析文件...');
+  toast('⏳ 雷达深度检索中...');
   
   reader.onload = function(e) {
     const data = e.target.result;
@@ -684,47 +720,30 @@ function processFile(file) {
       
       let successCount = 0;
       importedRows.forEach(row => {
-        // 智能词根模糊匹配 (融合您表格中的独特列名)
-        const dateVal = findValueByKeys(row, ['日期', 'date', 'time', 'day', '发布']); 
-        let regionVal = findValueByKeys(row, ['地区', '国家', 'region', 'country', 'site']);
-        const channelVal = findValueByKeys(row, ['渠道', '平台', 'channel', 'platform']);
-        const contentTypeVal = findValueByKeys(row, ['内容形式', '形式', 'content', 'type', '类型']); 
-        const countVal = findValueByKeys(row, ['推广数量', '数量', '推广数', 'count', 'num']);
-        const costVal = findValueByKeys(row, ['消耗', '花费', 'cost', 'spend', 'price']);
-        const usersVal = findValueByKeys(row, ['新增用户', '新增', '用户', 'users', 'install', 'reg']);
-        const noteVal = findValueByKeys(row, ['url', '链接', '备注', 'note', 'desc', 'comment']);
-
-        if (dateVal) {
-          let region = String(regionVal || '').trim();
-          if (region.includes('土耳其') || region.toUpperCase() === 'TR') region = 'TR';
-          else if (region.includes('台湾') || region.toUpperCase() === 'TW') region = 'TW';
-          else if (region.includes('西语') || region.toUpperCase() === 'ES') region = 'ES';
-          else if (region.includes('巴西') || region.toUpperCase() === 'BR') region = 'BR';
-          else region = 'TR'; // 针对上传的表格，若地区解析为空，则兜底默认为土耳其
-          
-          // 对缺失列进行智能默认值供给，防止报错
-          const finalCount = countVal !== null ? (parseFloat(countVal) || 0) : 1;
-          const finalUsers = usersVal !== null ? (parseFloat(usersVal) || 0) : 0;
-
+        const parsed = parseRowByRadar(row);
+        // 只要雷达能搜寻到该行具备合法的日期主轴，全部放行！
+        if (parsed && parsed.date && parsed.date.length >= 8) {
           records.push({
             id: Date.now() + Math.random().toString(36).slice(2),
-            date: formatUploadedDate(dateVal),
-            region: region,
-            channel: channelVal ? String(channelVal).trim() : 'TikTok',
-            contentType: contentTypeVal ? String(contentTypeVal).trim() : 'video',
-            count: finalCount,
-            cost: parseFloat(costVal) || 0,
-            users: finalUsers,
-            note: noteVal ? String(noteVal).trim() : ''
+            date: parsed.date,
+            region: parsed.region,
+            channel: parsed.channel,
+            contentType: parsed.type,
+            count: parsed.count,
+            cost: parsed.cost,
+            users: parsed.users,
+            note: parsed.note
           });
           successCount++;
         }
       });
 
       if(successCount > 0) {
-        persistRecords(); renderRecent(); toast(`✓ 智能解析成功！已成功导入 ${successCount} 条数据`);
+        persistRecords(); 
+        renderRecent(); 
+        toast(`✓ 雷达解析大成功！已成功检索并存入 ${successCount} 条数据`);
       } else {
-        toast('❌ 无法识别有效的“日期”或“发布”列，请检查首行');
+        toast('❌ 无法在表中寻找到包含“日期”或“发布”关键字的列头');
       }
     } catch (err) {
       toast('❌ 文件解析失败，请检查格式');
@@ -734,7 +753,9 @@ function processFile(file) {
 }
 
 function formatUploadedDate(val) {
-  if (typeof val === 'number') { const date = XLSX.utils.parse_date(val); return date.toISOString().slice(0, 10); }
+  if (typeof val === 'number') { 
+    try { const date = XLSX.utils.parse_date(val); return date.toISOString().slice(0, 10); } catch(e){}
+  }
   let str = String(val).trim().replace(/\//g, '-');
   if(str.length === 8 && !str.includes('-')) return `${str.slice(0,4)}-${str.slice(4,6)}-${str.slice(6,8)}`;
   return str.slice(0, 10);
@@ -756,11 +777,11 @@ function exportCSV() {
   const header = '日期,地区,渠道,内容形式,推广数量,消耗(USD),新增用户,备注/链接';
   const rows = records
     .sort((a,b) => b.date.localeCompare(a.date))
-    .map(r => `${r.date},${REGIONS[r.region].name},${r.channel},${r.contentType},${r.count},${r.cost},${r.users},"${r.note||''}"`);
+    .map(r => `${r.date},${REGIONS[r.region]?REGIONS[r.region].name:r.region},${r.channel},${r.contentType},${r.count},${r.cost},${r.users},"${r.note||''}"`);
   const csv = '\uFEFF' + [header, ...rows].join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-  a.download = 'KOL推广数据分析表_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.download = 'KOL推广精简数据表_' + new Date().toISOString().slice(0,10) + '.csv';
   a.click();
   toast('✓ CSV 报表已成功下载');
 }
@@ -771,8 +792,8 @@ function toast(msg) {
   clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
 }
 
+// 自动引导加载
 loadRecords();
-renderDashboard();
 </script>
 </body>
 </html>
