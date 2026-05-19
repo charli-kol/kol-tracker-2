@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KOL 推广数据管理系统（多维增强版）</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff;
+    --bg2: #f5f5f4;
+    --bg3: #f0efea;
+    --text: #1a1a18;
+    --text2: #6b6b68;
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.22);
+    --radius: 8px;
+    --radius-lg: 12px;
+    --success: #1D9E75;
+    --danger: #D85A30;
+    --info: #185FA5;
+    --warning: #BA7517;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a;
+      --bg2: #242422;
+      --bg3: #2c2c2a;
+      --text: #f0efea;
+      --text2: #888780;
+      --border: rgba(255,255,255,0.12);
+      --border2: rgba(255,255,255,0.22);
+    }
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 12px; }
+  .topbar-left .subtitle { font-size: 12px; color: var(--text2); margin-bottom: 3px; }
+  .topbar-left h1 { font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .topbar-right { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg); color: var(--text); cursor: pointer; font-size: 13px; font-family: inherit; transition: background .15s; }
+  .btn:hover { background: var(--bg2); }
+  .btn-primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .btn-primary:hover { opacity: 0.85; }
+  .tabs { display: flex; gap: 4px; background: var(--bg2); border-radius: var(--radius); padding: 4px; margin-bottom: 1.5rem; width: fit-content; }
+  .tab { padding: 6px 16px; border-radius: 6px; border: none; background: transparent; cursor: pointer; font-size: 13px; color: var(--text2); font-family: inherit; transition: all .15s; display: flex; align-items: center; gap: 5px; }
+  .tab.active { background: var(--bg); color: var(--text); font-weight: 500; border: 0.5px solid var(--border); }
+  
+  .region-tabs { display: flex; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .rtab { padding: 6px 16px; border-radius: 20px; border: 0.5px solid var(--border); background: var(--bg); cursor: pointer; font-size: 13px; color: var(--text2); font-family: inherit; display: flex; align-items: center; gap: 6px; transition: all .15s; }
+  .rtab.active { border-color: var(--border2); color: var(--text); background: var(--bg2); font-weight: 500; }
+  .rtab .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  
+  .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .metric-card { background: var(--bg2); border-radius: var(--radius); padding: 1rem; }
+  .metric-label { font-size: 12px; color: var(--text2); margin-bottom: 6px; display: flex; align-items: center; gap: 5px; }
+  .metric-value { font-size: 24px; font-weight: 600; }
+  .metric-sub { font-size: 12px; color: var(--text2); margin-top: 4px; }
+  .up { color: var(--success); }
+  .dn { color: var(--danger); }
+  
+  .section { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 8px; }
+  .section-title { font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+  @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
+  
+  .chart-wrap { position: relative; width: 100%; height: 240px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text2); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 8px 10px; color: var(--text2); font-weight: 400; border-bottom: 0.5px solid var(--border); white-space: nowrap; }
+  td { padding: 9px 10px; border-bottom: 0.5px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg2); }
+  
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+  .b-TR { background: #E6F1FB; color: #0C447C; }
+  .b-TW { background: #FAEEDA; color: #633806; }
+  .b-ES { background: #EAF3DE; color: #27500A; }
+  .b-BR { background: #FAECE7; color: #712B13; }
+  .b-c { background: #EAEAEA; color: #333333; }
+  
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 1rem; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group label { font-size: 12px; color: var(--text2); }
+  .form-group input, .form-group select, .form-group textarea {
+    padding: 7px 10px; border: 0.5px solid var(--border2); border-radius: var(--radius);
+    background: var(--bg); color: var(--text); font-size: 13px; font-family: inherit;
+  }
+  .form-group input:focus, .form-group select:focus { outline: 2px solid #378ADD44; border-color: #378ADD; }
+  
+  /* 上传区域样式 */
+  .upload-box { border: 2px dashed var(--border2); border-radius: var(--radius-lg); padding: 2rem; text-align: center; background: var(--bg2); cursor: pointer; transition: all 0.2s; margin-bottom: 1rem; }
+  .upload-box:hover { background: var(--bg); border-color: var(--text); }
+  .upload-box i { font-size: 32px; color: var(--text2); margin-bottom: 8px; display: block; }
+  .upload-box p { font-size: 13px; color: var(--text2); }
+  .upload-box input { display: none; }
+
+  .view { display: none; }
+  .view.active { display: block; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--text); color: var(--bg); padding: 10px 20px; border-radius: var(--radius); font-size: 13px; opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; z-index: 9999; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .table-wrap { overflow-x: auto; }
+  .action-btn { background: none; border: none; cursor: pointer; color: var(--text2); font-size: 14px; padding: 2px 6px; border-radius: 4px; transition: all 0.15s; }
+  .action-btn:hover { background: var(--bg2); }
+  .action-btn.edit:hover { color: var(--info); }
+  .action-btn.del:hover { color: var(--danger); }
+  .empty { text-align: center; padding: 2rem; color: var(--text2); font-size: 13px; }
+  .week-label { font-size: 12px; color: var(--text2); background: var(--bg2); padding: 2px 8px; border-radius: 10px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="subtitle">KOL 推广管理系统 3.0</div>
+      <h1><i class="ti ti-chart-bar"></i>数据看板</h1>
+    </div>
+    <div class="topbar-right">
+      <button class="btn" onclick="exportCSV()"><i class="ti ti-download"></i>导出 CSV</button>
+      <button class="btn btn-primary" onclick="showView('add')"><i class="ti ti-plus"></i>录入/导入数据</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showView('dashboard')"><i class="ti ti-layout-dashboard"></i>总览分析</button>
+    <button class="tab" onclick="showView('daily')"><i class="ti ti-calendar"></i>明细日报</button>
+    <button class="tab" onclick="showView('weekly')"><i class="ti ti-chart-line"></i>周度报告</button>
+    <button class="tab" onclick="showView('add')"><i class="ti ti-edit"></i>录入与上传</button>
+  </div>
+
+  <div id="view-dashboard" class="view active">
+    <div class="region-tabs">
+      <button class="rtab active" onclick="setRegion('all')"><span class="dot" style="background:#888"></span>全部地区</button>
+      <button class="rtab" onclick="setRegion('TR')"><span class="dot" style="background:#378ADD"></span>🇹🇷 土耳其</button>
+      <button class="rtab" onclick="setRegion('TW')"><span class="dot" style="background:#BA7517"></span>🇹🇼 台湾</button>
+      <button class="rtab" onclick="setRegion('ES')"><span class="dot" style="background:#3B6D11"></span>🌎 西语</button>
+      <button class="rtab" onclick="setRegion('BR')"><span class="dot" style="background:#D85A30"></span>🇧🇷 巴西</button>
+    </div>
+    <div class="metrics-grid" id="metrics-grid"></div>
+    
+    <div class="two-col">
+      <div class="section">
+        <div class="section-header"><span class="section-title"><i class="ti ti-brand-tiktok"></i>渠道流量分布 (新增用户)</span></div>
+        <div class="chart-wrap"><canvas id="chart-channels"></canvas></div>
+      </div>
+      <div class="section">
+        <div class="section-header"><span class="section-title"><i class="ti ti-video"></i>内容形式转化率 (CPA)</span></div>
+        <div class="chart-wrap"><canvas id="chart-content-types"></canvas></div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="section">
+        <div class="section-header"><span class="section-title"><i class="ti ti-users"></i>新增用户趋势（近7天）</span></div>
+        <div class="legend" id="legend-users"></div>
+        <div class="chart-wrap"><canvas id="chart-users"></canvas></div>
+      </div>
+      <div class="section">
+        <div class="section-header"><span class="section-title"><i class="ti ti-coin"></i>消耗趋势（近7天）</span></div>
+        <div class="legend" id="legend-cost"></div>
+        <div class="chart-wrap"><canvas id="chart-cost"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-daily" class="view">
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title"><i class="ti ti-calendar"></i>明细过滤与检索</span>
+        <span id="daily-count" style="font-size:12px;color:var(--text2);"></span>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;">
+        <select id="filter-region" onchange="renderDaily()" style="font-size:13px;padding:5px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;">
+          <option value="">全部地区</option>
+          <option value="TR">🇹🇷 土耳其</option>
+          <option value="TW">🇹🇼 台湾</option>
+          <option value="ES">🌎 西语</option>
+          <option value="BR">🇧🇷 巴西</option>
+        </select>
+        <select id="filter-channel" onchange="renderDaily()" style="font-size:13px;padding:5px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;">
+          <option value="">全部渠道</option>
+          <option value="TikTok">TikTok</option>
+          <option value="YouTube">YouTube</option>
+          <option value="Instagram">Instagram</option>
+        </select>
+        <input type="month" id="filter-month" onchange="renderDaily()" style="font-size:13px;padding:5px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;">
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>日期</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗(USD)</th><th>新增</th><th>CPA</th><th>备注</th><th>操作</th></tr></thead>
+          <tbody id="daily-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-weekly" class="view">
+    <div class="section">
+      <div class="section-header"><span class="section-title"><i class="ti ti-chart-bar"></i>各地区周度新增用户</span></div>
+      <div class="chart-wrap" style="height:260px;margin-bottom:1rem;">
+        <canvas id="chart-weekly"></canvas></div>
+    </div>
+    <div class="section">
+      <div class="section-header"><span class="section-title"><i class="ti ti-table"></i>周报明细数据</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>周次</th><th>地区</th><th>推广数量</th><th>总消耗 (USD)</th><th>新增用户</th><th>平均 CPA</th></tr></thead>
+          <tbody id="weekly-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-add" class="view">
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title" id="form-title"><i class="ti ti-edit"></i>录入推广数据</span>
+        <span id="edit-indicator" style="display:none;" class="badge b-TW">正在编辑修改模式</span>
+      </div>
+      <input type="hidden" id="f-id">
+      
+      <div class="form-grid">
+        <div class="form-group"><label>日期 *</label><input type="date" id="f-date"></div>
+        <div class="form-group">
+          <label>地区 *</label>
+          <select id="f-region">
+            <option value="TR">🇹🇷 土耳其</option>
+            <option value="TW">🇹🇼 台湾</option>
+            <option value="ES">🌎 西语</option>
+            <option value="BR">🇧🇷 巴西</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>渠道 *</label>
+          <select id="f-channel">
+            <option value="TikTok">TikTok</option>
+            <option value="YouTube">YouTube</option>
+            <option value="Instagram">Instagram</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>内容形式 *</label>
+          <select id="f-content-type">
+            <option value="短视频">短视频</option>
+            <option value="长视频">长视频</option>
+            <option value="图文">图文</option>
+            <option value="直播">直播</option>
+          </select>
+        </div>
+        <div class="form-group"><label>推广数量（条）</label><input type="number" id="f-count" placeholder="0" min="0"></div>
+        <div class="form-group"><label>消耗（USD）</label><input type="number" id="f-cost" placeholder="0.00" min="0" step="0.01"></div>
+        <div class="form-group"><label>新增用户</label><input type="number" id="f-users" placeholder="0" min="0"></div>
+        <div class="form-group"><label>备注（可选）</label><input type="text" id="f-note" placeholder="活动名、KOL等"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:0.5rem;">
+        <button class="btn btn-primary" onclick="saveRecord()"><i class="ti ti-check"></i>保存数据</button>
+        <button class="btn" onclick="clearForm()"><i class="ti ti-x"></i>取消/清空</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><span class="section-title"><i class="ti ti-file-upload"></i>批量上传文件进行分析</span></div>
+      <div class="upload-box" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
+        <i class="ti ti-cloud-upload"></i>
+        <p>支持拖拽或点击上传 <b>CSV</b> 或 <b>Excel (.xlsx, .xls)</b> 文件</p>
+        <p style="font-size:11px; margin-top:5px; color:var(--text2)">标准列名需包含：日期, 地区, 渠道, 内容形式, 推广数量, 消耗, 新增用户, 备注</p>
+        <input type="file" id="file-input" accept=".csv, .xlsx, .xls" onchange="handleFileSelect(event)">
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title"><i class="ti ti-history"></i>最近录入（最新10条）</span>
+        <button class="btn" style="font-size:12px;padding:4px 10px;" onclick="if(confirm('确认清空所有数据？'))clearAll()"><i class="ti ti-trash"></i>清空全部数据</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>日期</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗</th><th>新增</th><th>备注</th><th>操作</th></tr></thead>
+          <tbody id="recent-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const REGIONS = {
+  TR: { name: '土耳其', flag: '🇹🇷', color: '#378ADD' },
+  TW: { name: '台湾',   flag: '🇹🇼', color: '#BA7517' },
+  ES: { name: '西语',   flag: '🌎',  color: '#3B6D11' },
+  BR: { name: '巴西',   flag: '🇧🇷', color: '#D85A30' },
+};
+
+const CHANNEL_COLORS = { 'TikTok': '#FE2C55', 'YouTube': '#FF0000', 'Instagram': '#E1306C' };
+const CONTENT_COLORS = { '短视频': '#4EA8DE', '长视频': '#5E60CE', '图文': '#48CAE4', '直播': '#70E000' };
+
+let records = [];
+let currentRegion = 'all';
+let charts = {};
+
+function loadRecords() {
+  try { const s = localStorage.getItem('kol_records_v3'); records = s ? JSON.parse(s) : []; } catch(e) { records = []; }
+}
+function persistRecords() {
+  try { localStorage.setItem('kol_records_v3', JSON.stringify(records)); } catch(e) {}
+}
+
+function getLast7Dates() {
+  const out = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    out.push(d.toISOString().slice(0, 10));
+  }
+  return out;
+}
+
+function getWeekStr(ds) {
+  const d = new Date(ds);
+  if(isNaN(d.getTime())) return '未知周';
+  const jan1 = new Date(d.getFullYear(), 0, 1);
+  const w = Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
+  return d.getFullYear() + '-W' + String(w).padStart(2, '0');
+}
+
+function sum(arr, key) { return arr.reduce((s, r) => s + (parseFloat(r[key]) || 0), 0); }
+function pct(a, b) { return b === 0 ? 0 : Math.round((a - b) / b * 100); }
+
+function showView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + v).classList.add('active');
+  const views = ['dashboard', 'daily', 'weekly', 'add'];
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', views[i] === v));
+  if (v === 'dashboard') renderDashboard();
+  if (v === 'daily') renderDaily();
+  if (v === 'weekly') renderWeekly();
+  if (v === 'add') renderRecent();
+}
+
+function setRegion(r) {
+  currentRegion = r;
+  const rs = ['all', 'TR', 'TW', 'ES', 'BR'];
+  document.querySelectorAll('.rtab').forEach((t, i) => t.classList.toggle('active', rs[i] === r));
+  renderDashboard();
+}
+
+function renderDashboard() {
+  renderMetrics();
+  renderTrendCharts();
+  renderDistributionCharts();
+}
+
+function renderMetrics() {
+  const all14 = [];
+  for (let i = 13; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); all14.push(d.toISOString().slice(0, 10)); }
+  const thisWeek = all14.slice(7);
+  const prevWeek = all14.slice(0, 7);
+  const base = currentRegion === 'all' ? records : records.filter(r => r.region === currentRegion);
+  const tw = base.filter(r => thisWeek.includes(r.date));
+  const pw = base.filter(r => prevWeek.includes(r.date));
+  
+  const items = [
+    { label: '本周推广数量', icon: 'ti-speakerphone', val: sum(tw, 'count').toLocaleString() + ' 条', diff: pct(sum(tw,'count'), sum(pw,'count')) },
+    { label: '本周消耗', icon: 'ti-coin', val: '$' + sum(tw, 'cost').toLocaleString(), diff: pct(sum(tw,'cost'), sum(pw,'cost')) },
+    { label: '本周新增用户', icon: 'ti-users', val: sum(tw, 'users').toLocaleString() + ' 人', diff: pct(sum(tw,'users'), sum(pw,'users')) },
+    { label: '平均 CPA', icon: 'ti-chart-pie', val: sum(tw,'users') > 0 ? '$' + (sum(tw,'cost')/sum(tw,'users')).toFixed(2) : '—', diff: null },
+  ];
+  
+  document.getElementById('metrics-grid').innerHTML = items.map(m => `
+    <div class="metric-card">
+      <div class="metric-label"><i class="ti ${m.icon}"></i>${m.label}</div>
+      <div class="metric-value">${m.val}</div>
+      <div class="metric-sub">${m.diff !== null ? `<span class="${m.diff >= 0 ? 'up' : 'dn'}">${m.diff >= 0 ? '↑' : '↓'}${Math.abs(m.diff)}%</span> vs 上周` : '本周均值'}</div>
+    </div>`).join('');
+}
+
+function renderTrendCharts() {
+  const dates = getLast7Dates();
+  const labels = dates.map(d => d.slice(5));
+  const rks = currentRegion === 'all' ? Object.keys(REGIONS) : [currentRegion];
+  const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)';
+  const tickColor = isDark ? '#888' : '#999';
+
+  const makeDS = (key) => rks.map(r => ({
+    label: REGIONS[r].flag + ' ' + REGIONS[r].name,
+    data: dates.map(d => sum(records.filter(x => x.date === d && x.region === r), key)),
+    borderColor: REGIONS[r].color,
+    backgroundColor: REGIONS[r].color + '28',
+    tension: 0.35, pointRadius: 3, borderWidth: 2,
+    fill: rks.length === 1,
+  }));
+
+  const opts = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 11 }, color: tickColor } },
+      y: { grid: { color: gridColor }, ticks: { font: { size: 11 }, color: tickColor, callback: v => v >= 1000 ? (v/1000).toFixed(1)+'k' : v } }
+    }
+  };
+
+  ['chart-users', 'chart-cost'].forEach(id => { if (charts[id]) { charts[id].destroy(); delete charts[id]; } });
+
+  document.getElementById('legend-users').innerHTML = rks.map(r =>
+    `<span class="legend-item"><span class="legend-dot" style="background:${REGIONS[r].color}"></span>${REGIONS[r].flag} ${REGIONS[r].name}</span>`).join('');
+  document.getElementById('legend-cost').innerHTML = document.getElementById('legend-users').innerHTML;
+
+  charts['chart-users'] = new Chart(document.getElementById('chart-users'), { type: 'line', data: { labels, datasets: makeDS('users') }, options: opts });
+  charts['chart-cost']  = new Chart(document.getElementById('chart-cost'),  { type: 'line', data: { labels, datasets: makeDS('cost')  }, options: opts });
+}
+
+function renderDistributionCharts() {
+  const base = currentRegion === 'all' ? records : records.filter(r => r.region === currentRegion);
+  const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const tickColor = isDark ? '#888' : '#999';
+
+  // 1. 渠道新增用户分布 (Pie/Doughnut)
+  const channels = ['TikTok', 'YouTube', 'Instagram'];
+  const channelData = channels.map(c => sum(base.filter(r => r.channel === c), 'users'));
+  
+  if (charts['chart-channels']) charts['chart-channels'].destroy();
+  charts['chart-channels'] = new Chart(document.getElementById('chart-channels'), {
+    type: 'doughnut',
+    data: {
+      labels: channels,
+      datasets: [{
+        data: channelData,
+        backgroundColor: channels.map(c => CHANNEL_COLORS[c] || '#888'),
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'right', labels: { color: tickColor, font: { size: 12 } } } }
+    }
+  });
+
+  // 2. 内容形式平均 CPA 分布 (Bar)
+  const contentTypes = ['短视频', '长视频', '图文', '直播'];
+  const contentCPA = contentTypes.map(t => {
+    const matched = base.filter(r => r.contentType === t);
+    const totalCost = sum(matched, 'cost');
+    const totalUsers = sum(matched, 'users');
+    return totalUsers > 0 ? parseFloat((totalCost / totalUsers).toFixed(2)) : 0;
+  });
+
+  if (charts['chart-content-types']) charts['chart-content-types'].destroy();
+  charts['chart-content-types'] = new Chart(document.getElementById('chart-content-types'), {
+    type: 'bar',
+    data: {
+      labels: contentTypes,
+      datasets: [{
+        label: '平均 CPA (USD)',
+        data: contentCPA,
+        backgroundColor: contentTypes.map(t => CONTENT_COLORS[t] || '#888'),
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: tickColor } },
+        y: { ticks: { color: tickColor }, grid: { color: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)' } }
+      }
+    }
+  });
+}
+
+function renderDaily() {
+  const fr = document.getElementById('filter-region').value;
+  const fc = document.getElementById('filter-channel').value;
+  const fm = document.getElementById('filter-month').value;
+  
+  let data = [...records].sort((a,b) => b.date.localeCompare(a.date));
+  if (fr) data = data.filter(r => r.region === fr);
+  if (fc) data = data.filter(r => r.channel === fc);
+  if (fm) data = data.filter(r => r.date.startsWith(fm));
+  
+  document.getElementById('daily-count').textContent = '共 ' + data.length + ' 条';
+  document.getElementById('daily-tbody').innerHTML = data.length === 0
+    ? `<tr><td colspan="10" class="empty">暂无匹配的数据明细</td></tr>`
+    : data.map(r => `<tr>
+      <td>${r.date}</td>
+      <td><span class="badge b-${r.region}">${(REGIONS[r.region] || {flag:'', name: r.region}).flag} ${(REGIONS[r.region] || {name:r.region}).name}</span></td>
+      <td><span class="badge b-c" style="border-left:3px solid ${CHANNEL_COLORS[r.channel]}">${r.channel || '—'}</span></td>
+      <td>${r.contentType || '—'}</td>
+      <td>${(+r.count || 0).toLocaleString()}</td>
+      <td>$${(+r.cost || 0).toLocaleString()}</td>
+      <td>${(+r.users || 0).toLocaleString()}</td>
+      <td>${r.users > 0 ? '$' + (r.cost/r.users).toFixed(2) : '—'}</td>
+      <td style="color:var(--text2);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.note || '—'}</td>
+      <td>
+        <button class="action-btn edit" onclick="editRecord('${r.id}')" title="编辑"><i class="ti ti-edit"></i></button>
+        <button class="action-btn del" onclick="deleteRecord('${r.id}')" title="删除"><i class="ti ti-trash"></i></button>
+      </td>
+    </tr>`).join('');
+}
+
+function renderWeekly() {
+  const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)';
+  const tickColor = isDark ? '#888' : '#999';
+
+  const weekMap = {};
+  records.forEach(r => {
+    const wk = getWeekStr(r.date);
+    if (!weekMap[wk]) weekMap[wk] = {};
+    if (!weekMap[wk][r.region]) weekMap[wk][r.region] = { count:0, cost:0, users:0 };
+    weekMap[wk][r.region].count += +r.count || 0;
+    weekMap[wk][r.region].cost  += +r.cost || 0;
+    weekMap[wk][r.region].users += +r.users || 0;
+  });
+  const weeks = Object.keys(weekMap).sort().slice(-6);
+  const rks = Object.keys(REGIONS);
+
+  if (charts['chart-weekly']) { charts['chart-weekly'].destroy(); delete charts['chart-weekly']; }
+  charts['chart-weekly'] = new Chart(document.getElementById('chart-weekly'), {
+    type: 'bar',
+    data: {
+      labels: weeks,
+      datasets: rks.map(r => ({
+        label: REGIONS[r].flag + ' ' + REGIONS[r].name,
+        data: weeks.map(w => weekMap[w] && weekMap[w][r] ? weekMap[w][r].users : 0),
+        backgroundColor: REGIONS[r].color + 'cc',
+        borderColor: REGIONS[r].color,
+        borderWidth: 1,
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: tickColor, font: { size: 11 }, boxWidth: 10, boxHeight: 10 } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: tickColor } },
+        y: { grid: { color: gridColor }, ticks: { color: tickColor } }
+      }
+    }
+  });
+
+  let rows = '';
+  weeks.slice().reverse().forEach(w => {
+    rks.forEach(r => {
+      const d = weekMap[w] && weekMap[w][r];
+      if (!d) return;
+      rows += `<tr>
+        <td><span class="week-label">${w}</span></td>
+        <td><span class="badge b-${r}">${REGIONS[r].flag} ${REGIONS[r].name}</span></td>
+        <td>${Math.round(d.count).toLocaleString()}</td>
+        <td>$${d.cost.toLocaleString()}</td>
+        <td>${Math.round(d.users).toLocaleString()}</td>
+        <td>${d.users > 0 ? '$' + (d.cost/d.users).toFixed(2) : '—'}</td>
+      </tr>`;
+    });
+  });
+  document.getElementById('weekly-tbody').innerHTML = rows || `<tr><td colspan="6" class="empty">暂无足量周度周数据</td></tr>`;
+}
+
+function renderRecent() {
+  if (!document.getElementById('f-date').value) {
+    document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
+  }
+  const recent = [...records].sort((a,b) => b.date.localeCompare(a.date)).slice(0, 10);
+  document.getElementById('recent-tbody').innerHTML = recent.length === 0
+    ? `<tr><td colspan="9" class="empty">还没有数据，快来录入或上传第一条吧</td></tr>`
+    : recent.map(r => `<tr>
+      <td>${r.date}</td>
+      <td><span class="badge b-${r.region}">${(REGIONS[r.region]||{}).flag||''} ${(REGIONS[r.region]||{name:r.region}).name}</span></td>
+      <td>${r.channel}</td>
+      <td>${r.contentType}</td>
+      <td>${r.count}</td>
+      <td>$${(+r.cost).toLocaleString()}</td>
+      <td>${r.users}</td>
+      <td style="color:var(--text2);font-size:12px;">${r.note || '—'}</td>
+      <td>
+        <button class="action-btn edit" onclick="editRecord('${r.id}')" title="修改"><i class="ti ti-edit"></i></button>
+        <button class="action-btn del" onclick="deleteRecord('${r.id}')" title="删除"><i class="ti ti-trash"></i></button>
+      </td>
+    </tr>`).join('');
+}
+
+// 核心功能：保存或更新记录
+function saveRecord() {
+  const id = document.getElementById('f-id').value;
+  const date = document.getElementById('f-date').value;
+  const region = document.getElementById('f-region').value;
+  const channel = document.getElementById('f-channel').value;
+  const contentType = document.getElementById('f-content-type').value;
+  const count = parseFloat(document.getElementById('f-count').value) || 0;
+  const cost = parseFloat(document.getElementById('f-cost').value) || 0;
+  const users = parseFloat(document.getElementById('f-users').value) || 0;
+  const note = document.getElementById('f-note').value.trim();
+
+  if (!date) { toast('❌ 请填写日期'); return; }
+
+  if (id) {
+    // 修改现有记录
+    const index = records.findIndex(r => r.id === id);
+    if (index > -1) {
+      records[index] = { id, date, region, channel, contentType, count, cost, users, note };
+      toast('✓ 数据已成功修改');
+    }
+  } else {
+    // 新增记录
+    records.push({
+      id: Date.now() + Math.random().toString(36).slice(2),
+      date, region, channel, contentType, count, cost, users, note
+    });
+    toast('✓ 新增数据已保存');
+  }
+
+  persistRecords();
+  clearForm();
+  renderRecent();
+}
+
+// 核心功能：进入修改状态
+function editRecord(id) {
+  const r = records.find(x => x.id === id);
+  if (!r) return;
+  
+  showView('add');
+  document.getElementById('f-id').value = r.id;
+  document.getElementById('f-date').value = r.date;
+  document.getElementById('f-region').value = r.region;
+  document.getElementById('f-channel').value = r.channel || 'TikTok';
+  document.getElementById('f-content-type').value = r.contentType || '短视频';
+  document.getElementById('f-count').value = r.count;
+  document.getElementById('f-cost').value = r.cost;
+  document.getElementById('f-users').value = r.users;
+  document.getElementById('f-note').value = r.note || '';
+
+  document.getElementById('form-title').innerHTML = `<i class="ti ti-edit"></i> 修改推广数据`;
+  document.getElementById('edit-indicator').style.display = 'inline-block';
+}
+
+function clearForm() {
+  document.getElementById('f-id').value = '';
+  ['f-count','f-cost','f-users','f-note'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('form-title').innerHTML = `<i class="ti ti-edit"></i> 录入推广数据`;
+  document.getElementById('edit-indicator').style.display = 'none';
+}
+
+function deleteRecord(id) {
+  if(confirm('确认删除该条记录吗？')) {
+    records = records.filter(r => r.id !== id);
+    persistRecords();
+    if(document.getElementById('view-daily').classList.contains('active')) renderDaily();
+    if(document.getElementById('view-add').classList.contains('active')) renderRecent();
+    toast('已成功删除');
+  }
+}
+
+function clearAll() {
+  records = [];
+  persistRecords();
+  renderRecent();
+  toast('已清空本地数据库');
+}
+
+// 核心功能：上传解析文件（CSV 与 Excel）
+function handleDrop(e) {
+  e.preventDefault();
+  const files = e.dataTransfer.files;
+  if (files.length > 0) processFile(files[0]);
+}
+
+function handleFileSelect(e) {
+  const files = e.target.files;
+  if (files.length > 0) processFile(files[0]);
+}
+
+function processFile(file) {
+  const reader = new FileReader();
+  const extension = file.name.split('.').pop().toLowerCase();
+  
+  toast('⏳ 正在解析文件，请稍候...');
+  
+  reader.onload = function(e) {
+    const data = e.target.result;
+    let importedRows = [];
+    
+    try {
+      if (extension === 'csv') {
+        const text = new TextDecoder('utf-8').decode(data);
+        importedRows = parseCSVToArray(text);
+      } else {
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        importedRows = XLSX.utils.sheet_to_json(worksheet);
+      }
+      
+      let successCount = 0;
+      importedRows.forEach(row => {
+        // 兼容不同的映射中英文列名
+        const date = row['日期'] || row['date'] || row['Date'];
+        let region = row['地区'] || row['region'] || row['Region'];
+        const channel = row['渠道'] || row['channel'] || row['Channel'] || 'TikTok';
+        const contentType = row['内容形式'] || row['content_type'] || row['ContentType'] || '短视频';
+        const count = parseFloat(row['推广数量'] || row['推广数'] || row['count']) || 0;
+        const cost = parseFloat(row['消耗'] || row['cost'] || row['Cost']) || 0;
+        const users = parseFloat(row['新增用户'] || row['新增'] || row['users']) || 0;
+        const note = row['备注'] || row['note'] || row['Note'] || '';
+
+        if (date) {
+          // 如果传入国家中文名，反向转换成代码
+          if (region === '土耳其') region = 'TR';
+          if (region === '台湾') region = 'TW';
+          if (region === '西语') region = 'ES';
+          if (region === '巴西') region = 'BR';
+          
+          records.push({
+            id: Date.now() + Math.random().toString(36).slice(2),
+            date: formatUploadedDate(date),
+            region: ['TR','TW','ES','BR'].includes(region) ? region : 'TW',
+            channel, contentType, count, cost, users, note
+          });
+          successCount++;
+        }
+      });
+
+      if(successCount > 0) {
+        persistRecords();
+        renderRecent();
+        toast(`✓ 成功导入 ${successCount} 条推广数据！`);
+      } else {
+        toast('❌ 未能解析到有效数据，请检查文件列名');
+      }
+    } catch (err) {
+      console.error(err);
+      toast('❌ 文件解析失败，请检查格式是否标准');
+    }
+  };
+
+  if (extension === 'csv') {
+    reader.readAsArrayBuffer(file);
+  } else {
+    reader.readAsArrayBuffer(file);
+  }
+}
+
+function formatUploadedDate(val) {
+  if (typeof val === 'number') {
+    // 应对 Excel 数字格式日期
+    const date = XLSX.utils.parse_date(val);
+    return date.toISOString().slice(0, 10);
+  }
+  let str = String(val).trim().replace(/\//g, '-');
+  if(str.length === 8 && !str.includes('-')) { // 20241010 格式
+    return `${str.slice(0,4)}-${str.slice(4,6)}-${str.slice(6,8)}`;
+  }
+  return str.slice(0, 10);
+}
+
+function parseCSVToArray(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+  if(lines.length === 0) return [];
+  const headers = lines[0].replace(/^\uFEFF/, '').split(','); // 去除BOM头
+  return lines.slice(1).map(line => {
+    const values = line.split(',');
+    const obj = {};
+    headers.forEach((h, i) => {
+      let val = values[i];
+      if (val && val.startsWith('"') && val.endsWith('"')) val = val.slice(1, -1);
+      obj[h.trim()] = val;
+    });
+    return obj;
+  });
+}
+
+function exportCSV() {
+  if (records.length === 0) { toast('暂无数据可导出'); return; }
+  const header = '日期,地区,渠道,内容形式,推广数量,消耗(USD),新增用户,CPA,备注';
+  const rows = records
+    .sort((a,b) => b.date.localeCompare(a.date))
+    .map(r => `${r.date},${(REGIONS[r.region]||{}).name||r.region},${r.channel},${r.contentType},${r.count},${r.cost},${r.users},${r.users>0?(r.cost/r.users).toFixed(2):''},"${r.note||''}"`);
+  const csv = '\uFEFF' + [header, ...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = 'KOL扩展推广数据_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  toast('✓ 包含新维度的 CSV 已成功导出');
+}
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// 初始化加载
+loadRecords();
+renderDashboard();
+</script>
+</body>
+</html>
