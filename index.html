@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KOL 推广数据管理系统 v9.0</title>
+<title>KOL 推广数据管理系统 v10.0</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -72,10 +72,10 @@
   .form-group input:focus, .form-group select:focus { border-color: #3b82f6; outline: none; }
   .date-range-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
   
-  .upload-box { border: 2px dashed #3b82f6; border-radius: var(--radius-lg); padding: 3rem; text-align: center; background: rgba(59,130,246,0.02); cursor: pointer; transition: all 0.2s; margin-bottom: 1.5rem; }
+  .upload-box { border: 2px dashed #3b82f6; border-radius: var(--radius-lg); padding: 2.5rem; text-align: center; background: rgba(59,130,246,0.02); cursor: pointer; transition: all 0.2s; margin-bottom: 1.5rem; }
   .upload-box:hover { background: rgba(59,130,246,0.05); border-color: #2563eb; }
-  .upload-box i { font-size: 42px; color: #3b82f6; margin-bottom: 10px; display: block; }
-  .upload-box p { font-size: 14px; color: var(--text2); font-weight: 500; }
+  .upload-box i { font-size: 36px; color: #3b82f6; margin-bottom: 8px; display: block; }
+  .upload-box p { font-size: 13px; color: var(--text2); font-weight: 500; }
   .upload-box input { display: none; }
   .view { display: none; } .view.active { display: block; }
   .toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(10px); background: #212529; color: #fff; padding: 12px 24px; border-radius: var(--radius); font-size: 13px; font-weight: 500; opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
@@ -95,7 +95,6 @@
   .page-btn:hover { background: var(--bg2); }
   .page-btn.active { background: #3b82f6; color: #fff; border-color: #3b82f6; font-weight: 600; }
   .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .page-info { font-size: 12px; color: var(--text2); margin-left: 4px; }
 
   .monthly-section { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem; }
   .monthly-region-header { display: flex; align-items: center; gap: 10px; margin-bottom: 1.25rem; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
@@ -159,7 +158,7 @@
         <div class="chart-wrap"><canvas id="chart-channels"></canvas></div>
       </div>
       <div class="section">
-        <div class="section-header"><span class="section-title"><i class="ti ti-chart-columns"></i>内容形式：消耗 vs 总播放</span></div>
+        <div class="section-header"><span class="section-title"><i class="ti ti-chart-columns"></i>内容形式：消耗情况分析</span></div>
         <div class="chart-wrap"><canvas id="chart-content-types"></canvas></div>
       </div>
     </div>
@@ -206,7 +205,20 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>日期区间 / 单日</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗(USD)</th><th>新增用户</th><th>总预估收益</th><th>细分效果播放</th><th>CPA</th><th>ROI</th><th>备注/链接</th><th>操作</th></tr></thead>
+          <thead>
+            <tr>
+              <th>日期区间 / 单日</th>
+              <th>地区</th>
+              <th>渠道</th>
+              <th>内容形式</th>
+              <th>推广数量</th>
+              <th>消耗(USD)</th>
+              <th>新增用户</th>
+              <th>核算 CPA</th>
+              <th>备注/链接</th>
+              <th>操作</th>
+            </tr>
+          </thead>
           <tbody id="daily-tbody"></tbody>
         </table>
       </div>
@@ -216,13 +228,11 @@
 
   <div id="view-weekly" class="view">
     <div class="section">
-      <div class="section-header"><span class="section-title"><i class="ti ti-chart-arrows"></i>每周核心核算走势（近6周）</span></div>
+      <div class="section-header"><span class="section-title"><i class="ti ti-chart-arrows"></i>每周推广消耗走势（近6周）</span></div>
       <div class="chart-wrap" style="height:260px;margin-bottom:1rem;"><canvas id="chart-weekly"></canvas></div>
     </div>
     <div class="section">
-      <div class="section-header">
-        <span class="section-title"><i class="ti ti-table-alias"></i>周区间级动态核算表</span>
-      </div>
+      <div class="section-header"><span class="section-title"><i class="ti ti-table-alias"></i>周区间级动态核算表</span></div>
       <div style="display:flex;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap;">
         <select id="weekly-filter-region" onchange="renderWeekly()" style="font-size:13px;padding:6px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;">
           <option value="">全部地区</option>
@@ -237,7 +247,7 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>具体周区间段 (周一 至 周日)</th><th>地区</th><th>推广条数</th><th>总消耗 (USD)</th><th>周推广播放</th><th>新增用户</th><th>核算 CPA</th><th>综合 ROI</th></tr></thead>
+          <thead><tr><th>具体周区间段 (周一 至 周日)</th><th>地区</th><th>推广条数</th><th>总消耗 (USD)</th><th>新增用户</th><th>核算 CPA</th></tr></thead>
           <tbody id="weekly-tbody"></tbody>
         </table>
       </div>
@@ -245,28 +255,22 @@
 
     <div class="section" style="margin-top:0;">
       <div class="section-header">
-        <span class="section-title"><i class="ti ti-calendar-compare"></i>月度高级核算 &amp; 自由双组对比看板 (支持4个月各自独立自由选择)</span>
+        <span class="section-title"><i class="ti ti-calendar-compare"></i>月度高级核算 &amp; 自由双组对比看板 (支持4个月各自独立自由选择，支持周期与表格月份完全读取)</span>
       </div>
-
       <div class="month-selector-container">
         <div class="month-selector-row">
           <div style="width:100%; font-weight:700; font-size:12px; margin-bottom:6px; color: #3b82f6;"><i class="ti ti-copy"></i> 对比分析组 1</div>
-          <label>月份 A：</label>
-          <select id="compare-month-a" onchange="renderMonthlyCompare()"></select>
+          <label>月份 A：</label><select id="compare-month-a" onchange="renderMonthlyCompare()"></select>
           <span class="vs-badge">VS</span>
-          <label>月份 B：</label>
-          <select id="compare-month-b" onchange="renderMonthlyCompare()"></select>
+          <label>月份 B：</label><select id="compare-month-b" onchange="renderMonthlyCompare()"></select>
         </div>
         <div class="month-selector-row">
           <div style="width:100%; font-weight:700; font-size:12px; margin-bottom:6px; color: #10b981;"><i class="ti ti-copy"></i> 对比分析组 2</div>
-          <label>月份 C：</label>
-          <select id="compare-month-c" onchange="renderMonthlyCompare()"></select>
+          <label>月份 C：</label><select id="compare-month-c" onchange="renderMonthlyCompare()"></select>
           <span class="vs-badge">VS</span>
-          <label>月份 D：</label>
-          <select id="compare-month-d" onchange="renderMonthlyCompare()"></select>
+          <label>月份 D：</label><select id="compare-month-d" onchange="renderMonthlyCompare()"></select>
         </div>
       </div>
-
       <div id="monthly-compare-body"></div>
     </div>
   </div>
@@ -274,7 +278,7 @@
   <div id="view-views_panel" class="view">
     <div class="two-col">
       <div class="section">
-        <div class="section-header"><span class="section-title"><i class="ti ti-circle-plus"></i>大盘总播放量独立录入段</span></div>
+        <div class="section-header"><span class="section-title"><i class="ti ti-circle-plus"></i>大盘总播放量独立录入端</span></div>
         <div class="form-group" style="margin-bottom:12px;">
           <label>日期维度模式</label>
           <select id="vp-mode" onchange="toggleVpDateMode()">
@@ -283,21 +287,20 @@
           </select>
         </div>
         <div class="form-group" id="vp-date-wrapper" style="margin-bottom:12px;">
-          <label>选择目标日期 *</label>
-          <input type="date" id="vp-date">
+          <label>选择目标日期 *</label><input type="date" id="vp-date">
         </div>
         <div class="form-grid" style="grid-template-columns:1fr; gap:12px; margin-bottom:12px;">
           <div class="form-group">
             <label>对应目标业务地区 *</label>
             <select id="vp-region">
-              <option value="TR">🇹🇷 土耳其地区</option>
-              <option value="TW">🇹🇼 台湾地区</option>
-              <option value="ES">🌎 西语地区</option>
-              <option value="BR">🇧🇷 巴西地区</option>
+              <option value="TR">🇹🇷 土耳其</option>
+              <option value="TW">🇹🇼 台湾</option>
+              <option value="ES">🌎 西语</option>
+              <option value="BR">🇧🇷 巴西</option>
             </select>
           </div>
           <div class="form-group">
-            <label>独立总播放量数值 (不与其他推广数据混合) *</label>
+            <label>独立总播放量数值 (去重取最大值覆盖) *</label>
             <input type="number" id="vp-count" placeholder="请输入完整播放总量" min="0">
           </div>
         </div>
@@ -305,28 +308,23 @@
           <button class="btn btn-primary" onclick="saveVpRecord()"><i class="ti ti-lock-check"></i>锁入大盘播放数据库</button>
           <button class="btn" onclick="clearVpForm()"><i class="ti ti-refresh"></i>重置</button>
         </div>
-        <div style="margin-top:12px; font-size:12px; color:var(--text2); line-height:1.5;">
-          💡 <strong>机制说明：</strong>此处录入的数据直接归档至总播放量主核心。如同天/同周期已存在记录，系统将<strong>直接提取最大值</strong>，不作任何无意义叠加；且周期范围数据采用**独立记录闭环分析**，不分派打散到每日。
-        </div>
       </div>
-
       <div class="section">
         <div class="section-header"><span class="section-title"><i class="ti ti-report-analytics"></i>各地区大盘独立播放归档统计</span></div>
-        <div class="table-wrap" style="max-height: 290px;">
+        <div class="table-wrap" style="max-height: 230px;">
           <table>
-            <thead><tr><th>地区</th><th>单日记录量</th><th>周期范围记录量</th><th>归档累计播放总和</th></tr></thead>
+            <thead><tr><th>地区</th><th>单日记录</th><th>周期记录</th><th>归档累计播放总和</th></tr></thead>
             <tbody id="vp-summary-tbody"></tbody>
           </table>
         </div>
-        <button class="btn btn-danger" style="width:100%; justify-content:center; margin-top:14px; font-size:12px; padding:6px;" onclick="if(confirm('🚨 确定全量抹除大盘独立总播放量数据库？')) { vpRecords=[]; persistVp(); renderVpView(); toast('大盘播放量已清空'); }"><i class="ti ti-trash"></i>清空总播放量独立数据库</button>
+        <button class="btn btn-danger" style="width:100%; justify-content:center; margin-top:14px; font-size:12px; padding:6px;" onclick="if(confirm('🚨 确定清空所有总播放量？')) { vpRecords=[]; persistVp(); renderVpView(); updateMonthSelectors(); toast('大盘播放量已清空'); }"><i class="ti ti-trash"></i>清空总播放量独立数据库</button>
       </div>
     </div>
-
     <div class="section">
       <div class="section-header"><span class="section-title"><i class="ti ti-database"></i>大盘独立总播放量流水归档台账</span></div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>模式</th><th>归档日期区间 / 日期</th><th>结算地区</th><th>独立大盘总播放数</th><th>状态</th><th>操作</th></tr></thead>
+          <thead><tr><th>模式</th><th>归档日期区间 / 日期</th><th>结算地区</th><th>独立大盘总播放数</th><th>操作</th></tr></thead>
           <tbody id="vp-tbody"></tbody>
         </table>
       </div>
@@ -343,44 +341,21 @@
       <div class="form-grid">
         <div class="form-group">
           <label>目标地区 *</label>
-          <select id="t-region">
-            <option value="TW">🇹🇼 台湾地区</option>
-            <option value="TR">🇹🇷 土耳其地区</option>
-          </select>
+          <select id="t-region"><option value="TW">🇹🇼 台湾</option><option value="TR">🇹🇷 土耳其</option></select>
         </div>
-        <div class="form-group">
-          <label>投放时间段 *</label>
-          <input type="text" id="t-range" placeholder="例如：2026/05/01-2026/05/07">
-        </div>
-        <div class="form-group">
-          <label>TT SPK 新增 *</label>
-          <input type="number" id="t-tt-spk-users" placeholder="0" min="0">
-        </div>
-        <div class="form-group">
-          <label>TT 总新增 *</label>
-          <input type="number" id="t-tt-total-users" placeholder="0" min="0">
-        </div>
-        <div class="form-group">
-          <label>TT SPK 消耗 (USD) *</label>
-          <input type="number" id="t-tt-spk-cost" placeholder="0.00" min="0" step="0.01">
-        </div>
-        <div class="form-group">
-          <label>TT 总消耗 (USD) *</label>
-          <input type="number" id="t-tt-total-cost" placeholder="0.00" min="0" step="0.01">
-        </div>
+        <div class="form-group"><label>投放时间段 *</label><input type="text" id="t-range" placeholder="例如：2026/05/01-2026/05/07"></div>
+        <div class="form-group"><label>TT SPK 新增 *</label><input type="number" id="t-tt-spk-users" placeholder="0" min="0"></div>
+        <div class="form-group"><label>TT 总新增 *</label><input type="number" id="t-tt-total-users" placeholder="0" min="0"></div>
+        <div class="form-group"><label>TT SPK 消耗 (USD) *</label><input type="number" id="t-tt-spk-cost" placeholder="0.00" min="0" step="0.01"></div>
+        <div class="form-group"><label>TT 总消耗 (USD) *</label><input type="number" id="t-tt-total-cost" placeholder="0.00" min="0" step="0.01"></div>
       </div>
-      <div style="display:flex;gap:10px;">
-        <button class="btn btn-primary" onclick="saveTrackingRecord()"><i class="ti ti-device-floppy"></i>归档保存追踪数据</button>
-        <button class="btn" onclick="clearTrackingForm()"><i class="ti ti-refresh"></i>重置</button>
-      </div>
+      <div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveTrackingRecord()"><i class="ti ti-device-floppy"></i>归档保存追踪数据</button></div>
     </div>
     <div class="section">
       <div class="section-header"><span class="section-title"><i class="ti ti-archive"></i>TW / TR 监测明细归档历史</span></div>
       <div class="table-wrap">
         <table>
-          <thead>
-            <tr><th>投放时间段</th><th>地区</th><th>TT SPK 新增</th><th>TT 总新增</th><th>SPK 新增占比</th><th>TT SPK 消耗</th><th>TT 总消耗</th><th>SPK 消耗占比</th><th>TT SPK CPR</th><th>TT 总 CPR</th><th>操作</th></tr>
-          </thead>
+          <thead><tr><th>投放时间段</th><th>地区</th><th>TT SPK 新增</th><th>TT 总新增</th><th>占比</th><th>TT SPK 消耗</th><th>TT 总消耗</th><th>操作</th></tr></thead>
           <tbody id="tracking-tbody"></tbody>
         </table>
       </div>
@@ -389,10 +364,10 @@
 
   <div id="view-add" class="view">
     <div class="section">
-      <div class="section-header"><span class="section-title"><i class="ti ti-upload"></i>表格上传</span></div>
+      <div class="section-header"><span class="section-title"><i class="ti ti-upload"></i>表格智能适配上传 (支持任意推广表/用户表智能识别合并)</span></div>
       <div class="upload-box" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
         <i class="ti ti-copy-check"></i>
-        <p>拖拽或点击选择上传 Excel 或 CSV 文件</p>
+        <p>将表格文件（Excel 或 CSV）拖拽到此处，或点击浏览上传</p>
         <input type="file" id="file-input" accept=".csv, .xlsx, .xls" onchange="handleFileSelect(event)">
       </div>
     </div>
@@ -412,8 +387,7 @@
           </select>
         </div>
         <div class="form-group" id="date-input-wrapper">
-          <label>日期 *</label>
-          <input type="date" id="f-date">
+          <label>日期 *</label><input type="date" id="f-date">
         </div>
         <div class="form-group">
           <label>地区 *</label>
@@ -427,31 +401,19 @@
         <div class="form-group">
           <label>渠道</label>
           <select id="f-channel">
-            <option value="TikTok">TikTok</option>
-            <option value="YouTube">YouTube</option>
-            <option value="Instagram">Instagram</option>
+            <option value="TikTok">TikTok</option><option value="YouTube">YouTube</option><option value="Instagram">Instagram</option>
           </select>
         </div>
         <div class="form-group">
           <label>内容形式</label>
           <select id="f-content-type">
-            <option value="video">video</option>
-            <option value="reel">reel</option>
-            <option value="story">story</option>
-            <option value="post">post</option>
-            <option value="shorts">shorts</option>
-            <option value="comment">comment</option>
+            <option value="video">video</option><option value="reel">reel</option><option value="story">story</option><option value="comment">comment</option>
           </select>
         </div>
         <div class="form-group"><label>推广数量</label><input type="number" id="f-count" placeholder="1" min="0"></div>
         <div class="form-group"><label>消耗（USD）</label><input type="number" id="f-cost" placeholder="0.00" min="0" step="0.01"></div>
         <div class="form-group"><label>新增用户量</label><input type="number" id="f-users" placeholder="0" min="0"></div>
-        <div class="form-group"><label>预估收益/回款(USD)</label><input type="number" id="f-revenue" placeholder="0.00" min="0" step="0.01"></div>
-        <div class="form-group">
-          <label>效果播放量 <span style="color:#3b82f6;font-size:11px;">(该条KOL细分)</span></label>
-          <input type="number" id="f-views" placeholder="0" min="0">
-        </div>
-        <div class="form-group"><label>备注/链接</label><input type="text" id="f-note" placeholder="URL链接、范围备注或说明"></div>
+        <div class="form-group"><label>备注/说明</label><input type="text" id="f-note" placeholder="选填"></div>
       </div>
       <div style="display:flex;gap:10px;margin-top:0.5rem;">
         <button class="btn btn-primary" onclick="saveRecord()"><i class="ti ti-device-floppy"></i>保存表单</button>
@@ -461,22 +423,14 @@
 
     <div class="section">
       <div class="section-header">
-        <span class="section-title"><i class="ti ti-history-toggle"></i>最新历史录入明细</span>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <select id="clean-filter-region" onchange="renderRecent()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;">
-            <option value="">筛选删除地区：全部</option>
-            <option value="TR">土耳其</option>
-            <option value="TW">台湾</option>
-            <option value="ES">西语</option>
-            <option value="BR">巴西</option>
-          </select>
-          <button class="btn btn-danger" style="padding:4px 12px;font-size:12px;" onclick="batchDeleteFiltered()"><i class="ti ti-layers-subtract"></i>批量删除当前筛选</button>
-          <button class="btn" style="color:var(--danger);border-color:rgba(201,42,42,0.2);padding:4px 12px;font-size:12px;" onclick="if(confirm('🚨 确定全量清空所有数据？'))clearAll()"><i class="ti ti-trash"></i>清空全部</button>
+        <span class="section-title"><i class="ti ti-history-toggle"></i>最新归档流水明细 (前10条)</span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-danger" style="padding:4px 12px;font-size:12px;" onclick="if(confirm('🚨 确定清空全部流转数据？')){records=[];persistRecords();renderRecent();updateMonthSelectors();toast('已清空');}"><i class="ti ti-trash"></i>清空全部常规流水</button>
         </div>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>日期 / 周期</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗</th><th>新增用户</th><th>收益</th><th>效果播放</th><th>备注</th><th>操作</th></tr></thead>
+          <thead><tr><th>日期 / 周期</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗</th><th>新增用户</th><th>操作</th></tr></thead>
           <tbody id="recent-tbody"></tbody>
         </table>
       </div>
@@ -487,41 +441,39 @@
 
 <script>
 const REGIONS = {
-  TR: { name:'土耳其', flag:'🇹🇷', color:'#0ca678' },
-  TW: { name:'台湾',   flag:'🇹🇼', color:'#f76707' },
-  ES: { name:'西语',   flag:'🌎',  color:'#4c6ef5' },
-  BR: { name:'巴西',   flag:'🇧🇷', color:'#d6336c' },
+  TR: { name:'土耳其', flag:'🇹🇷', color:'#0ca678', keywords:['土耳其','TR','TURKEY'] },
+  TW: { name:'台湾',   flag:'🇹🇼', color:'#f76707', keywords:['台湾','臺灣','TW','TAIWAN'] },
+  ES: { name:'西语',   flag:'🌎',  color:'#4c6ef5', keywords:['西语','西班牙','ES','SPANISH'] },
+  BR: { name:'巴西',   flag:'🇧🇷', color:'#d6336c', keywords:['巴西', 'BR', 'BRAZIL'] },
 };
-const CHANNEL_COLORS = { TikTok:'#1e293b', YouTube:'#3b82f6', borderagram:'#8b5cf6', Instagram:'#8b5cf6' };
+const CHANNEL_COLORS = { TikTok:'#1e293b', YouTube:'#3b82f6', Instagram:'#8b5cf6' };
 
 let records = [];
 let trackingRecords = [];
-let vpRecords = []; // 独占：总播放量独立台账库
+let vpRecords = [];
 let currentRegion = 'all';
 let charts = {};
 let dailyPage = 1;
 
-// ── Storage ──────────────────────────────────────────────
+// ── 核心存储读取 ──────────────────────────────────────────
 function loadRecords() {
   try {
-    const s = localStorage.getItem('kol_records_v9') || localStorage.getItem('kol_records_v8') || localStorage.getItem('kol_records');
+    const s = localStorage.getItem('kol_records_v10') || localStorage.getItem('kol_records_v9');
     records = s ? JSON.parse(s) : [];
-    
-    const t = localStorage.getItem('kol_tracking_v9') || localStorage.getItem('kol_tracking_v8');
+    const t = localStorage.getItem('kol_tracking_v10') || localStorage.getItem('kol_tracking_v9');
     trackingRecords = t ? JSON.parse(t) : [];
-    
-    const v = localStorage.getItem('kol_vp_v9');
+    const v = localStorage.getItem('kol_vp_v10') || localStorage.getItem('kol_vp_v9');
     vpRecords = v ? JSON.parse(v) : [];
   } catch(e) { records = []; trackingRecords = []; vpRecords = []; }
   if(!Array.isArray(records)) records = [];
   if(!Array.isArray(trackingRecords)) trackingRecords = [];
   if(!Array.isArray(vpRecords)) vpRecords = [];
 }
-function persistRecords() { localStorage.setItem('kol_records_v9', JSON.stringify(records)); }
-function persistTrackingRecords() { localStorage.setItem('kol_tracking_v9', JSON.stringify(trackingRecords)); }
-function persistVp() { localStorage.setItem('kol_vp_v9', JSON.stringify(vpRecords)); }
+function persistRecords() { localStorage.setItem('kol_records_v10', JSON.stringify(records)); }
+function persistTrackingRecords() { localStorage.setItem('kol_tracking_v10', JSON.stringify(trackingRecords)); }
+function persistVp() { localStorage.setItem('kol_vp_v10', JSON.stringify(vpRecords)); }
 
-// ── Helpers ───────────────────────────────────────────────
+// ── 智能日期和周区间解析 ────────────────────────────────────
 function getWeekRangeLabel(weekStr) {
   if (!weekStr || !weekStr.includes('-W')) return weekStr;
   try {
@@ -548,7 +500,6 @@ function fmtDiff(a, b) {
   return `<span class="diff-badge ${d>=0?'up':'dn'}">${d>=0?'↑':'↓'}${Math.abs(d)}%</span>`;
 }
 
-// ── 动态表单切换 ──────────────────────────────────────────
 function toggleDateInputMode() {
   const mode = document.getElementById('f-date-mode').value;
   const container = document.getElementById('date-input-wrapper');
@@ -556,7 +507,7 @@ function toggleDateInputMode() {
     container.innerHTML = `<label>日期 *</label><input type="date" id="f-date">`;
     document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
   } else {
-    container.innerHTML = `<label>周期范围 (开始 至 结束) *</label><div class="date-range-container"><input type="date" id="f-date-start"><input type="date" id="f-date-end"></div>`;
+    container.innerHTML = `<label>周期范围 *</label><div class="date-range-container"><input type="date" id="f-date-start"><input type="date" id="f-date-end"></div>`;
     const today = new Date().toISOString().slice(0,10);
     document.getElementById('f-date-start').value = today; document.getElementById('f-date-end').value = today;
   }
@@ -564,14 +515,10 @@ function toggleDateInputMode() {
 function toggleVpDateMode() {
   const mode = document.getElementById('vp-mode').value;
   const container = document.getElementById('vp-date-wrapper');
-  if(mode === 'single') {
-    container.innerHTML = `<label>选择目标日期 *</label><input type="date" id="vp-date">`;
-  } else {
-    container.innerHTML = `<label>周期范围 *</label><div class="date-range-container"><input type="date" id="vp-start"><input type="date" id="vp-end"></div>`;
-  }
+  if(mode === 'single') container.innerHTML = `<label>选择目标日期 *</label><input type="date" id="vp-date">`;
+  else container.innerHTML = `<label>周期范围 *</label><div class="date-range-container"><input type="date" id="vp-start"><input type="date" id="vp-end"></div>`;
 }
 
-// ── Nav 控制 ──────────────────────────────────────────────
 function showView(v) {
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   document.getElementById('view-'+v).classList.add('active');
@@ -580,15 +527,14 @@ function showView(v) {
   if (v==='dashboard') renderDashboard();
   if (v==='daily') { dailyPage=1; renderDaily(); }
   if (v==='weekly') { updateWeeklyFilters(); renderWeekly(); updateMonthSelectors(); renderMonthlyCompare(); }
-  if (v==='views_panel') { renderVpView(); }
-  if (v==='tracking') { renderTrackingView(); }
+  if (v==='views_panel') renderVpView();
+  if (v==='tracking') renderTrackingView();
   if (v==='add') { toggleDateInputMode(); renderRecent(); }
 }
 function setRegion(r) { currentRegion = r; renderDashboard(); }
 
-// ── Dashboard ─────────────────────────────────────────────
+// ── 数据总览 ─────────────────────────────────────────────
 function renderDashboard() {
-  // 核心计算逻辑：引入独立播放量主核心
   const todayMonth = new Date().toISOString().slice(0,7);
   const all14 = []; for (let i=13;i>=0;i--) { const d=new Date(); d.setDate(d.getDate()-i); all14.push(d.toISOString().slice(0,10)); }
   const tw = all14.slice(7), pw = all14.slice(0,7);
@@ -596,37 +542,32 @@ function renderDashboard() {
   const base = currentRegion==='all' ? records : records.filter(r=>r.region===currentRegion);
   const baseVp = currentRegion==='all' ? vpRecords : vpRecords.filter(r=>r.region===currentRegion);
   
-  const twR = base.filter(r=>tw.includes(r.date)), pwR = base.filter(r=>pw.includes(r.date));
+  const twR = base.filter(r=>tw.includes(r.date.slice(0,10))), pwR = base.filter(r=>pw.includes(r.date.slice(0,10)));
   
-  // 统计本周与上周大盘总播放量 (包含单日匹配和落入周期的)
   const getVpSumByDates = (dArr) => {
     let s = 0;
     baseVp.forEach(v => {
       if(v.mode === 'single' && dArr.includes(v.date)) s += v.views;
       if(v.mode === 'range') {
-        // 如果周期包含任何一天，则归入该统计线内
         const [sD, eD] = v.date.split(' 至 ');
-        const match = dArr.some(d => d >= sD && d <= eD);
-        if(match) s += v.views;
+        if(dArr.some(d => d >= sD && d <= eD)) s += v.views;
       }
     });
     return s;
   };
 
-  const twViews = getVpSumByDates(tw) + sum(twR, 'views');
-  const pwViews = getVpSumByDates(pw) + sum(pwR, 'views');
-  
+  const twViews = getVpSumByDates(tw);
+  const pwViews = getVpSumByDates(pw);
   const twCost=sum(twR,'cost'), twUsers=sum(twR,'users');
-  const tMonth = base.filter(r=>r.date.startsWith(todayMonth));
+  const tMonth = base.filter(r=>r.date.includes(todayMonth));
   const tmCost=sum(tMonth,'cost'), tmUsers=sum(tMonth,'users');
-  
   const monthCPA = tmUsers>0 ? '$'+(tmCost/tmUsers).toFixed(2) : '—';
   
   document.getElementById('metrics-grid').innerHTML = [
     { label:'本周总消耗', icon:'ti-coin', val:'$'+twCost.toLocaleString(), sub:`<span class="${pct(twCost,sum(pwR,'cost'))>=0?'up':'dn'}">${pct(twCost,sum(pwR,'cost'))>=0?'↑':'↓'}${Math.abs(pct(twCost,sum(pwR,'cost')))}%</span> vs 上周` },
     { label:'本周新增用户', icon:'ti-users-plus', val:twUsers.toLocaleString()+' 人', sub:`<span class="${pct(twUsers,sum(pwR,'users'))>=0?'up':'dn'}">${pct(twUsers,sum(pwR,'users'))>=0?'↑':'↓'}${Math.abs(pct(twUsers,sum(pwR,'users')))}%</span> vs 上周` },
-    { label:'本周大盘总播放量', icon:'ti-eye', val:twViews.toLocaleString()+' 次', sub:`<span class="${pct(twViews,pwViews)>=0?'up':'dn'}">${pct(twViews,pwViews)>=0?'↑':'↓'}${Math.abs(pct(twViews,pwViews))}%</span> 复合走势` },
-    { label:'月度核算 CPA', icon:'ti-calculator', val:monthCPA, sub:'当月转化平均成本' }
+    { label:'本周独立大盘播放量', icon:'ti-eye', val:twViews.toLocaleString()+' 次', sub:`独立板块录入归档总计` },
+    { label:'月度大盘核算 CPA', icon:'ti-calculator', val:monthCPA, sub:'当前月份转化平均成本' }
   ].map(m=>`<div class="metric-card">
     <div class="metric-label"><i class="ti ${m.icon}"></i>${m.label}</div>
     <div class="metric-value">${m.val}</div>
@@ -671,19 +612,16 @@ function renderDistributionCharts() {
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:tc}}}}
   });
   
-  const ct=['video','reel','story','post','shorts','comment'];
+  const ct=['video','reel','story','comment'];
   if(charts['chart-content-types'])charts['chart-content-types'].destroy();
   charts['chart-content-types']=new Chart(document.getElementById('chart-content-types'),{
     type:'bar',
-    data:{labels:ct,datasets:[
-      {label:'消耗 (USD)',data:ct.map(t=>sum(base.filter(r=>r.contentType===t),'cost')),backgroundColor:'#3b82f6',yAxisID:'y'},
-      {label:'效果播放',data:ct.map(t=>sum(base.filter(r=>r.contentType===t),'views')),backgroundColor:'#a78bfa',yAxisID:'y1'}
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,scales:{x:{ticks:{color:tc}},y:{position:'left',ticks:{color:tc}},y1:{position:'right',grid:{drawOnChartArea:false},ticks:{color:tc}}}}
+    data:{labels:ct,datasets:[{label:'消耗 (USD)',data:ct.map(t=>sum(base.filter(r=>r.contentType===t),'cost')),backgroundColor:'#3b82f6'}]},
+    options:{responsive:true,maintainAspectRatio:false,scales:{x:{ticks:{color:tc}},y:{ticks:{color:tc}}}}
   });
 }
 
-// ── Daily 明细 ────────────────────────────────────────────
+// ── 日报明细（去除了预估收益、效果播放、ROI） ─────────────────
 function renderDaily() {
   const fr=document.getElementById('filter-region').value;
   const fc=document.getElementById('filter-channel').value;
@@ -700,19 +638,16 @@ function renderDaily() {
 
   document.getElementById('daily-count').textContent=`共 ${total} 条`;
   document.getElementById('daily-tbody').innerHTML=pageData.length===0
-    ?`<tr><td colspan="13" class="empty">暂无明细台账</td></tr>`
+    ?`<tr><td colspan="10" class="empty">暂无明细数据</td></tr>`
     :pageData.map(r=>`<tr>
         <td>${r.date}</td>
-        <td><span class="badge b-${r.region}">${REGIONS[r.region].flag} ${REGIONS[r.region].name}</span></td>
+        <td><span class="badge b-${r.region}">${REGIONS[r.region]?REGIONS[r.region].flag+' '+REGIONS[r.region].name:r.region}</span></td>
         <td><span class="badge b-c">${r.channel||'—'}</span></td>
         <td><strong>${r.contentType||'—'}</strong></td>
         <td>${(+r.count||0)}</td>
         <td>$${(+r.cost).toLocaleString()}</td>
         <td><span style="color:#2b8a3e;font-weight:600;">${(+r.users).toLocaleString()}</span></td>
-        <td style="color:#e67e22;">$${(+r.revenue||0).toLocaleString()}</td>
-        <td style="color:#6366f1;">${(+r.views||0).toLocaleString()}</td>
         <td><strong>${r.users>0?'$'+(r.cost/r.users).toFixed(2):'—'}</strong></td>
-        <td><span class="${r.revenue>=r.cost?'up':'dn'}">${r.cost>0?(r.revenue/r.cost).toFixed(2)+'x':'—'}</span></td>
         <td>${r.note? (r.note.startsWith('http')?`<a href="${r.note}" target="_blank" class="note-link">链接</a>`:r.note) :'—'}</td>
         <td>
           <button class="action-btn edit" onclick="editRecord('${r.id}')"><i class="ti ti-edit"></i></button>
@@ -729,7 +664,7 @@ function renderDaily() {
   pg.innerHTML=h+`<button class="page-btn" onclick="dailyPage=${totalPages}">»</button>`;
 }
 
-// ── Weekly ────────────────────────────────────────────────
+// ── 周次核算 ──────────────────────────────────────────────
 function updateWeeklyFilters() {
   const weekSet=new Set(); records.forEach(r=>weekSet.add(getWeekStr(r.date)));
   const sel=document.getElementById('weekly-filter-range'); sel.innerHTML='<option value="">全部周次</option>';
@@ -741,8 +676,8 @@ function renderWeekly() {
   const rFilter=document.getElementById('weekly-filter-region').value;
   const wm={};
   records.forEach(r=>{
-    const wk=getWeekStr(r.date); if(!wm[wk])wm[wk]={}; if(!wm[wk][r.region])wm[wk][r.region]={count:0,cost:0,users:0,views:0,revenue:0};
-    wm[wk][r.region].count+=+r.count||0; wm[wk][r.region].cost+=+r.cost||0; wm[wk][r.region].users+=+r.users||0; wm[wk][r.region].views+=+r.views||0; wm[wk][r.region].revenue+=+r.revenue||0;
+    const wk=getWeekStr(r.date); if(!wm[wk])wm[wk]={}; if(!wm[wk][r.region])wm[wk][r.region]={count:0,cost:0,users:0};
+    wm[wk][r.region].count+=+r.count||0; wm[wk][r.region].cost+=+r.cost||0; wm[wk][r.region].users+=+r.users||0;
   });
   const allWeeks=Object.keys(wm).sort(), cw=allWeeks.slice(-6), rks=Object.keys(REGIONS);
   if(charts['chart-weekly'])charts['chart-weekly'].destroy();
@@ -760,63 +695,78 @@ function renderWeekly() {
         <td><span class="week-range">${getWeekRangeLabel(w)}</span></td>
         <td><span class="badge b-${r}">${REGIONS[r].flag} ${REGIONS[r].name}</span></td>
         <td>${d.count}</td><td>$${d.cost.toLocaleString()}</td>
-        <td style="color:#6366f1;">${d.views.toLocaleString()}</td>
         <td style="color:#2b8a3e;font-weight:600;">${d.users.toLocaleString()}</td>
         <td><span style="color:#c92a2a;font-weight:700;">${d.users>0?'$'+(d.cost/d.users).toFixed(2):'—'}</span></td>
-        <td><span class="${d.revenue>=d.cost?'up':'dn'}">${d.cost>0?(d.revenue/d.cost).toFixed(2)+'x':'—'}</span></td>
       </tr>`;
     });
   });
-  document.getElementById('weekly-tbody').innerHTML=rows||`<tr><td colspan="8" class="empty">无周核算数据</td></tr>`;
+  document.getElementById('weekly-tbody').innerHTML=rows||`<tr><td colspan="6" class="empty">无周核算数据</td></tr>`;
 }
 
-// ── 月度自由对比（修复全量可选月份逻辑） ───────────────────────
+// ── 月度自选对比 Bug 完美修复：全面兼容解构单日与周期范围 ──────────
 function updateMonthSelectors() {
-  // 综合扫描普通流水库与大盘独立播放量库，获取绝对完整的月份集合
   const mSet = new Set();
-  records.forEach(r => { if(r.date && r.date.length>=7) mSet.add(r.date.slice(0,7)); });
-  vpRecords.forEach(v => { if(v.date && v.date.length>=7) mSet.add(v.date.slice(0,7)); });
   
-  // 生成固定的全局月份全名单
+  // 智能平滑扫射函数
+  const extractMonth = (str) => {
+    if(!str) return;
+    const match = str.match(/(\d{4})[-/](\d{2})/);
+    if(match) mSet.add(`${match[1]}-${match[2]}`);
+  };
+
+  records.forEach(r => {
+    if(r.date.includes(' 至 ')) {
+      r.date.split(' 至 ').forEach(extractMonth);
+    } else {
+      extractMonth(r.date);
+    }
+  });
+  vpRecords.forEach(v => {
+    if(v.date.includes(' 至 ')) {
+      v.date.split(' 至 ').forEach(extractMonth);
+    } else {
+      extractMonth(v.date);
+    }
+  });
+  
   const fullMonthList = Array.from(mSet).sort();
   const ids = ['compare-month-a','compare-month-b','compare-month-c','compare-month-d'];
   
   ids.forEach((id, index) => {
     const el = document.getElementById(id);
-    const savedVal = el.value; // 保留当前用户的选择状态
-    
+    const savedVal = el.value;
     el.innerHTML = '<option value="">— 选择月份 —</option>';
+    
     fullMonthList.forEach(m => {
       const opt = document.createElement('option');
       opt.value = m; opt.textContent = m;
       el.appendChild(opt);
     });
     
-    // 如果没有历史选择值，智能设定默认初始位置
-    if(!savedVal && fullMonthList.length > 0) {
-      if(index === 0 || index === 2) el.value = fullMonthList[fullMonthList.length - 2] || fullMonthList[0];
-      if(index === 1 || index === 3) el.value = fullMonthList[fullMonthList.length - 1] || fullMonthList[0];
-    } else {
-      el.value = savedVal;
+    if(fullMonthList.length > 0) {
+      if(fullMonthList.includes(savedVal)) {
+        el.value = savedVal;
+      } else {
+        if(index === 0 || index === 2) el.value = fullMonthList[fullMonthList.length - 2] || fullMonthList[0];
+        if(index === 1 || index === 3) el.value = fullMonthList[fullMonthList.length - 1] || fullMonthList[0];
+      }
     }
   });
 }
 
 function getMonthStats(m, reg) {
-  if(!m) return { count:0, cost:0, users:0, views:0, revenue:0, cpa:null, roi:null };
-  const sub = records.filter(r=>r.region===reg && r.date && r.date.includes(m));
+  if(!m) return { count:0, cost:0, users:0, views:0, cpa:null };
+  // 匹配属于该月的常规流水
+  const sub = records.filter(r => r.region === reg && r.date.includes(m));
   
-  // 结合独立总播放库计算该月的总播放量
+  // 叠加属于该大盘月度的独立播放量记录
   let bigViews = 0;
-  vpRecords.filter(v=>v.region===reg && v.date.includes(m)).forEach(v=>{
-    bigViews += v.views;
-  });
+  vpRecords.filter(v => v.region === reg && v.date.includes(m)).forEach(v => { bigViews += v.views; });
 
-  const totCost = sum(sub,'cost'), totUsers = sum(sub,'users'), totRev = sum(sub,'revenue');
+  const totCost = sum(sub,'cost'), totUsers = sum(sub,'users');
   return {
     count: sum(sub,'count'), cost: totCost, users: totUsers,
-    views: sum(sub,'views') + bigViews, revenue: totRev,
-    cpa: totUsers>0 ? totCost/totUsers : null, roi: totCost>0 ? totRev/totCost : null
+    views: bigViews, cpa: totUsers>0 ? totCost/totUsers : null
   };
 }
 
@@ -832,7 +782,7 @@ function renderMonthlyCompare() {
   let h='';
   Object.keys(REGIONS).forEach(r=>{
     const sa=getMonthStats(ma,r), sb=getMonthStats(mb,r), sc=getMonthStats(mc,r), sd=getMonthStats(md,r);
-    if(sa.cost===0&&sb.cost===0&&sc.cost===0&&sd.cost===0&&sa.views===0&&sb.views===0) return;
+    if(sa.cost===0 && sb.cost===0 && sc.cost===0 && sd.cost===0 && sa.views===0 && sb.views===0) return;
     
     h+=`<div class="monthly-section">
       <div class="monthly-region-header"><span class="monthly-region-title"><span>${REGIONS[r].flag}</span><span>${REGIONS[r].name}</span></span></div>`;
@@ -858,93 +808,76 @@ function compareRows(s, p) {
   return [
     {l:'总消耗(USD)', v:'$'+s.cost.toLocaleString(), r:s.cost, pr:p?p.cost:null},
     {l:'转化新增用户', v:s.users.toLocaleString()+' 人', r:s.users, pr:p?p.users:null},
-    {l:'累计大盘播放总总和', v:s.views.toLocaleString()+' 次', r:s.views, pr:p?p.views:null},
-    {l:'预估收益', v:'$'+s.revenue.toLocaleString(), r:s.revenue, pr:p?p.revenue:null},
-    {l:'核算 CPA', v:s.cpa?'$'+s.cpa.toFixed(2):'—', r:s.cpa, pr:p?p.cpa:null},
-    {l:'综合 ROI', v:s.roi?s.roi.toFixed(2)+'x':'—', r:s.roi, pr:p?p.roi:null}
+    {l:'独立大盘播放总量', v:s.views.toLocaleString()+' 次', r:s.views, pr:p?p.views:null},
+    {l:'核算 CPA', v:s.cpa?'$'+s.cpa.toFixed(2):'—', r:s.cpa, pr:p?p.cpa:null}
   ].map(row=>`<div class="compare-row"><span class="label">${row.l}</span><span class="value">${row.v} ${p&&row.pr!==null&&row.r!==null?fmtDiff(row.r,row.pr):''}</span></div>`).join('');
 }
 
-// ── 独占：总播放量独立分析逻辑台账（防重叠/去重取最大/不分派到天） ──────
+// ── 总播放量独立录入段 ──────────────────────────────────────
 function saveVpRecord() {
   const mode = document.getElementById('vp-mode').value;
   const region = document.getElementById('vp-region').value;
   const countVal = parseFloat(document.getElementById('vp-count').value)||0;
-  
   let dateStr = '';
+  
   if(mode === 'single') {
     dateStr = document.getElementById('vp-date').value;
     if(!dateStr) { toast('❌ 请选择具体日期'); return; }
   } else {
     const sD = document.getElementById('vp-start').value;
     const eD = document.getElementById('vp-end').value;
-    if(!sD || !eD) { toast('❌ 请输入完整的周期开始与结束范围'); return; }
+    if(!sD || !eD) { toast('❌ 周期范围不完整'); return; }
     dateStr = `${sD} 至 ${eD}`;
   }
-  if(countVal <= 0) { toast('❌ 播放量数据不合法'); return; }
+  if(countVal <= 0) { toast('❌ 播放量不合法'); return; }
 
-  // 查重匹配逻辑：如果模式、日期段、地区完全一致
   const existIdx = vpRecords.findIndex(v => v.mode === mode && v.date === dateStr && v.region === region);
-  
   if(existIdx > -1) {
-    // 再次强调，如果重复录入了某一天的/某一周期的，不要叠加，直接取最大值。
     const oldVal = vpRecords[existIdx].views;
-    if(countVal > oldVal) {
-      vpRecords[existIdx].views = countVal;
-      toast(`ℹ️ 检测到冲突：原记录 ${oldVal}，系统已取最大值 ${countVal} 完成覆盖`);
-    } else {
-      toast(`ℹ️ 同期记录已存在最大值 ${oldVal}，本次录入 ${countVal} 被智能忽略`);
-    }
+    vpRecords[existIdx].views = Math.max(oldVal, countVal);
+    toast(`ℹ️ 同期已存在记录，系统已直接提取最大值进行覆盖：${vpRecords[existIdx].views}`);
   } else {
-    // 新增独立流水，整个周期数据闭环存储，拒绝派发打散到每一天
     vpRecords.push({ id:'vp_'+Date.now(), mode, date:dateStr, region, views:countVal });
-    toast('✓ 大盘独立播放量归档成功');
+    toast('✓ 独立总播放量锁入成功');
   }
-  
-  persistVp(); clearVpForm(); renderVpView();
+  persistVp(); clearVpForm(); renderVpView(); updateMonthSelectors();
 }
 function deleteVpRecord(id) {
-  if(confirm('确认清除该项独立播放归档？')) {
-    vpRecords = vpRecords.filter(v=>v.id!==id); persistVp(); renderVpView(); toast('已删除');
+  if(confirm('确定清除该项播放量独立流水？')) {
+    vpRecords = vpRecords.filter(v=>v.id!==id); persistVp(); renderVpView(); updateMonthSelectors(); toast('已卸载');
   }
 }
 function clearVpForm() { document.getElementById('vp-count').value = ''; }
 function renderVpView() {
-  // 1. 历史细分流水账目
   document.getElementById('vp-tbody').innerHTML = vpRecords.length === 0
-    ? `<tr><td colspan="6" class="empty">独立总播放量库中无有效台账</td></tr>`
+    ? `<tr><td colspan="5" class="empty">无独立总播放量归档台账</td></tr>`
     : vpRecords.slice().reverse().map(v=>`<tr>
-        <td><span class="badge b-c">${v.mode==='single'?'单日模式':'独立周期'}</span></td>
+        <td><span class="badge b-c">${v.mode==='single'?'单日':'独立周期'}</span></td>
         <td><strong>${v.date}</strong></td>
-        <td><span class="badge b-${v.region}">${REGIONS[v.region].flag} ${REGIONS[v.region].name}</span></td>
+        <td><span class="badge b-${v.region}">${REGIONS[v.region]?REGIONS[v.region].flag+' '+REGIONS[v.region].name:v.region}</span></td>
         <td style="color:#6366f1; font-weight:700;">${v.views.toLocaleString()} 次</td>
-        <td><span class="badge b-TR" style="color:#2b8a3e; background:#e3faf2;">安全封存</span></td>
         <td><button class="action-btn del" onclick="deleteVpRecord('${v.id}')"><i class="ti ti-trash"></i></button></td>
       </tr>`).join('');
 
-  // 2. 区域汇总总计
   document.getElementById('vp-summary-tbody').innerHTML = Object.keys(REGIONS).map(r=>{
     const sub = vpRecords.filter(v=>v.region === r);
-    const singles = sub.filter(v=>v.mode==='single').length;
-    const ranges = sub.filter(v=>v.mode==='range').length;
-    const total = sum(sub, 'views');
     return `<tr>
       <td><span class="badge b-${r}">${REGIONS[r].flag} ${REGIONS[r].name}</span></td>
-      <td>${singles} 组单日</td>
-      <td>${ranges} 组周期</td>
-      <td style="color:#3b82f6; font-weight:700;">${total.toLocaleString()} 次</td>
+      <td>${sub.filter(v=>v.mode==='single').length} 次</td>
+      <td>${sub.filter(v=>v.mode==='range').length} 次</td>
+      <td style="color:#3b82f6; font-weight:700;">${sum(sub, 'views').toLocaleString()} 次</td>
     </tr>`;
   }).join('');
 }
 
-// ── TW & TR 素材监测追踪 ──────────────────────────────────
+// ── TW & TR 素材追踪 ──────────────────────────────────────
 function saveTrackingRecord() {
   const region = document.getElementById('t-region').value; const range = document.getElementById('t-range').value.trim();
   const spkUsers = parseFloat(document.getElementById('t-tt-spk-users').value)||0; const totalUsers = parseFloat(document.getElementById('t-tt-total-users').value)||0;
   const spkCost = parseFloat(document.getElementById('t-tt-spk-cost').value)||0; const totalCost = parseFloat(document.getElementById('t-tt-total-cost').value)||0;
   if(!range) { toast('❌ 投放时间段不能为空'); return; }
   trackingRecords.push({ id: 'track_'+Date.now(), region, range, spkUsers, totalUsers, spkCost, totalCost });
-  persistTrackingRecords(); clearTrackingForm(); renderTrackingView(); toast('✓ 定制数据成功归档');
+  persistTrackingRecords(); clearTrackingForm(); renderTrackingView(); toast('✓ 定制素材跟踪成功');
 }
 function clearTrackingForm() { ['t-range','t-tt-spk-users','t-tt-total-users','t-tt-spk-cost','t-tt-total-cost'].forEach(id=>document.getElementById(id).value=''); }
 function renderTrackingView() {
@@ -952,20 +885,19 @@ function renderTrackingView() {
   const twSpkU = sum(twList,'spkUsers'), twTotU = sum(twList,'totalUsers'), twSpkC = sum(twList,'spkCost'), twTotC = sum(twList,'totalCost');
   const trSpkU = sum(trList,'spkUsers'), trTotU = sum(trList,'totalUsers'), trSpkC = sum(trList,'spkCost'), trTotC = sum(trList,'totalCost');
   document.getElementById('tracking-summary-grid').innerHTML = `
-    <div class="metric-card" style="border-left:4px solid #f76707;"><div class="metric-label">🇹🇼 TW SPK 新增占比</div><div class="metric-value">${twTotU>0?((twSpkU/twTotU)*100).toFixed(1)+'%':'0%'}</div><div class="metric-sub">SPK:${twSpkU}/总:${twTotU}</div></div>
-    <div class="metric-card" style="border-left:4px solid #f76707;"><div class="metric-label">🇹🇼 TW SPK 消耗占比</div><div class="metric-value">${twTotC>0?((twSpkC/twTotC)*100).toFixed(1)+'%':'0%'}</div><div class="metric-sub">SPK:$${twSpkC}/总:$${twTotC}</div></div>
-    <div class="metric-card" style="border-left:4px solid #0ca678;"><div class="metric-label">🇹🇷 TR SPK 新增占比</div><div class="metric-value">${trTotU>0?((trSpkU/trTotU)*100).toFixed(1)+'%':'0%'}</div><div class="metric-sub">SPK:${trSpkU}/总:${trTotU}</div></div>
-    <div class="metric-card" style="border-left:4px solid #0ca678;"><div class="metric-label">🇹🇷 TR SPK 消耗占比</div><div class="metric-value">${trTotC>0?((trSpkC/trTotC)*100).toFixed(1)+'%':'0%'}</div><div class="metric-sub">SPK:$${trSpkC}/总:$${trTotC}</div></div>`;
-  document.getElementById('tracking-tbody').innerHTML = trackingRecords.length === 0 ? `<tr><td colspan="11" class="empty">暂无定制记录</td></tr>` : trackingRecords.slice().reverse().map(r=>`<tr>
-    <td><strong>${r.range}</strong></td><td><span class="badge b-${r.region}">${REGIONS[r.region].flag} ${REGIONS[r.region].name}</span></td>
+    <div class="metric-card" style="border-left:4px solid #f76707;"><div class="metric-label">🇹🇼 TW SPK 新增占比</div><div class="metric-value">${twTotU>0?((twSpkU/twTotU)*100).toFixed(1)+'%':'0%'}</div></div>
+    <div class="metric-card" style="border-left:4px solid #f76707;"><div class="metric-label">🇹🇼 TW SPK 消耗占比</div><div class="metric-value">${twTotC>0?((twSpkC/twTotC)*100).toFixed(1)+'%':'0%'}</div></div>
+    <div class="metric-card" style="border-left:4px solid #0ca678;"><div class="metric-label">🇹🇷 TR SPK 新增占比</div><div class="metric-value">${trTotU>0?((trSpkU/trTotU)*100).toFixed(1)+'%':'0%'}</div></div>
+    <div class="metric-card" style="border-left:4px solid #0ca678;"><div class="metric-label">🇹🇷 TR SPK 消耗占比</div><div class="metric-value">${trTotC>0?((trSpkC/trTotC)*100).toFixed(1)+'%':'0%'}</div></div>`;
+  document.getElementById('tracking-tbody').innerHTML = trackingRecords.length === 0 ? `<tr><td colspan="8" class="empty">暂无追踪监测明细</td></tr>` : trackingRecords.slice().reverse().map(r=>`<tr>
+    <td><strong>${r.range}</strong></td><td><span class="badge b-${r.region}">${REGIONS[r.region]?REGIONS[r.region].name:r.region}</span></td>
     <td>${r.spkUsers}</td><td>${r.totalUsers}</td><td style="color:#2b8a3e;font-weight:700;">${r.totalUsers>0?((r.spkUsers/r.totalUsers)*100).toFixed(1)+'%':'—'}</td>
-    <td>$${r.spkCost}</td><td>$${r.totalCost}</td><td style="color:#1c7ed6;font-weight:700;">${r.totalCost>0?((r.spkCost/r.totalCost)*100).toFixed(1)+'%':'—'}</td>
-    <td style="color:#c92a2a;font-weight:700;">${r.spkUsers>0?'$'+(r.spkCost/r.spkUsers).toFixed(2):'—'}</td><td>$${r.totalUsers>0?(r.totalCost/r.totalUsers).toFixed(2):'—'}</td>
+    <td>$${r.spkCost}</td><td>$${r.totalCost}</td>
     <td><button class="action-btn del" onclick="trackingRecords=trackingRecords.filter(x=>x.id!='${r.id}');persistTrackingRecords();renderTrackingView();"><i class="ti ti-trash"></i></button></td>
   </tr>`).join('');
 }
 
-// ── CRUD 与常规历史录入 ────────────────────────────────────
+// ── 表单常规操作 ──────────────────────────────────────────
 function saveRecord() {
   const id=document.getElementById('f-id').value; const mode=document.getElementById('f-date-mode').value;
   let dateLabel = '';
@@ -974,25 +906,20 @@ function saveRecord() {
   
   const region=document.getElementById('f-region').value, channel=document.getElementById('f-channel').value, contentType=document.getElementById('f-content-type').value;
   const count=parseFloat(document.getElementById('f-count').value)||1, cost=parseFloat(document.getElementById('f-cost').value)||0, users=parseFloat(document.getElementById('f-users').value)||0;
-  const revenue=parseFloat(document.getElementById('f-revenue').value)||0, views=parseFloat(document.getElementById('f-views').value)||0, note=document.getElementById('f-note').value.trim();
+  const note=document.getElementById('f-note').value.trim();
   
-  // 普通推广流水的同维覆盖去重逻辑
   const dupIdx = records.findIndex(r => r.date === dateLabel && r.region === region && r.channel === channel && r.contentType === contentType && r.id !== id);
   if(dupIdx > -1) {
-    records[dupIdx].count = count;
-    records[dupIdx].cost = cost;
-    records[dupIdx].users = Math.max(records[dupIdx].users, users);
-    records[dupIdx].views = Math.max(records[dupIdx].views, views);
-    records[dupIdx].revenue = revenue;
-    records[dupIdx].note = note;
-    toast('ℹ️ 存在重复推广线，核心转化指标已取最大值完成数据覆盖覆盖');
+    records[dupIdx].count = count; records[dupIdx].cost = cost;
+    records[dupIdx].users = Math.max(records[dupIdx].users, users); records[dupIdx].note = note;
+    toast('ℹ️ 同维度线路已合并去重，核心转化数据取最大值覆盖');
   } else {
-    const payload={id,date:dateLabel,region,channel,contentType,count,cost,users,revenue,views,note};
+    const payload={id,date:dateLabel,region,channel,contentType,count,cost,users,note};
     if(id){ const idx=records.findIndex(r=>r.id===id); if(idx>-1) records[idx]=payload; }
     else { payload.id='r_'+Date.now(); records.push(payload); }
-    toast('✓ 操作成功');
+    toast('✓ 录入流转成功');
   }
-  persistRecords(); clearForm(); renderRecent();
+  persistRecords(); clearForm(); renderRecent(); updateMonthSelectors();
 }
 function editRecord(id){
   const r=records.find(x=>x.id===id); if(!r)return; showView('add'); document.getElementById('f-id').value=r.id;
@@ -1004,68 +931,114 @@ function editRecord(id){
   }
   document.getElementById('f-region').value=r.region; document.getElementById('f-channel').value=r.channel; document.getElementById('f-content-type').value=r.contentType;
   document.getElementById('f-count').value=r.count; document.getElementById('f-cost').value=r.cost; document.getElementById('f-users').value=r.users;
-  document.getElementById('f-revenue').value=r.revenue; document.getElementById('f-views').value=r.views; document.getElementById('f-note').value=r.note||'';
-  document.getElementById('form-title').innerHTML=`<i class="ti ti-edit"></i> 修改流转明细线`; document.getElementById('edit-indicator').style.display='inline-block';
+  document.getElementById('f-note').value=r.note||'';
+  document.getElementById('form-title').innerHTML=`<i class="ti ti-edit"></i> 修改流水数据线`; document.getElementById('edit-indicator').style.display='inline-block';
 }
-function clearForm(){ document.getElementById('f-id').value=''; ['f-count','f-cost','f-users','f-revenue','f-views','f-note'].forEach(id=>document.getElementById(id).value=''); document.getElementById('f-date-mode').value = 'single'; toggleDateInputMode(); document.getElementById('form-title').innerHTML=`<i class="ti ti-ballpen"></i> 单条数据录入`; document.getElementById('edit-indicator').style.display='none'; }
-function deleteRecord(id){ if(confirm('确认移除？')){ records=records.filter(r=>r.id!==id); persistRecords(); renderRecent(); toast('已卸载'); } }
-function batchDeleteFiltered(){ const cf=document.getElementById('clean-filter-region').value; if(!cf)return; records=records.filter(r=>r.region!==cf); persistRecords(); renderRecent(); toast('已批量清洗'); }
-function clearAll(){ records=[]; persistRecords(); renderRecent(); toast('全量清空'); }
-
+function clearForm(){ document.getElementById('f-id').value=''; ['f-count','f-cost','f-users','f-note'].forEach(id=>document.getElementById(id).value=''); document.getElementById('f-date-mode').value = 'single'; toggleDateInputMode(); document.getElementById('form-title').innerHTML=`<i class="ti ti-ballpen"></i> 单条数据录入`; document.getElementById('edit-indicator').style.display='none'; }
+function deleteRecord(id){ if(confirm('确定永久删除该条流水？')){ records=records.filter(r=>r.id!==id); persistRecords(); renderRecent(); updateMonthSelectors(); toast('已删除'); } }
 function renderRecent() {
-  let list=[...records].sort((a,b)=>b.date.localeCompare(a.date)); const cf=document.getElementById('clean-filter-region').value; if(cf) list=list.filter(r=>r.region===cf);
+  let list=[...records].sort((a,b)=>b.date.localeCompare(a.date));
   document.getElementById('recent-tbody').innerHTML=list.slice(0,10).map(r=>`<tr>
-    <td>${r.date}</td><td><span class="badge b-${r.region}">${REGIONS[r.region].name}</span></td><td>${r.channel}</td><td>${r.contentType}</td>
-    <td>${r.count}</td><td>$${r.cost}</td><td>${r.users}</td><td>$${r.revenue}</td><td>${r.views}</td><td>${r.note||'—'}</td>
+    <td>${r.date}</td><td><span class="badge b-${r.region}">${REGIONS[r.region]?REGIONS[r.region].name:r.region}</span></td><td>${r.channel}</td><td>${r.contentType}</td>
+    <td>${r.count}</td><td>$${r.cost}</td><td>${r.users}</td>
     <td><button class="action-btn edit" onclick="editRecord('${r.id}')"><i class="ti ti-edit"></i></button><button class="action-btn del" onclick="deleteRecord('${r.id}')"><i class="ti ti-trash"></i></button></td>
   </tr>`).join('');
 }
 
-// ── 导入机制（追加取最大值过滤） ─────────────────────────────
+// ── 智能表头雷达识别引擎机制（完美适配任意表格数据） ───────────────────
 function handleDrop(e){ e.preventDefault(); const f=e.dataTransfer.files; if(f.length>0) processFile(f[0]); }
 function handleFileSelect(e){ const f=e.target.files; if(f.length>0) processFile(f[0]); }
 function processFile(file){
-  const reader=new FileReader(), ext=file.name.split('.').pop().toLowerCase(); toast('正在解构表格数据...');
+  const reader=new FileReader(), ext=file.name.split('.').pop().toLowerCase(); toast('智能识别引擎已激活，正在解构表格...');
   reader.onload=function(e){
     try {
-      let rawArr = [];
+      let rows = [];
       if(ext==='csv') {
         const text = new TextDecoder('utf-8').decode(e.target.result);
-        rawArr = text.split('\n').slice(1).map(l=>l.split(',')).filter(l=>l.length>2);
+        rows = text.split('\n').map(l=>l.split(',').map(cell=>cell.trim().replace(/^"|"$/g,'')));
       } else {
         const wb=XLSX.read(e.target.result,{type:'array'});
-        rawArr = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1}).slice(1);
+        rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1});
       }
-      let c=0;
-      rawArr.forEach(row=>{
-        if(!row[0]) return;
-        const dt = String(row[0]).trim(); const reg = String(row[1]||'TR').toUpperCase();
-        const ch = String(row[2]||'TikTok'); const ct = String(row[3]||'video');
-        const co = parseFloat(row[5])||0; const us = parseFloat(row[6])||0;
-        const vi = parseFloat(row[8])||0;
+      if(rows.length<2){ toast('❌ 表格无可读有效数据'); return; }
+      
+      // 提取并清洗第一行表头字段
+      const headers = rows[0].map(h=>String(h||'').trim().toUpperCase());
+      
+      // 智能表头雷达寻轨
+      const idxDate = headers.findIndex(h => h.includes('日期') || h.includes('DATE') || h.includes('发布'));
+      const idxReg  = headers.findIndex(h => h.includes('国家') || h.includes('地区') || h.includes('REGION') || h.includes('COUNTRY'));
+      const idxCost = headers.findIndex(h => h.includes('消耗') || h.includes('COST') || h.includes('SPEND'));
+      const idxUser = headers.findIndex(h => h.includes('新增') || h.includes('用户') || h.includes('注册') || h.includes('USERS'));
+      const idxChan = headers.findIndex(h => h.includes('渠道') || h.includes('CHANNEL'));
+      const idxType = headers.findIndex(h => h.includes('类型') || h.includes('形式') || h.includes('TYPE'));
+      const idxUrl  = headers.findIndex(h => h.includes('URL') || h.includes('链接'));
+
+      if(idxDate === -1){ toast('❌ 未能在表格首行探明【日期】有效维度列'); return; }
+
+      let countSuccess = 0; let countMerged = 0;
+      
+      // 迭代解构剩余行
+      for(let i=1; i<rows.length; i++) {
+        const row = rows[i]; if(!row || !row[idxDate]) continue;
         
-        const exist = records.find(x=>x.date===dt && x.region===reg && x.channel===ch && x.contentType===ct);
-        if(exist) {
-          // 重复导入时，核心数值指标取最大值，不叠加
-          exist.users = Math.max(exist.users, us);
-          exist.views = Math.max(exist.views, vi);
-          if(co > exist.cost) exist.cost = co;
-        } else {
-          records.push({ id:'r_'+Date.now()+Math.random(), date:dt, region:reg, channel:ch, contentType:ct, count:parseFloat(row[4])||1, cost:co, users:us, revenue:parseFloat(row[7])||0, views:vi, note:String(row[10]||'') });
-          c++;
+        // 清洗提取标准化日期 (如 2026-05-18(一) 清洗为 2026-05-18)
+        let rawDate = String(row[idxDate]).trim().split('(')[0].split(' ')[0];
+        if(!/^\d{4}[-/]\d{2}[-/]\d{2}$/.test(rawDate) && rawDate.length===8) {
+          // 针对 20260101 等格式的兼容
+          rawDate = `${rawDate.slice(0,4)}-${rawDate.slice(4,6)}-${rawDate.slice(6,8)}`;
         }
-      });
-      persistRecords(); renderRecent(); toast(`✓ 成功清洗并新导入 ${c} 条独特推广线`);
-    } catch(err){ toast('❌ 导入结构不匹配，请检查表头维度'); }
+        rawDate = rawDate.replace(/\//g, '-');
+        
+        // 国家地区模糊雷达检索映射
+        let rawReg = idxReg>-1 ? String(row[idxReg]).trim().toUpperCase() : 'BR';
+        let matchedRegionKey = 'BR';
+        for(let k in REGIONS) {
+          if(REGIONS[k].keywords.some(kw => rawReg.includes(kw))) { matchedRegionKey = k; break; }
+        }
+
+        const costVal = idxCost>-1 ? parseFloat(row[idxCost])||0 : 0;
+        const userVal = idxUser>-1 ? parseFloat(row[idxUser])||0 : 0;
+        const chanVal = idxChan>-1 ? String(row[idxChan]).trim() : 'TikTok';
+        const typeVal = idxType>-1 ? String(row[idxType]).trim() : 'video';
+        const urlVal  = idxUrl>-1 ? String(row[idxUrl]).trim() : '';
+
+        // 判断属于大盘纯用户表，还是KOL推广消耗表
+        if(idxCost === -1 && idxUser > -1) {
+          // A. 纯用户大盘表：触发去重取最大值覆盖逻辑
+          const exist = records.find(x => x.date === rawDate && x.region === matchedRegionKey);
+          if(exist) {
+            exist.users = Math.max(exist.users, userVal); countMerged++;
+          } else {
+            records.push({ id:'imported_'+Date.now()+'_'+Math.random(), date:rawDate, region:matchedRegionKey, channel:'大盘渠道', contentType:'大盘转化', count:1, cost:0, users:userVal, note:'外部表格智能同步归档' });
+            countSuccess++;
+          }
+        } else {
+          // B. 推广表：进行同维线路识别
+          const exist = records.find(x => x.date === rawDate && x.region === matchedRegionKey && x.channel === chanVal && x.contentType === typeVal && x.note === urlVal);
+          if(exist) {
+            exist.cost = Math.max(exist.cost, costVal);
+            exist.users = Math.max(exist.users, userVal);
+            countMerged++;
+          } else {
+            records.push({ id:'imported_'+Date.now()+'_'+Math.random(), date:rawDate, region:matchedRegionKey, channel:chanVal, contentType:typeVal, count:1, cost:costVal, users:userVal, note:urlVal });
+            countSuccess++;
+          }
+        }
+      }
+
+      persistRecords(); renderRecent(); updateMonthSelectors();
+      toast(`✓ 智能转换完成！成功新归档：${countSuccess} 条线路，合并覆盖冲突项：${countMerged} 条`);
+    } catch(err){ console.error(err); toast('❌ 识别引擎发生错误，请检查数据完整度'); }
   };
   reader.readAsArrayBuffer(file);
 }
 
 function exportCSV(){
-  const h='日期,地区,渠道,内容形式,推广数量,消耗(USD),新增用户,总预估收益,效果播放,CPA,备注';
-  const rows=records.map(r=>`${r.date},${r.region},${r.channel},${r.contentType},${r.count},${r.cost},${r.users},${r.revenue},${r.views},${r.users>0?(r.cost/r.users).toFixed(2):0},"${r.note||''}"`);
+  const h='日期,地区,渠道,内容形式,推广数量,消耗(USD),新增用户,备注';
+  const rows=records.map(r=>`${r.date},${r.region},${r.channel},${r.contentType},${r.count},${r.cost},${r.users},"${r.note||''}"`);
   const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['\uFEFF'+[h,...rows].join('\n')],{type:'text/csv;charset=utf-8'}));
-  a.download='KOL_Export_v9.csv'; a.click();
+  a.download='KOL_Clean_Export.csv'; a.click();
 }
 
 let toastTimer; function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),4000);}
