@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-  <title>KOL 推广数据管理系统 v10.0 · 优化版</title>
+  <title>KOL 推广数据管理系统 v10.0 · 深度优化版</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js">
   </script>
@@ -36,10 +36,12 @@
     .tabs { display: flex; gap: 4px; background: var(--bg2); border-radius: var(--radius); padding: 5px; margin-bottom: 2rem; width: fit-content; border: 1px solid var(--border); flex-wrap: wrap; }
     .tab { padding: 8px 18px; border-radius: 6px; border: none; background: transparent; cursor: pointer; font-size: 13px; color: var(--text2); font-weight: 500; transition: all .15s; display: flex; align-items: center; gap: 6px; font-family: inherit; }
     .tab.active { background: var(--bg); color: #3b82f6; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    .region-tabs { display: flex; gap: 10px; margin-bottom: 2rem; flex-wrap: wrap; }
+    .region-tabs { display: flex; gap: 10px; margin-bottom: 2rem; flex-wrap: wrap; align-items: center; }
     .rtab { padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg); cursor: pointer; font-size: 13px; color: var(--text2); display: flex; align-items: center; gap: 8px; transition: all .15s; font-family: inherit; }
     .rtab.active { border-color: #3b82f6; color: var(--text); background: var(--bg2); font-weight: 600; }
     .rtab .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .month-filter-wrap { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+    .month-filter-wrap select { font-size: 13px; padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border2); background: var(--bg); color: var(--text); }
     .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 2rem; }
     .metric-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
     .metric-label { font-size: 12px; color: var(--text2); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; font-weight: 500; }
@@ -145,6 +147,12 @@
       <button class="rtab" onclick="setRegion('TW')"><span class="dot" style="background:#f76707"></span>🇹🇼 台湾</button>
       <button class="rtab" onclick="setRegion('ES')"><span class="dot" style="background:#4c6ef5"></span>🌎 西语</button>
       <button class="rtab" onclick="setRegion('BR')"><span class="dot" style="background:#d6336c"></span>🇧🇷 巴西</button>
+      <div class="month-filter-wrap">
+        <label for="dashboard-month-filter" style="font-size:13px;color:var(--text2);">📅 月度筛选</label>
+        <select id="dashboard-month-filter" onchange="renderDashboard()">
+          <option value="">全部月份</option>
+        </select>
+      </div>
     </div>
     <div class="metrics-grid" id="metrics-grid"></div>
     <div class="two-col">
@@ -164,7 +172,7 @@
         <select id="weekly-filter-region" onchange="renderWeekly()" style="font-size:13px;padding:6px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);"><option value="">全部地区</option><option value="TR">🇹🇷 土耳其</option><option value="TW">🇹🇼 台湾</option><option value="ES">🌎 西语</option><option value="BR">🇧🇷 巴西</option></select>
         <select id="weekly-filter-range" onchange="renderWeekly()" style="font-size:13px;padding:6px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);"><option value="">全部周次</option></select>
       </div>
-      <div class="table-wrap"><table><thead><tr><th>具体周区间段</th><th>地区</th><th>推广条数</th><th>总消耗</th><th>新增用户</th><th>核算CPA</th></tr></thead><tbody id="weekly-tbody"></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>具体周区间段</th><th>地区</th><th>推广条数</th><th>总消耗</th><th>新增用户</th><th>周视频总播放量</th><th>核算CPA</th></tr></thead><tbody id="weekly-tbody"></tbody></table></div>
     </div>
     <div class="section"><div class="section-header"><span class="section-title"><i class="ti ti-calendar-compare"></i>月度高级核算 & 自由双组对比看板</span></div>
       <div class="month-selector-container">
@@ -314,7 +322,7 @@
     document.getElementById('view-'+v).classList.add('active');
     const vs = ['dashboard','weekly','views_panel','tracking','add'];
     document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', vs[i]===v));
-    if (v==='dashboard') renderDashboard();
+    if (v==='dashboard') { updateDashboardMonthFilter(); renderDashboard(); }
     if (v==='weekly') { updateWeeklyFilters(); renderWeekly(); updateMonthSelectors(); renderMonthlyCompare(); }
     if (v==='views_panel') renderVpView();
     if (v==='tracking') { renderTrackingView(); updateTrackingMonthFilter(); renderTrackingMonthly(); }
@@ -322,12 +330,35 @@
   }
   function setRegion(r) { currentRegion = r; renderDashboard(); }
 
+  function updateDashboardMonthFilter() {
+    const months = new Set();
+    records.forEach(r => {
+      const m = r.date.match(/(\d{4})-(\d{2})/);
+      if(m) months.add(`${m[1]}-${m[2]}`);
+    });
+    vpRecords.forEach(v => {
+      const m = v.date.match(/(\d{4})-(\d{2})/);
+      if(m) months.add(`${m[1]}-${m[2]}`);
+    });
+    const sel = document.getElementById('dashboard-month-filter');
+    sel.innerHTML = '<option value="">全部月份</option>';
+    Array.from(months).sort().forEach(m => {
+      const opt = document.createElement('option'); opt.value = m; opt.textContent = m; sel.appendChild(opt);
+    });
+  }
+
+  function getFilteredBase() {
+    let base = currentRegion==='all' ? records : records.filter(r=>r.region===currentRegion);
+    const monthFilter = document.getElementById('dashboard-month-filter')?.value;
+    if(monthFilter) base = base.filter(r => r.date.includes(monthFilter));
+    return base;
+  }
+
   function renderDashboard() {
-    const todayMonth = new Date().toISOString().slice(0,7);
+    const base = getFilteredBase();
+    const baseVp = currentRegion==='all' ? vpRecords : vpRecords.filter(r=>r.region===currentRegion);
     const all14 = []; for (let i=13;i>=0;i--) { const d=new Date(); d.setDate(d.getDate()-i); all14.push(d.toISOString().slice(0,10)); }
     const tw = all14.slice(7), pw = all14.slice(0,7);
-    const base = currentRegion==='all' ? records : records.filter(r=>r.region===currentRegion);
-    const baseVp = currentRegion==='all' ? vpRecords : vpRecords.filter(r=>r.region===currentRegion);
     const twR = base.filter(r=>tw.includes(r.date.slice(0,10))), pwR = base.filter(r=>pw.includes(r.date.slice(0,10)));
     const getVpSumByDates = (dArr) => {
       let s = 0;
@@ -342,25 +373,27 @@
     };
     const twViews = getVpSumByDates(tw);
     const twCost=sum(twR,'cost'), twUsers=sum(twR,'users');
-    const tMonth = base.filter(r=>r.date.includes(todayMonth));
+    const monthFilterVal = document.getElementById('dashboard-month-filter')?.value;
+    const tMonth = base.filter(r=> monthFilterVal ? r.date.includes(monthFilterVal) : r.date.includes(new Date().toISOString().slice(0,7)));
     const tmCost=sum(tMonth,'cost'), tmUsers=sum(tMonth,'users');
     const monthCPA = tmUsers>0 ? '$'+(tmCost/tmUsers).toFixed(2) : '—';
     document.getElementById('metrics-grid').innerHTML = [
       { label:'本周总消耗', icon:'ti-coin', val:'$'+twCost.toLocaleString(), sub:`<span class="${pct(twCost,sum(pwR,'cost'))>=0?'up':'dn'}">${pct(twCost,sum(pwR,'cost'))>=0?'↑':'↓'}${Math.abs(pct(twCost,sum(pwR,'cost')))}%</span> vs 上周` },
       { label:'本周新增用户', icon:'ti-users-plus', val:twUsers.toLocaleString()+' 人', sub:`<span class="${pct(twUsers,sum(pwR,'users'))>=0?'up':'dn'}">${pct(twUsers,sum(pwR,'users'))>=0?'↑':'↓'}${Math.abs(pct(twUsers,sum(pwR,'users')))}%</span> vs 上周` },
       { label:'本周独立大盘播放量', icon:'ti-eye', val:twViews.toLocaleString()+' 次', sub:'独立板块录入归档总计' },
-      { label:'月度大盘核算 CPA', icon:'ti-calculator', val:monthCPA, sub:'当前月份转化平均成本' }
+      { label:'月度大盘核算 CPA', icon:'ti-calculator', val:monthCPA, sub: monthFilterVal ? `${monthFilterVal} 转化成本` : '当前月份转化平均成本' }
     ].map(m=>`<div class="metric-card"><div class="metric-label"><i class="ti ${m.icon}"></i>${m.label}</div><div class="metric-value">${m.val}</div><div class="metric-sub">${m.sub}</div></div>`).join('');
     renderTrendCharts(); renderDistributionCharts();
   }
 
   function renderTrendCharts() {
+    const base = getFilteredBase();
     const dates=[]; for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);dates.push(d.toISOString().slice(0,10));}
     const labels=dates.map(d=>d.slice(5));
     const rks=currentRegion==='all'?Object.keys(REGIONS):[currentRegion];
     const isDark=matchMedia('(prefers-color-scheme:dark)').matches;
     const gc=isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)', tc=isDark?'#909296':'#6c757d';
-    const makeDS=(key)=>rks.map(r=>({label:REGIONS[r].name,data:dates.map(d=>sum(records.filter(x=>x.date.includes(d)&&x.region===r),key)),borderColor:REGIONS[r].color,backgroundColor:REGIONS[r].color+'15',tension:0.3,pointRadius:4,borderWidth:2,fill:rks.length===1}));
+    const makeDS=(key)=>rks.map(r=>({label:REGIONS[r].name,data:dates.map(d=>sum(base.filter(x=>x.date.includes(d)&&x.region===r),key)),borderColor:REGIONS[r].color,backgroundColor:REGIONS[r].color+'15',tension:0.3,pointRadius:4,borderWidth:2,fill:rks.length===1}));
     ['chart-users','chart-cost'].forEach(id=>{if(charts[id]){charts[id].destroy();}});
     const leg = rks.map(r=>`<span class="legend-item"><span class="legend-dot" style="background:${REGIONS[r].color}"></span>${REGIONS[r].flag} ${REGIONS[r].name}</span>`).join('');
     document.getElementById('legend-users').innerHTML=leg; document.getElementById('legend-cost').innerHTML=leg;
@@ -370,7 +403,7 @@
   }
 
   function renderDistributionCharts() {
-    const base=currentRegion==='all'?records:records.filter(r=>r.region===currentRegion);
+    const base=getFilteredBase();
     const tc=matchMedia('(prefers-color-scheme:dark)').matches?'#909296':'#6c757d';
     const channels=['TikTok','YouTube','Instagram'];
     if(charts['chart-channels'])charts['chart-channels'].destroy();
@@ -385,6 +418,23 @@
     const sel=document.getElementById('weekly-filter-range'); sel.innerHTML='<option value="">全部周次</option>';
     Array.from(weekSet).sort().forEach(w=>{const o=document.createElement('option');o.value=w;o.textContent=getWeekRangeLabel(w);sel.appendChild(o);});
   }
+  function getWeeklyViews(weekStr, region) {
+    let total = 0;
+    vpRecords.filter(v => v.region === region).forEach(v => {
+      if(v.mode === 'single') {
+        if(getWeekStr(v.date) === weekStr) total += v.views;
+      } else if(v.mode === 'range') {
+        const [sD, eD] = v.date.split(' 至 ');
+        const weekDays = [];
+        const [y,w] = weekStr.split('-W').map(Number);
+        const jan4 = new Date(y,0,4); const dow = jan4.getDay()===0?7:jan4.getDay();
+        const mon = new Date(jan4.getTime()-(dow-1)*86400000+(w-1)*7*86400000);
+        for(let i=0;i<7;i++){ const d=new Date(mon); d.setDate(d.getDate()+i); weekDays.push(d.toISOString().slice(0,10)); }
+        if(weekDays.some(d=>d>=sD && d<=eD)) total += v.views;
+      }
+    });
+    return total;
+  }
   function renderWeekly() {
     const tc=matchMedia('(prefers-color-scheme:dark)').matches?'#909296':'#6c757d';
     const wFilter=document.getElementById('weekly-filter-range').value;
@@ -395,8 +445,8 @@
     if(charts['chart-weekly'])charts['chart-weekly'].destroy();
     charts['chart-weekly']=new Chart(document.getElementById('chart-weekly'),{type:'bar',data:{labels:cw.map(w=>getWeekRangeLabel(w)),datasets:rks.map(r=>({label:REGIONS[r].name,data:cw.map(w=>wm[w]&&wm[w][r]?wm[w][r].cost:0),backgroundColor:REGIONS[r].color+'cc'}))},options:{responsive:true,maintainAspectRatio:false,scales:{x:{ticks:{color:tc}},y:{ticks:{color:tc}}}}});
     let rows='';
-    allWeeks.slice().reverse().forEach(w=>{if(wFilter&&w!==wFilter)return; rks.forEach(r=>{if(rFilter&&r!==rFilter)return; const d=wm[w]&&wm[w][r]; if(!d)return; rows+=`<tr><td><span class="week-range">${getWeekRangeLabel(w)}</span></td><td><span class="badge b-${r}">${REGIONS[r].flag} ${REGIONS[r].name}</span></td><td>${d.count}</td><td>$${d.cost.toLocaleString()}</td><td style="color:#2b8a3e;font-weight:600;">${d.users.toLocaleString()}</td><td>${d.users>0?'$'+(d.cost/d.users).toFixed(2):'—'}</td></tr>`;})});
-    document.getElementById('weekly-tbody').innerHTML=rows||`<tr><td colspan="6" class="empty">无周核算数据</td></tr>`;
+    allWeeks.slice().reverse().forEach(w=>{if(wFilter&&w!==wFilter)return; rks.forEach(r=>{if(rFilter&&r!==rFilter)return; const d=wm[w]&&wm[w][r]; if(!d)return; const weekViews = getWeeklyViews(w, r); rows+=`<tr><td><span class="week-range">${getWeekRangeLabel(w)}</span></td><td><span class="badge b-${r}">${REGIONS[r].flag} ${REGIONS[r].name}</span></td><td>${d.count}</td><td>$${d.cost.toLocaleString()}</td><td style="color:#2b8a3e;font-weight:600;">${d.users.toLocaleString()}</td><td style="color:#6366f1;font-weight:600;">${weekViews.toLocaleString()}</td><td>${d.users>0?'$'+(d.cost/d.users).toFixed(2):'—'}</td></tr>`;})});
+    document.getElementById('weekly-tbody').innerHTML=rows||`<tr><td colspan="7" class="empty">无周核算数据</td></tr>`;
   }
 
   function updateMonthSelectors() {
@@ -449,9 +499,9 @@
     const existIdx = vpRecords.findIndex(v => v.mode === mode && v.date === dateStr && v.region === region);
     if(existIdx > -1) { vpRecords[existIdx].views = Math.max(vpRecords[existIdx].views, countVal); toast(`ℹ️ 同期已存在记录，已提取最大值覆盖`); }
     else { vpRecords.push({ id:'vp_'+Date.now(), mode, date:dateStr, region, views:countVal }); toast('✓ 独立总播放量锁入成功'); }
-    persistVp(); clearVpForm(); renderVpView(); updateMonthSelectors();
+    persistVp(); clearVpForm(); renderVpView(); updateMonthSelectors(); updateDashboardMonthFilter();
   }
-  function deleteVpRecord(id) { if(confirm('确定清除该项播放量独立流水？')) { vpRecords = vpRecords.filter(v=>v.id!==id); persistVp(); renderVpView(); updateMonthSelectors(); toast('已卸载'); } }
+  function deleteVpRecord(id) { if(confirm('确定清除该项播放量独立流水？')) { vpRecords = vpRecords.filter(v=>v.id!==id); persistVp(); renderVpView(); updateMonthSelectors(); updateDashboardMonthFilter(); toast('已卸载'); } }
   function clearVpForm() { document.getElementById('vp-count').value = ''; }
   function renderVpView() {
     document.getElementById('vp-tbody').innerHTML = vpRecords.length === 0 ? `<tr><td colspan="5" class="empty">无独立总播放量归档台账</td></tr>` : vpRecords.slice().reverse().map(v=>`<tr><td><span class="badge b-c">${v.mode==='single'?'单日':'独立周期'}</span></td><td><strong>${v.date}</strong></td><td><span class="badge b-${v.region}">${REGIONS[v.region]?REGIONS[v.region].flag+' '+REGIONS[v.region].name:v.region}</span></td><td style="color:#6366f1;font-weight:700;">${v.views.toLocaleString()} 次</td><td><button class="action-btn del" onclick="deleteVpRecord('${v.id}')"><i class="ti ti-trash"></i></button></td></tr>`).join('');
@@ -492,8 +542,12 @@
       if(m) months.add(`${m[1]}-${m[2]}`);
     });
     const sel = document.getElementById('tracking-month-filter');
+    const currentVal = sel.value;
     sel.innerHTML = '<option value="">全部月份</option>';
-    Array.from(months).sort().forEach(m => { const opt = document.createElement('option'); opt.value = m; opt.textContent = m; sel.appendChild(opt); });
+    Array.from(months).sort().forEach(m => {
+      const opt = document.createElement('option'); opt.value = m; opt.textContent = m; sel.appendChild(opt);
+    });
+    if(months.has(currentVal)) sel.value = currentVal;
   }
   function renderTrackingMonthly() {
     const filterMonth = document.getElementById('tracking-month-filter').value;
@@ -531,11 +585,11 @@
     const dupIdx = records.findIndex(r => r.date === dateLabel && r.region === region && r.channel === channel && r.contentType === contentType && r.id !== id);
     if(dupIdx > -1) { records[dupIdx].count = count; records[dupIdx].cost = cost; records[dupIdx].users = Math.max(records[dupIdx].users, users); records[dupIdx].note = note; toast('ℹ️ 同维度线路已合并去重'); }
     else { const payload={id,date:dateLabel,region,channel,contentType,count,cost,users,note}; if(id){ const idx=records.findIndex(r=>r.id===id); if(idx>-1) records[idx]=payload; } else { payload.id='r_'+Date.now(); records.push(payload); } toast('✓ 录入流转成功'); }
-    persistRecords(); clearForm(); renderRecent(); updateMonthSelectors();
+    persistRecords(); clearForm(); renderRecent(); updateMonthSelectors(); updateDashboardMonthFilter();
   }
   function editRecord(id){ const r=records.find(x=>x.id===id); if(!r)return; showView('add'); document.getElementById('f-id').value=r.id; if(r.date.includes(' 至 ')) { document.getElementById('f-date-mode').value = 'range'; toggleDateInputMode(); const [ds, de] = r.date.split(' 至 '); document.getElementById('f-date-start').value = ds; document.getElementById('f-date-end').value = de; } else { document.getElementById('f-date-mode').value = 'single'; toggleDateInputMode(); document.getElementById('f-date').value = r.date; } document.getElementById('f-region').value=r.region; document.getElementById('f-channel').value=r.channel; document.getElementById('f-content-type').value=r.contentType; document.getElementById('f-count').value=r.count; document.getElementById('f-cost').value=r.cost; document.getElementById('f-users').value=r.users; document.getElementById('f-note').value=r.note||''; document.getElementById('form-title').innerHTML=`<i class="ti ti-edit"></i> 修改流水数据线`; document.getElementById('edit-indicator').style.display='inline-block'; }
   function clearForm(){ document.getElementById('f-id').value=''; ['f-count','f-cost','f-users','f-note'].forEach(id=>document.getElementById(id).value=''); document.getElementById('f-date-mode').value = 'single'; toggleDateInputMode(); document.getElementById('form-title').innerHTML=`<i class="ti ti-ballpen"></i> 单条数据录入`; document.getElementById('edit-indicator').style.display='none'; }
-  function deleteRecord(id){ if(confirm('确定永久删除该条流水？')){ records=records.filter(r=>r.id!==id); persistRecords(); renderRecent(); updateMonthSelectors(); toast('已删除'); } }
+  function deleteRecord(id){ if(confirm('确定永久删除该条流水？')){ records=records.filter(r=>r.id!==id); persistRecords(); renderRecent(); updateMonthSelectors(); updateDashboardMonthFilter(); toast('已删除'); } }
   function renderRecent() { let list=[...records].sort((a,b)=>b.date.localeCompare(a.date)); document.getElementById('recent-tbody').innerHTML=list.slice(0,10).map(r=>`<tr><td>${r.date}</td><td><span class="badge b-${r.region}">${REGIONS[r.region]?REGIONS[r.region].name:r.region}</span></td><td>${r.channel}</td><td>${r.contentType}</td><td>${r.count}</td><td>$${r.cost}</td><td>${r.users}</td><td><button class="action-btn edit" onclick="editRecord('${r.id}')"><i class="ti ti-edit"></i></button><button class="action-btn del" onclick="deleteRecord('${r.id}')"><i class="ti ti-trash"></i></button></td></tr>`).join(''); }
 
   function handleDrop(e){ e.preventDefault(); const f=e.dataTransfer.files; if(f.length>0) processFile(f[0]); }
@@ -559,7 +613,7 @@
         if(idxDate === -1){ toast('❌ 未探明日期列'); return; }
         let countSuccess=0, countMerged=0;
         for(let i=1;i<rows.length;i++){ const row=rows[i]; if(!row||!row[idxDate]) continue; let rawDate=String(row[idxDate]).trim().split('(')[0].split(' ')[0]; rawDate=rawDate.replace(/\//g,'-'); let rawReg=idxReg>-1?String(row[idxReg]).trim().toUpperCase():'BR'; let matchedRegionKey='BR'; for(let k in REGIONS){ if(REGIONS[k].keywords.some(kw=>rawReg.includes(kw))){matchedRegionKey=k;break;} } const costVal=idxCost>-1?parseFloat(row[idxCost])||0:0; const userVal=idxUser>-1?parseFloat(row[idxUser])||0:0; const chanVal=idxChan>-1?String(row[idxChan]).trim():'TikTok'; const typeVal=idxType>-1?String(row[idxType]).trim():'video'; const urlVal=idxUrl>-1?String(row[idxUrl]).trim():''; if(idxCost===-1&&idxUser>-1){ const exist=records.find(x=>x.date===rawDate&&x.region===matchedRegionKey); if(exist){exist.users=Math.max(exist.users,userVal);countMerged++;}else{records.push({id:'imported_'+Date.now(),date:rawDate,region:matchedRegionKey,channel:'大盘渠道',contentType:'大盘转化',count:1,cost:0,users:userVal,note:'外部表格智能同步归档'});countSuccess++;} }else{ const exist=records.find(x=>x.date===rawDate&&x.region===matchedRegionKey&&x.channel===chanVal&&x.contentType===typeVal&&x.note===urlVal); if(exist){exist.cost=Math.max(exist.cost,costVal);exist.users=Math.max(exist.users,userVal);countMerged++;}else{records.push({id:'imported_'+Date.now(),date:rawDate,region:matchedRegionKey,channel:chanVal,contentType:typeVal,count:1,cost:costVal,users:userVal,note:urlVal});countSuccess++;} } }
-        persistRecords(); renderRecent(); updateMonthSelectors(); toast(`✓ 智能转换完成！新归档${countSuccess}条，合并${countMerged}条`);
+        persistRecords(); renderRecent(); updateMonthSelectors(); updateDashboardMonthFilter(); toast(`✓ 智能转换完成！新归档${countSuccess}条，合并${countMerged}条`);
       } catch(err){ console.error(err); toast('❌ 识别引擎发生错误'); }
     };
     reader.readAsArrayBuffer(file);
@@ -575,7 +629,11 @@
   let toastTimer; function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),4000);}
 
   loadRecords();
-  window.onload = ()=>{ renderDashboard(); updateTrackingMonthFilter(); };
+  window.onload = ()=>{
+    updateDashboardMonthFilter();
+    renderDashboard();
+    updateTrackingMonthFilter();
+  };
 </script>
 </body>
 </html>
