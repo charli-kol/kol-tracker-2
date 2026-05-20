@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KOL 推广数据管理系统 v7.0</title>
+<title>KOL 推广数据管理系统 v8.0</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -31,7 +31,7 @@
   .btn-primary:hover { background: #2563eb; border-color: #2563eb; }
   .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
   .btn-danger:hover { opacity: 0.9; }
-  .tabs { display: flex; gap: 4px; background: var(--bg2); border-radius: var(--radius); padding: 5px; margin-bottom: 2rem; width: fit-content; border: 1px solid var(--border); }
+  .tabs { display: flex; gap: 4px; background: var(--bg2); border-radius: var(--radius); padding: 5px; margin-bottom: 2rem; width: fit-content; border: 1px solid var(--border); flex-wrap: wrap; }
   .tab { padding: 8px 18px; border-radius: 6px; border: none; background: transparent; cursor: pointer; font-size: 13px; color: var(--text2); font-weight: 500; transition: all .15s; display: flex; align-items: center; gap: 6px; font-family: inherit; }
   .tab.active { background: var(--bg); color: #3b82f6; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
   .region-tabs { display: flex; gap: 10px; margin-bottom: 2rem; flex-wrap: wrap; }
@@ -64,11 +64,15 @@
   .b-ES { background: #edf2ff; color: #4c6ef5; }
   .b-BR { background: #fff0f6; color: #d6336c; }
   .b-c { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
-  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 1.5rem; }
-  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  
+  /* 优化表单网格，彻底解决元素重叠问题 */
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 1.5rem; align-items: flex-end; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; width: 100%; }
   .form-group label { font-size: 12px; color: var(--text2); font-weight: 500; }
-  .form-group input, .form-group select, .form-group textarea { padding: 9px 12px; border: 1px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); font-size: 13px; font-family: inherit; transition: border-color 0.15s; }
+  .form-group input, .form-group select, .form-group textarea { padding: 9px 12px; border: 1px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); font-size: 13px; font-family: inherit; transition: border-color 0.15s; width: 100%; height: 38px; }
   .form-group input:focus, .form-group select:focus { border-color: #3b82f6; outline: none; }
+  .date-range-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+  
   .upload-box { border: 2px dashed #3b82f6; border-radius: var(--radius-lg); padding: 3rem; text-align: center; background: rgba(59,130,246,0.02); cursor: pointer; transition: all 0.2s; margin-bottom: 1.5rem; }
   .upload-box:hover { background: rgba(59,130,246,0.05); border-color: #2563eb; }
   .upload-box i { font-size: 42px; color: #3b82f6; margin-bottom: 10px; display: block; }
@@ -77,7 +81,7 @@
   .view { display: none; } .view.active { display: block; }
   .toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(10px); background: #212529; color: #fff; padding: 12px 24px; border-radius: var(--radius); font-size: 13px; font-weight: 500; opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+  .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 1rem; }
   .action-btn { background: none; border: none; cursor: pointer; color: var(--text2); font-size: 14px; padding: 4px 8px; border-radius: 4px; transition: all 0.15s; font-family: inherit; }
   .action-btn:hover { background: var(--bg3); }
   .action-btn.edit:hover { color: #1c7ed6; }
@@ -110,10 +114,15 @@
   .diff-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
   .diff-badge.up { background: #d3f9d8; color: #2b8a3e; }
   .diff-badge.dn { background: #ffe3e3; color: #c92a2a; }
-  .month-selector-row { display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; flex-wrap: wrap; padding: 1rem 1.25rem; background: var(--bg2); border-radius: var(--radius); border: 1px solid var(--border); }
+  
+  /* 多组双月对比排版 */
+  .compare-block-title { font-size: 13px; font-weight: 700; color: #3b82f6; margin-bottom: 10px; display: flex; align-items: center; gap: 4px; border-left: 3px solid #3b82f6; padding-left: 8px; }
+  .month-selector-container { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+  @media (max-width: 750px) { .month-selector-container { grid-template-columns: 1fr; } }
+  .month-selector-row { display: flex; align-items: center; gap: 10px; padding: 1rem 1.25rem; background: var(--bg2); border-radius: var(--radius); border: 1px solid var(--border); flex-wrap: wrap; }
   .month-selector-row label { font-size: 13px; font-weight: 600; color: var(--text2); white-space: nowrap; }
   .month-selector-row select { font-size: 13px; padding: 6px 12px; border: 1px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); font-family: inherit; }
-  .vs-badge { font-size: 12px; font-weight: 700; color: #3b82f6; padding: 4px 10px; border: 1px solid #3b82f6; border-radius: 10px; }
+  .vs-badge { font-size: 11px; font-weight: 700; color: #3b82f6; padding: 2px 8px; border: 1px solid #3b82f6; border-radius: 10px; }
 </style>
 </head>
 <body>
@@ -133,10 +142,10 @@
     <button class="tab active" onclick="showView('dashboard')"><i class="ti ti-layout-dashboard"></i>数据总览</button>
     <button class="tab" onclick="showView('daily')"><i class="ti ti-list-details"></i>日报明细</button>
     <button class="tab" onclick="showView('weekly')"><i class="ti ti-calendar-stats"></i>周/月度核算</button>
+    <button class="tab" onclick="showView('tracking')"><i class="ti ti-target-arrow"></i>TW/TR 素材追踪</button>
     <button class="tab" onclick="showView('add')"><i class="ti ti-file-import"></i>导入与录入</button>
   </div>
 
-  <!-- 总览 -->
   <div id="view-dashboard" class="view active">
     <div class="region-tabs">
       <button class="rtab active" onclick="setRegion('all')"><span class="dot" style="background:#6c757d"></span>全部地区</button>
@@ -170,7 +179,6 @@
     </div>
   </div>
 
-  <!-- 日报明细（分页） -->
   <div id="view-daily" class="view">
     <div class="section">
       <div class="section-header">
@@ -200,7 +208,7 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>日期</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗(USD)</th><th>新增用户</th><th>总预估收益</th><th>播放数据</th><th>CPA</th><th>ROI</th><th>备注/链接</th><th>操作</th></tr></thead>
+          <thead><tr><th>日期区间 / 单日</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗(USD)</th><th>新增用户</th><th>总预估收益</th><th>播放数据</th><th>CPA</th><th>ROI</th><th>备注/链接</th><th>操作</th></tr></thead>
           <tbody id="daily-tbody"></tbody>
         </table>
       </div>
@@ -208,9 +216,7 @@
     </div>
   </div>
 
-  <!-- 周/月度核算 -->
   <div id="view-weekly" class="view">
-    <!-- 周核算走势 -->
     <div class="section">
       <div class="section-header"><span class="section-title"><i class="ti ti-chart-arrows"></i>每周核心核算走势（近6周）</span></div>
       <div class="chart-wrap" style="height:260px;margin-bottom:1rem;"><canvas id="chart-weekly"></canvas></div>
@@ -239,28 +245,102 @@
       </div>
     </div>
 
-    <!-- 月度高级核算：各地区分开 + 自选双月对比 -->
     <div class="section" style="margin-top:0;">
       <div class="section-header">
-        <span class="section-title"><i class="ti ti-calendar-compare"></i>月度高级核算 &amp; 双月对比看板</span>
+        <span class="section-title"><i class="ti ti-calendar-compare"></i>月度高级核算 &amp; 自由双组对比看板 (可对比4个月)</span>
       </div>
 
-      <!-- 月份选择器 -->
-      <div class="month-selector-row">
-        <label><i class="ti ti-calendar" style="margin-right:4px;"></i>对比月份 A：</label>
-        <select id="compare-month-a" onchange="renderMonthlyCompare()"></select>
-        <span class="vs-badge">VS</span>
-        <label>对比月份 B：</label>
-        <select id="compare-month-b" onchange="renderMonthlyCompare()"></select>
-        <span style="font-size:12px;color:var(--text2);margin-left:8px;">可自由选择任意两个月份进行对比</span>
+      <div class="month-selector-container">
+        <div class="month-selector-row">
+          <div style="width:100%; font-weight:700; font-size:12px; margin-bottom:6px; color: #3b82f6;"><i class="ti ti-copy"></i> 对比分析组 1</div>
+          <label>月份 A：</label>
+          <select id="compare-month-a" onchange="renderMonthlyCompare()"></select>
+          <span class="vs-badge">VS</span>
+          <label>月份 B：</label>
+          <select id="compare-month-b" onchange="renderMonthlyCompare()"></select>
+        </div>
+        <div class="month-selector-row">
+          <div style="width:100%; font-weight:700; font-size:12px; margin-bottom:6px; color: #10b981;"><i class="ti ti-copy"></i> 对比分析组 2</div>
+          <label>月份 C：</label>
+          <select id="compare-month-c" onchange="renderMonthlyCompare()"></select>
+          <span class="vs-badge">VS</span>
+          <label>月份 D：</label>
+          <select id="compare-month-d" onchange="renderMonthlyCompare()"></select>
+        </div>
       </div>
 
-      <!-- 各地区分别展示 -->
       <div id="monthly-compare-body"></div>
     </div>
   </div>
 
-  <!-- 导入与录入 -->
+  <div id="view-tracking" class="view">
+    <div class="section">
+      <div class="section-header"><span class="section-title"><i class="ti ti-calculator"></i>TW &amp; TR 素材追踪独立汇总数据</span></div>
+      <div class="metrics-grid" id="tracking-summary-grid"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><span class="section-title"><i class="ti ti-edit-circle"></i>TW &amp; TR 素材追踪数据录入</span></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>目标地区 *</label>
+          <select id="t-region">
+            <option value="TW">🇹🇼 台湾地区</option>
+            <option value="TR">🇹🇷 土耳其地区</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>投放时间段 *</label>
+          <input type="text" id="t-range" placeholder="例如：2026/05/01-2026/05/07">
+        </div>
+        <div class="form-group">
+          <label>TT SPK 新增 *</label>
+          <input type="number" id="t-tt-spk-users" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label>TT 总新增 *</label>
+          <input type="number" id="t-tt-total-users" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label>TT SPK 消耗 (USD) *</label>
+          <input type="number" id="t-tt-spk-cost" placeholder="0.00" min="0" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>TT 总消耗 (USD) *</label>
+          <input type="number" id="t-tt-total-cost" placeholder="0.00" min="0" step="0.01">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary" onclick="saveTrackingRecord()"><i class="ti ti-device-floppy"></i>归档保存追踪数据</button>
+        <button class="btn" onclick="clearTrackingForm()"><i class="ti ti-refresh"></i>重置</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><span class="section-title"><i class="ti ti-archive"></i>TW / TR 监测明细归档历史</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>投放时间段</th>
+              <th>地区</th>
+              <th>TT SPK 新增</th>
+              <th>TT 总新增</th>
+              <th>SPK 新增占比</th>
+              <th>TT SPK 消耗</th>
+              <th>TT 总消耗</th>
+              <th>SPK 消耗占比</th>
+              <th>TT SPK CPR</th>
+              <th>TT 总 CPR</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="tracking-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <div id="view-add" class="view">
     <div class="section">
       <div class="section-header"><span class="section-title"><i class="ti ti-upload"></i>表格上传</span></div>
@@ -278,7 +358,19 @@
       </div>
       <input type="hidden" id="f-id">
       <div class="form-grid">
-        <div class="form-group"><label>日期 *</label><input type="date" id="f-date"></div>
+        <div class="form-group">
+          <label>日期模式切换器 *</label>
+          <select id="f-date-mode" onchange="toggleDateInputMode()">
+            <option value="single">单日模式</option>
+            <option value="range">周期范围模式</option>
+          </select>
+        </div>
+        
+        <div class="form-group" id="date-input-wrapper">
+          <label>日期 *</label>
+          <input type="date" id="f-date">
+        </div>
+
         <div class="form-group">
           <label>地区 *</label>
           <select id="f-region">
@@ -312,10 +404,10 @@
         <div class="form-group"><label>新增用户量</label><input type="number" id="f-users" placeholder="0" min="0"></div>
         <div class="form-group"><label>预估收益/回款(USD)</label><input type="number" id="f-revenue" placeholder="0.00" min="0" step="0.01"></div>
         <div class="form-group">
-          <label>本周所有视频总播放量 <span style="color:#3b82f6;font-size:11px;">（不区分渠道）</span></label>
+          <label>所有视频总播放量 <span style="color:#3b82f6;font-size:11px;">（不区分渠道）</span></label>
           <input type="number" id="f-views" placeholder="0" min="0">
         </div>
-        <div class="form-group"><label>备注/链接</label><input type="text" id="f-note" placeholder="URL链接或说明"></div>
+        <div class="form-group"><label>备注/链接</label><input type="text" id="f-note" placeholder="URL链接、范围备注或说明"></div>
       </div>
       <div style="display:flex;gap:10px;margin-top:0.5rem;">
         <button class="btn btn-primary" onclick="saveRecord()"><i class="ti ti-device-floppy"></i>保存表单</button>
@@ -340,7 +432,7 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>日期</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗</th><th>新增用户</th><th>收益</th><th>本周总播放</th><th>备注</th><th>操作</th></tr></thead>
+          <thead><tr><th>日期 / 周期</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗</th><th>新增用户</th><th>收益</th><th>总播放</th><th>备注</th><th>操作</th></tr></thead>
           <tbody id="recent-tbody"></tbody>
         </table>
       </div>
@@ -359,6 +451,7 @@ const REGIONS = {
 const CHANNEL_COLORS = { TikTok:'#1e293b', YouTube:'#3b82f6', Instagram:'#8b5cf6' };
 
 let records = [];
+let trackingRecords = []; // 独立监测数据追踪存储
 let currentRegion = 'all';
 let charts = {};
 let dailyPage = 1;
@@ -366,12 +459,25 @@ let dailyPage = 1;
 // ── Storage ──────────────────────────────────────────────
 function loadRecords() {
   try {
-    const s = localStorage.getItem('kol_records_v7') || localStorage.getItem('kol_records_v6') || localStorage.getItem('kol_records_v5') || localStorage.getItem('kol_records');
+    const s = localStorage.getItem('kol_records_v8') || localStorage.getItem('kol_records_v7') || localStorage.getItem('kol_records_v6') || localStorage.getItem('kol_records');
     records = s ? JSON.parse(s) : [];
     if (!Array.isArray(records)) records = [];
-  } catch(e) { records = []; }
+    
+    const t = localStorage.getItem('kol_tracking_v8');
+    trackingRecords = t ? JSON.parse(t) : [];
+    if (!Array.isArray(trackingRecords)) trackingRecords = [];
+  } catch(e) { records = []; trackingRecords = []; }
 }
-function persistRecords() { try { localStorage.setItem('kol_records_v7', JSON.stringify(records)); } catch(e){} }
+function persistRecords() { 
+  try { 
+    localStorage.setItem('kol_records_v8', JSON.stringify(records)); 
+  } catch(e){} 
+}
+function persistTrackingRecords() {
+  try {
+    localStorage.setItem('kol_tracking_v8', JSON.stringify(trackingRecords));
+  } catch(e){}
+}
 
 // ── Helpers ───────────────────────────────────────────────
 function getWeekRangeLabel(weekStr) {
@@ -387,7 +493,9 @@ function getWeekRangeLabel(weekStr) {
   } catch(e) { return weekStr; }
 }
 function getWeekStr(ds) {
-  const d = new Date(ds);
+  // 如果是范围则提取前10位计算周次
+  const dateToParse = ds.includes(' 至 ') ? ds.split(' 至 ')[0] : ds;
+  const d = new Date(dateToParse);
   if (isNaN(d.getTime())) return '未知周';
   const jan1 = new Date(d.getFullYear(), 0, 1);
   const w = Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
@@ -396,22 +504,44 @@ function getWeekStr(ds) {
 function sum(arr, key) { return arr.reduce((s,r) => s + (parseFloat(r[key])||0), 0); }
 function pct(a, b) { return b === 0 ? 0 : Math.round((a-b)/b*100); }
 function fmtDiff(a, b) {
-  if (b === 0) return '';
+  if (b === 0 || b === null || a === null) return '';
   const d = pct(a, b);
   const cls = d >= 0 ? 'up' : 'dn';
   return `<span class="diff-badge ${cls}">${d>=0?'↑':'↓'}${Math.abs(d)}%</span>`;
+}
+
+// ── 动态表单控制 (防止重叠) ──────────────────────────────
+function toggleDateInputMode() {
+  const mode = document.getElementById('f-date-mode').value;
+  const container = document.getElementById('date-input-wrapper');
+  if (mode === 'single') {
+    container.innerHTML = `<label>日期 *</label><input type="date" id="f-date">`;
+    document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
+  } else {
+    container.innerHTML = `
+      <label>周期范围 (开始 至 结束) *</label>
+      <div class="date-range-container">
+        <input type="date" id="f-date-start">
+        <input type="date" id="f-date-end">
+      </div>
+    `;
+    const today = new Date().toISOString().slice(0,10);
+    document.getElementById('f-date-start').value = today;
+    document.getElementById('f-date-end').value = today;
+  }
 }
 
 // ── Nav ───────────────────────────────────────────────────
 function showView(v) {
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   document.getElementById('view-'+v).classList.add('active');
-  const vs = ['dashboard','daily','weekly','add'];
+  const vs = ['dashboard','daily','weekly','tracking','add'];
   document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', vs[i]===v));
   if (v==='dashboard') renderDashboard();
   if (v==='daily') { dailyPage=1; renderDaily(); }
   if (v==='weekly') { updateWeeklyFilters(); renderWeekly(); updateMonthSelectors(); renderMonthlyCompare(); }
-  if (v==='add') renderRecent();
+  if (v==='tracking') { renderTrackingView(); }
+  if (v==='add') { toggleDateInputMode(); renderRecent(); }
 }
 function setRegion(r) {
   currentRegion = r;
@@ -456,7 +586,7 @@ function renderTrendCharts() {
   const gc=isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)', tc=isDark?'#909296':'#6c757d';
   const makeDS=(key)=>rks.map(r=>({
     label:REGIONS[r]?REGIONS[r].name:r,
-    data:dates.map(d=>sum(records.filter(x=>x.date===d&&x.region===r),key)),
+    data:dates.map(d=>sum(records.filter(x=>x.date.includes(d)&&x.region===r),key)),
     borderColor:REGIONS[r]?REGIONS[r].color:'#888', backgroundColor:(REGIONS[r]?REGIONS[r].color:'#888')+'15',
     tension:0.3, pointRadius:4, borderWidth:2, fill:rks.length===1
   }));
@@ -507,7 +637,7 @@ function renderDaily() {
   let data=[...records].sort((a,b)=>b.date.localeCompare(a.date));
   if(fr) data=data.filter(r=>r.region===fr);
   if(fc) data=data.filter(r=>r.channel===fc);
-  if(fm) data=data.filter(r=>r.date.startsWith(fm));
+  if(fm) data=data.filter(r=>r.date.includes(fm));
 
   const total=data.length;
   const totalPages=Math.max(1,Math.ceil(total/pageSize));
@@ -614,30 +744,40 @@ function renderWeekly() {
   document.getElementById('weekly-tbody').innerHTML=rows||`<tr><td colspan="8" class="empty">无匹配数据</td></tr>`;
 }
 
-// ── Monthly Compare ───────────────────────────────────────
+// ── Monthly Compare (支持自由4个月双组对比) ───────────────────
 function getAllMonths() {
   const set=new Set();
-  records.forEach(r=>{ if(r.date&&r.date.length>=7) set.add(r.date.slice(0,7)); });
+  records.forEach(r=>{ 
+    if(r.date && r.date.length >= 7) {
+      set.add(r.date.slice(0,7)); 
+    }
+  });
   return Array.from(set).sort();
 }
 
 function updateMonthSelectors() {
   const months=getAllMonths();
-  ['compare-month-a','compare-month-b'].forEach((id,idx)=>{
+  const selectIds = ['compare-month-a','compare-month-b','compare-month-c','compare-month-d'];
+  selectIds.forEach((id, idx)=>{
     const sel=document.getElementById(id);
     const cur=sel.value;
     sel.innerHTML='<option value="">— 选择月份 —</option>';
     months.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
-    // 默认 A=倒数第2月，B=最新月
-    if(!cur&&months.length>0){
-      if(idx===0) sel.value=months.length>=2?months[months.length-2]:months[0];
-      else sel.value=months[months.length-1];
-    } else { sel.value=cur; }
+    
+    if(!cur && months.length > 0){
+      if(idx === 0) sel.value = months[months.length-2] || months[0];
+      if(idx === 1) sel.value = months[months.length-1] || months[0];
+      if(idx === 2) sel.value = months[months.length-2] || months[0];
+      if(idx === 3) sel.value = months[months.length-1] || months[0];
+    } else { 
+      sel.value=cur; 
+    }
   });
 }
 
 function getMonthStats(month, region) {
-  const base=records.filter(r=>r.region===region&&r.date&&r.date.startsWith(month));
+  if(!month) return { count:0, cost:0, users:0, views:0, revenue:0, cpa:null, roi:null };
+  const base=records.filter(r=>r.region===region&&r.date&&r.date.includes(month));
   return {
     count: sum(base,'count'),
     cost:  sum(base,'cost'),
@@ -652,35 +792,66 @@ function getMonthStats(month, region) {
 function renderMonthlyCompare() {
   const ma=document.getElementById('compare-month-a').value;
   const mb=document.getElementById('compare-month-b').value;
+  const mc=document.getElementById('compare-month-c').value;
+  const md=document.getElementById('compare-month-d').value;
   const body=document.getElementById('monthly-compare-body');
-  if(!ma||!mb){body.innerHTML=`<div style="text-align:center;padding:2rem;color:var(--text2);font-size:13px;">请先选择两个月份进行对比</div>`;return;}
+  
+  if(!ma && !mb && !mc && !md){
+    body.innerHTML=`<div style="text-align:center;padding:2rem;color:var(--text2);font-size:13px;">请先在上方自选月份进行高级对比</div>`;
+    return;
+  }
 
   const rks=Object.keys(REGIONS);
   let html='';
+  
   rks.forEach(r=>{
-    const sa=getMonthStats(ma,r);
-    const sb=getMonthStats(mb,r);
-    const hasData=sa.cost>0||sa.users>0||sb.cost>0||sb.users>0;
-    if(!hasData)return;
+    const sa=getMonthStats(ma,r); const sb=getMonthStats(mb,r);
+    const sc=getMonthStats(mc,r); const sd=getMonthStats(md,r);
+    
+    const hasData = sa.cost>0||sa.users>0||sb.cost>0||sb.users>0||sc.cost>0||sc.users>0||sd.cost>0||sd.users>0;
+    if(!hasData) return;
 
     html+=`<div class="monthly-section">
       <div class="monthly-region-header">
         <span class="monthly-region-title"><span style="font-size:20px;">${REGIONS[r].flag}</span><span style="color:${REGIONS[r].color}">${REGIONS[r].name}</span></span>
-      </div>
-      <div class="compare-grid">
+      </div>`;
+      
+    // 渲染对比组 1
+    if(ma && mb) {
+      html += `
+      <div class="compare-block-title"><i class="ti ti-square-half"></i> 对比组 1 核心效益分析</div>
+      <div class="compare-grid" style="margin-bottom: 1.5rem;">
         <div class="compare-card">
-          <div class="compare-card-title" style="color:${REGIONS[r].color}"><i class="ti ti-calendar-event"></i>${ma}</div>
+          <div class="compare-card-title" style="color:${REGIONS[r].color}"><i class="ti ti-calendar-event"></i>基准月：${ma}</div>
           ${compareRows(sa, null)}
         </div>
         <div class="compare-card">
-          <div class="compare-card-title" style="color:${REGIONS[r].color}"><i class="ti ti-calendar-event"></i>${mb} &nbsp;${fmtDiff(sb.users,sa.users)||''}</div>
+          <div class="compare-card-title" style="color:${REGIONS[r].color}"><i class="ti ti-calendar-event"></i>对比月：${mb} &nbsp;${fmtDiff(sb.users,sa.users)||''}</div>
           ${compareRows(sb, sa)}
         </div>
-      </div>
-    </div>`;
+      </div>`;
+    }
+    
+    // 渲染对比组 2
+    if(mc && md) {
+      html += `
+      <div class="compare-block-title" style="color:#10b981; border-left-color:#10b981;"><i class="ti ti-square-half"></i> 对比组 2 核心效益分析</div>
+      <div class="compare-grid">
+        <div class="compare-card">
+          <div class="compare-card-title" style="color:${REGIONS[r].color}"><i class="ti ti-calendar-event"></i>基准月：${mc}</div>
+          ${compareRows(sc, null)}
+        </div>
+        <div class="compare-card">
+          <div class="compare-card-title" style="color:${REGIONS[r].color}"><i class="ti ti-calendar-event"></i>对比月：${md} &nbsp;${fmtDiff(sd.users,sc.users)||''}</div>
+          ${compareRows(sd, sc)}
+        </div>
+      </div>`;
+    }
+    
+    html+=`</div>`;
   });
 
-  if(!html) html=`<div style="text-align:center;padding:2rem;color:var(--text2);font-size:13px;">所选月份暂无各地区数据</div>`;
+  if(!html) html=`<div style="text-align:center;padding:2rem;color:var(--text2);font-size:13px;">所选月份暂无各地区历史推广数据</div>`;
   body.innerHTML=html;
 }
 
@@ -701,11 +872,112 @@ function compareRows(s, prev) {
     </div>`).join('');
 }
 
+// ── 独占板块逻辑：TW & TR 素材独立追踪监测 ──────────────────────
+function saveTrackingRecord() {
+  const region = document.getElementById('t-region').value;
+  const range = document.getElementById('t-range').value.trim();
+  const spkUsers = parseFloat(document.getElementById('t-tt-spk-users').value)||0;
+  const totalUsers = parseFloat(document.getElementById('t-tt-total-users').value)||0;
+  const spkCost = parseFloat(document.getElementById('t-tt-spk-cost').value)||0;
+  const totalCost = parseFloat(document.getElementById('t-tt-total-cost').value)||0;
+
+  if(!range) { toast('❌ 投放时间段不能为空'); return; }
+  if(totalUsers < spkUsers) { toast('⚠️ TT总新增不能小于SPK新增'); return; }
+  if(totalCost < spkCost) { toast('⚠️ TT总消耗不能小于SPK消耗'); return; }
+
+  const payload = {
+    id: 'track_' + Date.now(),
+    region, range, spkUsers, totalUsers, spkCost, totalCost
+  };
+
+  trackingRecords.push(payload);
+  persistTrackingRecords();
+  clearTrackingForm();
+  renderTrackingView();
+  toast('✓ 素材监测追踪数据成功归档');
+}
+
+function clearTrackingForm() {
+  ['t-range','t-tt-spk-users','t-tt-total-users','t-tt-spk-cost','t-tt-total-cost'].forEach(id=>document.getElementById(id).value='');
+}
+
+function deleteTrackingRecord(id) {
+  if(confirm('确定删除该条独立监测归档数据？')) {
+    trackingRecords = trackingRecords.filter(r=>r.id !== id);
+    persistTrackingRecords();
+    renderTrackingView();
+    toast('已删除监测归档');
+  }
+}
+
+function renderTrackingView() {
+  // 1. 数据单独汇总
+  const twList = trackingRecords.filter(r=>r.region==='TW');
+  const trList = trackingRecords.filter(r=>r.region==='TR');
+
+  const twSpkU = twList.reduce((s,r)=>s+r.spkUsers, 0);
+  const twTotU = twList.reduce((s,r)=>s+r.totalUsers, 0);
+  const twSpkC = twList.reduce((s,r)=>s+r.spkCost, 0);
+  const twTotC = twList.reduce((s,r)=>s+r.totalCost, 0);
+
+  const trSpkU = trList.reduce((s,r)=>s+r.spkUsers, 0);
+  const trTotU = trList.reduce((s,r)=>s+r.totalUsers, 0);
+  const trSpkC = trList.reduce((s,r)=>s+r.spkCost, 0);
+  const trTotC = trList.reduce((s,r)=>s+r.totalCost, 0);
+
+  document.getElementById('tracking-summary-grid').innerHTML = `
+    <div class="metric-card" style="border-left: 4px solid #f76707;">
+      <div class="metric-label">🇹🇼 TW 归档 SPK 总新增占总新增比</div>
+      <div class="metric-value">${twTotU>0?((twSpkU/twTotU)*100).toFixed(1)+'%':'0%'}</div>
+      <div class="metric-sub">SPK: ${twSpkU}人 / 总: ${twTotU}人</div>
+    </div>
+    <div class="metric-card" style="border-left: 4px solid #f76707;">
+      <div class="metric-label">🇹🇼 TW 归档 SPK 消耗占总消耗比</div>
+      <div class="metric-value">${twTotC>0?((twSpkC/twTotC)*100).toFixed(1)+'%':'0%'}</div>
+      <div class="metric-sub">SPK: $${twSpkC.toLocaleString()} / 总: $${twTotC.toLocaleString()}</div>
+    </div>
+    <div class="metric-card" style="border-left: 4px solid #0ca678;">
+      <div class="metric-label">🇹🇷 TR 归档 SPK 总新增占总新增比</div>
+      <div class="metric-value">${trTotU>0?((trSpkU/trTotU)*100).toFixed(1)+'%':'0%'}</div>
+      <div class="metric-sub">SPK: ${trSpkU}人 / 总: ${trTotU}人</div>
+    </div>
+    <div class="metric-card" style="border-left: 4px solid #0ca678;">
+      <div class="metric-label">🇹🇷 TR 归档 SPK 消耗占总消耗比</div>
+      <div class="metric-value">${trTotC>0?((trSpkC/trTotC)*100).toFixed(1)+'%':'0%'}</div>
+      <div class="metric-sub">SPK: $${trSpkC.toLocaleString()} / 总: $${trTotC.toLocaleString()}</div>
+    </div>
+  `;
+
+  // 2. 列表归档明细展示
+  document.getElementById('tracking-tbody').innerHTML = trackingRecords.length === 0
+    ? `<tr><td colspan="11" class="empty">暂无定制化归档追踪记录</td></tr>`
+    : trackingRecords.slice().reverse().map(r=>{
+        const pctU = r.totalUsers>0 ? ((r.spkUsers/r.totalUsers)*100).toFixed(1)+'%' : '—';
+        const pctC = r.totalCost>0 ? ((r.spkCost/r.totalCost)*100).toFixed(1)+'%' : '—';
+        const spkCpr = r.spkUsers>0 ? '$'+(r.spkCost/r.spkUsers).toFixed(2) : '—';
+        const totalCpr = r.totalUsers>0 ? '$'+(r.totalCost/r.totalUsers).toFixed(2) : '—';
+        return `<tr>
+          <td><strong>${r.range}</strong></td>
+          <td><span class="badge b-${r.region}">${REGIONS[r.region].flag} ${REGIONS[r.region].name}</span></td>
+          <td>${r.spkUsers.toLocaleString()}</td>
+          <td>${r.totalUsers.toLocaleString()}</td>
+          <td style="color:#2b8a3e; font-weight:700;">${pctU}</td>
+          <td>$${r.spkCost.toLocaleString()}</td>
+          <td>$${r.totalCost.toLocaleString()}</td>
+          <td style="color:#1c7ed6; font-weight:700;">${pctC}</td>
+          <td style="color:#c92a2a; font-weight:700;">${spkCpr}</td>
+          <td><strong>${totalCpr}</strong></td>
+          <td>
+            <button class="action-btn del" onclick="deleteTrackingRecord('${r.id}')"><i class="ti ti-trash"></i></button>
+          </td>
+        </tr>`;
+      }).join('');
+}
+
 // ── Render Recent ─────────────────────────────────────────
 function renderRecent() {
-  if(!document.getElementById('f-date').value) document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
-  const cf=document.getElementById('clean-filter-region').value;
   let list=[...records].sort((a,b)=>b.date.localeCompare(a.date));
+  const cf=document.getElementById('clean-filter-region').value;
   if(cf) list=list.filter(r=>r.region===cf);
   const recent=list.slice(0,15);
   document.getElementById('recent-tbody').innerHTML=recent.length===0
@@ -731,7 +1003,19 @@ function renderRecent() {
 // ── CRUD ──────────────────────────────────────────────────
 function saveRecord() {
   const id=document.getElementById('f-id').value;
-  const date=document.getElementById('f-date').value;
+  const mode=document.getElementById('f-date-mode').value;
+  
+  let dateLabel = '';
+  if(mode === 'single') {
+    dateLabel = document.getElementById('f-date').value;
+    if(!dateLabel){toast('❌ 日期不能为空');return;}
+  } else {
+    const ds = document.getElementById('f-date-start').value;
+    const de = document.getElementById('f-date-end').value;
+    if(!ds || !de){toast('❌ 周期开始和结束日期不能为空');return;}
+    dateLabel = `${ds} 至 ${de}`;
+  }
+  
   const region=document.getElementById('f-region').value;
   const channel=document.getElementById('f-channel').value;
   const contentType=document.getElementById('f-content-type').value;
@@ -741,22 +1025,36 @@ function saveRecord() {
   const revenue=parseFloat(document.getElementById('f-revenue').value)||0;
   const views=parseFloat(document.getElementById('f-views').value)||0;
   const note=document.getElementById('f-note').value.trim();
-  if(!date){toast('❌ 日期不能为空');return;}
-  const payload={id,date,region,channel,contentType,count,cost,users,revenue,views,note};
+  
+  const payload={id,date:dateLabel,region,channel,contentType,count,cost,users,revenue,views,note};
   if(id){
     const idx=records.findIndex(r=>r.id===id);
     if(idx>-1){records[idx]=payload;toast('✓ 修改成功');}
   } else {
     payload.id=Date.now()+Math.random().toString(36).slice(2);
-    records.push(payload);toast('✓ 单条记录已录入');
+    records.push(payload);toast('✓ 数据记录成功录入');
   }
   persistRecords();clearForm();renderRecent();
 }
+
 function editRecord(id){
   const r=records.find(x=>x.id===id);if(!r)return;
   showView('add');
   document.getElementById('f-id').value=r.id;
-  document.getElementById('f-date').value=r.date;
+  
+  // 处理恢复编辑时的日期模式
+  if(r.date.includes(' 至 ')) {
+    document.getElementById('f-date-mode').value = 'range';
+    toggleDateInputMode();
+    const [ds, de] = r.date.split(' 至 ');
+    document.getElementById('f-date-start').value = ds;
+    document.getElementById('f-date-end').value = de;
+  } else {
+    document.getElementById('f-date-mode').value = 'single';
+    toggleDateInputMode();
+    document.getElementById('f-date').value = r.date;
+  }
+  
   document.getElementById('f-region').value=r.region;
   document.getElementById('f-channel').value=r.channel||'TikTok';
   document.getElementById('f-content-type').value=r.contentType||'video';
@@ -769,13 +1067,16 @@ function editRecord(id){
   document.getElementById('form-title').innerHTML=`<i class="ti ti-edit"></i> 修改覆盖模式`;
   document.getElementById('edit-indicator').style.display='inline-block';
 }
+
 function clearForm(){
   document.getElementById('f-id').value='';
   ['f-count','f-cost','f-users','f-revenue','f-views','f-note'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('f-date-mode').value = 'single';
+  toggleDateInputMode();
   document.getElementById('form-title').innerHTML=`<i class="ti ti-ballpen"></i> 单条数据录入`;
   document.getElementById('edit-indicator').style.display='none';
 }
+
 function deleteRecord(id){
   if(confirm('确定删除该条数据？')){
     records=records.filter(r=>r.id!==id);persistRecords();
@@ -877,7 +1178,7 @@ function processFile(file){
 
 function exportCSV(){
   if(!records.length){toast('暂无数据');return;}
-  const header='日期,地区,渠道,内容形式,推广数量,消耗(USD),新增用户,总预估收益,本周总播放,CPA,备注';
+  const header='日期区间/单日,地区,渠道,内容形式,推广数量,消耗(USD),新增用户,总预估收益,总播放,CPA,备注';
   const rows=records.sort((a,b)=>b.date.localeCompare(a.date))
     .map(r=>`${r.date},${REGIONS[r.region]?REGIONS[r.region].name:r.region},${r.channel},${r.contentType},${r.count},${r.cost},${r.users},${r.revenue||0},${r.views||0},${r.users>0?(r.cost/r.users).toFixed(2):'0'},"${r.note||''}"`);
   const a=document.createElement('a');
