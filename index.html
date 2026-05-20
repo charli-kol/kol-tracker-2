@@ -84,16 +84,6 @@
   .action-btn.del:hover { color: #c92a2a; }
   .empty { text-align: center; padding: 3rem; color: var(--text2); font-size: 13px; }
   .week-range { font-family: monospace; font-size: 12px; color: var(--text); font-weight: 600; }
-  .note-link { color: #1c7ed6; text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; gap: 3px; }
-  .note-link:hover { text-decoration: underline; }
-
-  /* 分页与列表控制 */
-  .pagination { display: flex; align-items: center; gap: 6px; margin-top: 1rem; flex-wrap: wrap; }
-  .page-btn { min-width: 32px; height: 32px; padding: 0 8px; border-radius: var(--radius); border: 1px solid var(--border2); background: var(--bg); color: var(--text); cursor: pointer; font-size: 13px; font-family: inherit; display: inline-flex; align-items: center; justify-content: center; transition: all .15s; }
-  .page-btn:hover { background: var(--bg2); }
-  .page-btn.active { background: #3b82f6; color: #fff; border-color: #3b82f6; font-weight: 600; }
-  .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .page-info { font-size: 12px; color: var(--text2); margin-left: 4px; }
 
   /* 月度核算样式调整 */
   .monthly-section { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem; }
@@ -412,7 +402,6 @@ function setRegion(r) { currentRegion = r; renderDashboard(); }
 
 // ── 核心看板逻辑：总览大盘 ──────────────────────────────────────
 function renderDashboard() {
-  // 渲染各项核心卡片指标
   const today = new Date().toISOString().slice(0,7);
   const all14 = [];
   for (let i=13;i>=0;i--) { const d=new Date(); d.setDate(d.getDate()-i); all14.push(d.toISOString().slice(0,10)); }
@@ -438,7 +427,6 @@ function renderDashboard() {
       <div class="metric-sub">${m.diff!==null?`<span class="${m.diff>=0?'up':'dn'}">${m.diff>=0?'↑':'↓'}${Math.abs(m.diff)}%</span> vs 上周同期`:m.subText}</div>
     </div>`).join('');
 
-  // 渲染波动图表
   const dates=[]; for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);dates.push(d.toISOString().slice(0,10));}
   const labels=dates.map(d=>d.slice(5));
   const rks=currentRegion==='all'?Object.keys(REGIONS):[currentRegion];
@@ -461,7 +449,6 @@ function renderDashboard() {
   charts['chart-users']=new Chart(document.getElementById('chart-users'),{type:'line',data:{labels,datasets:makeDS('users')},options:opts});
   charts['chart-cost'] =new Chart(document.getElementById('chart-cost'), {type:'line',data:{labels,datasets:makeDS('cost')}, options:opts});
 
-  // 渠道与素材结构分布
   const channels=['TikTok','YouTube','Instagram','tt spark'];
   const chData=channels.map(c=>sum(base.filter(r=>r.channel===c),'cost'));
   if(charts['chart-channels'])charts['chart-channels'].destroy();
@@ -555,7 +542,7 @@ function updateMonthSelectors() {
     sel.innerHTML='<option value="">选择月份</option>';
     months.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
     if(!cur&&months.length>0){
-      if(idx===0) sel.value=months.length Alb>=2?months[months.length-2]:months[0];
+      if(idx===0) sel.value=months.length>=2?months[months.length-2]:months[0];
       else sel.value=months[months.length-1];
     } else { sel.value=cur; }
   });
@@ -635,7 +622,6 @@ function renderTWTRArchive() {
       const totalViews = sum(monthData, 'views');
       const totalRevenue = sum(monthData, 'revenue');
       
-      // 精确切分出来特定小消耗渠道的数据进行占比跟踪
       const smallCost = sum(monthData.filter(x => x.channel === 'tt spark' || (x.note && x.note.toLowerCase().includes('spark'))), 'cost');
       const smallPct = totalCost > 0 ? ((smallCost / totalCost) * 100).toFixed(1) + '%' : '0.0%';
       
@@ -744,7 +730,7 @@ function batchDeleteFiltered(){
 }
 function clearAll(){records=[];persistRecords();renderRecent();toast('本地关联数据仓库已清空');}
 
-// ── 外部高并发文件拖拽解析中心 (自动匹配智能雷达) ──────────────────────────
+// ── 外部文件拖拽解析中心 ──────────────────────────
 function handleDrop(e){e.preventDefault();const f=e.dataTransfer.files;if(f.length>0)processFile(f[0]);}
 function handleFileSelect(e){const f=e.target.files;if(f.length>0)processFile(f[0]);}
 
@@ -820,6 +806,7 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 
 // ── 系统底座初始化 ──────────────────────────────────────────
 loadRecords();
+renderDashboard();
 </script>
 </body>
 </html>
