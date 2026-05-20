@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KOL 推广数据管理系统 v8.0 (高级核算版)</title>
+<title>KOL 推广数据管理系统 v10.1 (高级多维核算版)</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -67,7 +67,7 @@
   .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 1.5rem; }
   .form-group { display: flex; flex-direction: column; gap: 6px; }
   .form-group label { font-size: 12px; color: var(--text2); font-weight: 500; }
-  .form-group input, .form-group select, .form-group textarea { padding: 9px 12px; border: 1px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); font-size: 13px; font-family: inherit; transition: border-color 0.15s; }
+  .form-group input, .form-group select { padding: 9px 12px; border: 1px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); font-size: 13px; font-family: inherit; transition: border-color 0.15s; }
   .form-group input:focus, .form-group select:focus { border-color: #3b82f6; outline: none; }
   .upload-box { border: 2px dashed #3b82f6; border-radius: var(--radius-lg); padding: 3rem; text-align: center; background: rgba(59,130,246,0.02); cursor: pointer; transition: all 0.2s; margin-bottom: 1.5rem; }
   .upload-box:hover { background: rgba(59,130,246,0.05); border-color: #2563eb; }
@@ -78,14 +78,10 @@
   .toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(10px); background: #212529; color: #fff; padding: 12px 24px; border-radius: var(--radius); font-size: 13px; font-weight: 500; opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
-  .action-btn { background: none; border: none; cursor: pointer; color: var(--text2); font-size: 14px; padding: 4px 8px; border-radius: 4px; transition: all 0.15s; font-family: inherit; }
-  .action-btn:hover { background: var(--bg3); }
-  .action-btn.edit:hover { color: #1c7ed6; }
-  .action-btn.del:hover { color: #c92a2a; }
   .empty { text-align: center; padding: 3rem; color: var(--text2); font-size: 13px; }
   .week-range { font-family: monospace; font-size: 12px; color: var(--text); font-weight: 600; }
 
-  /* 月度核算样式调整 */
+  /* 月度核算专区样式 */
   .monthly-section { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem; }
   .monthly-region-header { display: flex; align-items: center; gap: 10px; margin-bottom: 1.25rem; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
   .monthly-region-title { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
@@ -110,7 +106,7 @@
 <div class="container">
   <div class="topbar">
     <div class="topbar-left">
-      <div class="subtitle">KOL DATA SYSTEM v8.0</div>
+      <div class="subtitle">KOL DATA SYSTEM v10.1</div>
       <h1><i class="ti ti-chart-bar-popular"></i>推广高级数据核算系统</h1>
     </div>
     <div class="topbar-right">
@@ -261,11 +257,7 @@
     </div>
 
     <div class="section">
-      <div class="section-header">
-        <span class="section-title" id="form-title"><i class="ti ti-ballpen"></i>单条数据精细化录入</span>
-        <span id="edit-indicator" style="display:none;" class="badge b-TW">覆盖模式</span>
-      </div>
-      <input type="hidden" id="f-id">
+      <div class="section-header"><span class="section-title"><i class="ti ti-ballpen"></i>单条数据精细化录入与数据清洗</span></div>
       <div class="form-grid">
         <div class="form-group"><label>日期 *</label><input type="date" id="f-date"></div>
         <div class="form-group">
@@ -305,30 +297,7 @@
       </div>
       <div style="display:flex;gap:10px;margin-top:0.5rem;">
         <button class="btn btn-primary" onclick="saveRecord()"><i class="ti ti-device-floppy"></i>确认保存并加入底表</button>
-        <button class="btn" onclick="clearForm()"><i class="ti ti-refresh"></i>清空表单</button>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-header">
-        <span class="section-title"><i class="ti ti-history-toggle"></i>最新归档历史数据清洗（前 20 条）</span>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <select id="clean-filter-region" onchange="renderRecent()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;">
-            <option value="">快速联动过滤：全部</option>
-            <option value="TR">土耳其</option>
-            <option value="TW">台湾</option>
-            <option value="ES">西语</option>
-            <option value="BR">巴西</option>
-          </select>
-          <button class="btn btn-danger" style="padding:4px 12px;font-size:12px;" onclick="batchDeleteFiltered()"><i class="ti ti-layers-subtract"></i>批量擦除当前筛选</button>
-          <button class="btn" style="color:var(--danger);border-color:rgba(201,42,42,0.2);padding:4px 12px;font-size:12px;" onclick="if(confirm('🚨 警告：这会彻底清空整个本地数据库，确定吗？'))clearAll()"><i class="ti ti-trash"></i>清空本地库</button>
-        </div>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>日期</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗</th><th>新增用户</th><th>收益</th><th>素材总播放</th><th>备注</th><th>精细管理</th></tr></thead>
-          <tbody id="recent-tbody"></tbody>
-        </table>
+        <button class="btn" style="color:var(--danger);border-color:rgba(201,42,42,0.2)" onclick="if(confirm('确定永久清空本地所有持久化缓存吗？'))clearAll()"><i class="ti ti-trash"></i>擦除本地底表</button>
       </div>
     </div>
   </div>
@@ -351,12 +320,11 @@ let charts = {};
 // ── 数据持久化处理 ──────────────────────────────────────────
 function loadRecords() {
   try {
-    const s = localStorage.getItem('kol_records_v8') || localStorage.getItem('kol_records_v7') || localStorage.getItem('kol_records_v6') || localStorage.getItem('kol_records');
+    const s = localStorage.getItem('kol_records_v10') || localStorage.getItem('kol_records_v8') || localStorage.getItem('kol_records');
     records = s ? JSON.parse(s) : [];
-    if (!Array.isArray(records)) records = [];
   } catch(e) { records = []; }
 }
-function persistRecords() { try { localStorage.setItem('kol_records_v8', JSON.stringify(records)); } catch(e){} }
+function persistRecords() { try { localStorage.setItem('kol_records_v10', JSON.stringify(records)); } catch(e){} }
 
 // ── 周期与转化核心算法单元 ─────────────────────────────────────
 function getWeekRangeLabel(weekStr) {
@@ -396,11 +364,10 @@ function showView(v) {
   if (v==='dashboard') renderDashboard();
   if (v==='weekly') { updateWeeklyFilters(); renderWeekly(); updateMonthSelectors(); renderMonthlyCompare(); }
   if (v==='twtr') { updateTWTRMonthSelector(); renderTWTRArchive(); }
-  if (v==='add') renderRecent();
 }
 function setRegion(r) { currentRegion = r; renderDashboard(); }
 
-// ── 核心看板逻辑：总览大盘 ──────────────────────────────────────
+// ── 看板逻辑一：总览大盘 ──────────────────────────────────────
 function renderDashboard() {
   const today = new Date().toISOString().slice(0,7);
   const all14 = [];
@@ -474,7 +441,7 @@ function renderDashboard() {
   });
 }
 
-// ── 看板逻辑：周/月度复合核算（深度融入视频数据维度） ──────────────────────
+// ── 看板逻辑二：周/月度复合核算（深度融入视频数据维度） ──────────────────────
 function updateWeeklyFilters() {
   const weekSet=new Set(); records.forEach(r=>weekSet.add(getWeekStr(r.date)));
   const sorted=Array.from(weekSet).sort();
@@ -597,7 +564,7 @@ function compareRows(s, prev) {
     </div>`).join('');
 }
 
-// ── 看板逻辑：TW / TR 独立素材月度核算归档历史专区（含小消耗分析） ──────────────────
+// ── 看板逻辑三：TW / TR 独立素材月度核算归档历史专区（含小消耗分析） ──────────────────
 function updateTWTRMonthSelector() {
   const months = getAllMonths();
   const sel = document.getElementById('twtr-month-select'); const cur = sel.value;
@@ -622,6 +589,7 @@ function renderTWTRArchive() {
       const totalViews = sum(monthData, 'views');
       const totalRevenue = sum(monthData, 'revenue');
       
+      // 提取小消耗逻辑：渠道名为 "tt spark" 或者备注里带 spark 关键字的数据
       const smallCost = sum(monthData.filter(x => x.channel === 'tt spark' || (x.note && x.note.toLowerCase().includes('spark'))), 'cost');
       const smallPct = totalCost > 0 ? ((smallCost / totalCost) * 100).toFixed(1) + '%' : '0.0%';
       
@@ -646,89 +614,26 @@ function renderTWTRArchive() {
   document.getElementById('twtr-tbody').innerHTML = html || `<tr><td colspan="10" class="empty">未检索到符合条件的 TW / TR 归档期核心底表数据</td></tr>`;
 }
 
-// ── 底层数据流维护与清洗模块 (CRUD) ──────────────────────────────────
-function renderRecent() {
-  if(!document.getElementById('f-date').value) document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
-  const cf=document.getElementById('clean-filter-region').value;
-  let list=[...records].sort((a,b)=>b.date.localeCompare(a.date));
-  if(cf) list=list.filter(r=>r.region===cf);
-  const recent=list.slice(0,20);
-  document.getElementById('recent-tbody').innerHTML=recent.length===0
-    ?`<tr><td colspan="11" class="empty">暂无流水记录数据</td></tr>`
-    :recent.map(r=>`<tr>
-      <td>${r.date}</td>
-      <td><span class="badge b-${r.region}">${REGIONS[r.region]?REGIONS[r.region].flag:''} ${REGIONS[r.region]?REGIONS[r.region].name:r.region}</span></td>
-      <td><span class="badge b-c">${r.channel||'—'}</span></td>
-      <td><strong>${r.contentType||'—'}</strong></td>
-      <td>${r.count}</td>
-      <td>$${(+r.cost).toLocaleString()}</td>
-      <td>${r.users}</td>
-      <td>$${(+r.revenue||0).toLocaleString()}</td>
-      <td style="color:#6366f1;font-weight:600;">${r.views||0}</td>
-      <td>${r.note||'—'}</td>
-      <td>
-        <button class="action-btn edit" onclick="editRecord('${r.id}')"><i class="ti ti-edit"></i></button>
-        <button class="action-btn del" onclick="deleteRecord('${r.id}')"><i class="ti ti-trash"></i></button>
-      </td>
-    </tr>`).join('');
-}
-
+// ── 数据底表流维护与清洗模块 (去除了明细底表) ──────────────────────────────────
 function saveRecord() {
-  const id=document.getElementById('f-id').value; const date=document.getElementById('f-date').value;
-  const region=document.getElementById('f-region').value; const channel=document.getElementById('f-channel').value;
-  const contentType=document.getElementById('f-content-type').value;
-  const count=parseFloat(document.getElementById('f-count').value)||1;
-  const cost=parseFloat(document.getElementById('f-cost').value)||0;
-  const users=parseFloat(document.getElementById('f-users').value)||0;
-  const revenue=parseFloat(document.getElementById('f-revenue').value)||0;
-  const views=parseFloat(document.getElementById('f-views').value)||0;
-  const note=document.getElementById('f-note').value.trim();
+  const date=document.getElementById('f-date').value; const region=document.getElementById('f-region').value;
+  const channel=document.getElementById('f-channel').value; const contentType=document.getElementById('f-content-type').value;
+  const count=parseFloat(document.getElementById('f-count').value)||1; const cost=parseFloat(document.getElementById('f-cost').value)||0;
+  const users=parseFloat(document.getElementById('f-users').value)||0; const revenue=parseFloat(document.getElementById('f-revenue').value)||0;
+  const views=parseFloat(document.getElementById('f-views').value)||0; const note=document.getElementById('f-note').value.trim();
   
-  if(!date){toast('❌ 核心错误：日期归档项不能为空');return;}
-  const payload={id,date,region,channel,contentType,count,cost,users,revenue,views,note};
-  if(id){
-    const idx=records.findIndex(r=>r.id===id); if(idx>-1){records[idx]=payload;toast('✓ 历史归档纪录已修正覆盖');}
-  } else {
-    payload.id=Date.now()+Math.random().toString(36).slice(2); records.push(payload);toast('✓ 单条底表要素已成功录入');
-  }
-  persistRecords();clearForm();renderRecent();
-}
-
-function editRecord(id){
-  const r=records.find(x=>x.id===id);if(!r)return;
-  showView('add');
-  document.getElementById('f-id').value=r.id; document.getElementById('f-date').value=r.date;
-  document.getElementById('f-region').value=r.region; document.getElementById('f-channel').value=r.channel||'TikTok';
-  document.getElementById('f-content-type').value=r.contentType||'video'; document.getElementById('f-count').value=r.count;
-  document.getElementById('f-cost').value=r.cost; document.getElementById('f-users').value=r.users;
-  document.getElementById('f-revenue').value=r.revenue||0; document.getElementById('f-views').value=r.views||0;
-  document.getElementById('f-note').value=r.note||'';
-  document.getElementById('form-title').innerHTML=`<i class="ti ti-edit"></i> 精细化修正覆盖模式`;
-  document.getElementById('edit-indicator').style.display='inline-block';
-}
-
-function clearForm(){
-  document.getElementById('f-id').value='';
+  if(!date){toast('❌ 核心错误：归档项日期项不能为空');return;}
+  
+  const payload={id:Date.now()+Math.random().toString(36).slice(2),date,region,channel,contentType,count,cost,users,revenue,views,note};
+  records.push(payload);
+  persistRecords();
+  
+  // 重置表单数值项
   ['f-count','f-cost','f-users','f-revenue','f-views','f-note'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
-  document.getElementById('form-title').innerHTML=`<i class="ti ti-ballpen"></i> 单条数据精细化录入`;
-  document.getElementById('edit-indicator').style.display='none';
+  toast('✓ 单条底表要素已成功录入');
 }
 
-function deleteRecord(id){
-  if(confirm('核实：确定将这一单元的底层记录永久移除吗？')){
-    records=records.filter(r=>r.id!==id);persistRecords();renderRecent();toast('已从本地缓存擦除');
-  }
-}
-
-function batchDeleteFiltered(){
-  const cf=document.getElementById('clean-filter-region').value;
-  if(!cf){toast('⚠️ 请优先在左侧下拉菜单选择特定过滤目标地区');return;}
-  if(confirm(`警告：确定将选择的【${REGIONS[cf].name}】大区所有底层流水全部批量擦除吗？`)){
-    records=records.filter(r=>r.region!==cf);persistRecords();renderRecent();toast(`已完成【${REGIONS[cf].name}】大区数据批量清洗`);
-  }
-}
-function clearAll(){records=[];persistRecords();renderRecent();toast('本地关联数据仓库已清空');}
+function clearAll(){records=[];persistRecords();toast('本地关联数据仓库已永久清空');}
 
 // ── 外部文件拖拽解析中心 ──────────────────────────
 function handleDrop(e){e.preventDefault();const f=e.dataTransfer.files;if(f.length>0)processFile(f[0]);}
@@ -754,7 +659,7 @@ function parseRowByRadar(row) {
   const matched={date:null,region:'TR',channel:'TikTok',type:'video',count:1,cost:0,users:0,revenue:0,views:0,note:''};
   const findVal=(kws)=>{const fk=keys.find(k=>{const ck=k.toLowerCase().replace(/[\s\uFEFF\xa0]/g,'');return kws.some(kw=>ck.includes(kw));});return fk!==undefined?row[fk]:null;};
   
-  const dVal=findVal(['日期','date','time','day']); const rVal=findVal(['地区','国家','region','country']);
+  const dVal=findVal(['日期','date','time','day','发布']); const rVal=findVal(['地区','国家','region','country']);
   const cVal=findVal(['渠道','平台','channel','platform']); const tVal=findVal(['形式','类型','type','content']);
   const cnVal=findVal(['推广数','条数','数量','count']); const csVal=findVal(['消耗','花费','cost','spend']);
   const uVal=findVal(['新增','用户','users','install','激活','注册']); const revVal=findVal(['收益','回款','revenue']);
@@ -786,7 +691,7 @@ function processFile(file){
     try{
       if(ext==='csv'){parseCSVToArray(new TextDecoder('utf-8').decode(data)).forEach(row=>{const p=parseRowByRadar(row);if(p&&p.date)push(p);});}
       else{const wb=XLSX.read(data,{type:'array'});wb.SheetNames.forEach(name=>{XLSX.utils.sheet_to_json(wb.Sheets[name]).forEach(row=>{const p=parseRowByRadar(row);if(p&&p.date)push(p);});});}
-      persistRecords();renderRecent();toast(`✓ 成功导入：新增归档 ${ok} 条，自动合并 ${merge} 条重复序列`);
+      persistRecords();toast(`✓ 成功导入：新增归档 ${ok} 条，自动合并 ${merge} 条重复序列`);
     }catch(err){toast('❌ 结构匹配异常：请检查表单结构或选用标准CSV');}
   };
   reader.readAsArrayBuffer(file);
@@ -806,6 +711,7 @@ function toast(msg){const el=document.getElementById('toast');el.textContent=msg
 
 // ── 系统底座初始化 ──────────────────────────────────────────
 loadRecords();
+if(!document.getElementById('f-date').value) document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
 renderDashboard();
 </script>
 </body>
