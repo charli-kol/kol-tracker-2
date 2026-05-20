@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KOL 推广数据管理系统 v8.0 - 尊享极简重构版</title>
+<title>KOL 推广数据管理系统 v6.0 - 经典重构版</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -11,226 +11,188 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
     --bg: #ffffff;
-    --bg2: #fcfcfd;
-    --bg3: #f4f5f7;
-    --text: #1d1d1f;
-    --text2: #86868b;
-    --border: rgba(0, 0, 0, 0.05);
-    --border2: rgba(0, 0, 0, 0.12);
-    --radius: 10px;
-    --radius-lg: 16px;
-    --success: #10b981;
-    --danger: #ef4444;
-    --info: #3b82f6;
-    --accent: #6366f1;
+    --bg2: #f8f9fa;
+    --bg3: #f1f3f5;
+    --text: #212529;
+    --text2: #6c757d;
+    --border: rgba(0,0,0,0.08);
+    --border2: rgba(0,0,0,0.18);
+    --radius: 8px;
+    --radius-lg: 14px;
+    --success: #2b8a3e;
+    --danger: #c92a2a;
+    --info: #1c7ed6;
+    --warning: #e67e22;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #121214;
-      --bg2: #1a1a1e;
-      --bg3: #0a0a0c;
-      --text: #f5f5f7;
-      --text2: #86868b;
-      --border: rgba(255, 255, 255, 0.05);
-      --border2: rgba(255, 255, 255, 0.15);
+      --bg: #1a1b1e;
+      --bg2: #25262b;
+      --bg3: #101113;
+      --text: #c1c2c5;
+      --text2: #909296;
+      --border: rgba(255,255,255,0.06);
+      --border2: rgba(255,255,255,0.16);
     }
   }
-  body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; padding-bottom: 50px; }
-  .container { max-width: 1280px; margin: 0 auto; padding: 2rem 1.5rem; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 16px; }
+  .topbar-left .subtitle { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--text2); margin-bottom: 4px; }
+  .topbar-left h1 { font-size: 22px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+  .topbar-right { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius); border: 1px solid var(--border2); background: var(--bg); color: var(--text); cursor: pointer; font-size: 13px; font-weight: 500; transition: all .2s; }
+  .btn:hover { background: var(--bg2); border-color: var(--text2); }
+  .btn-primary { background: #3b82f6; color: #ffffff; border-color: #3b82f6; }
+  .btn-primary:hover { background: #2563eb; border-color: #2563eb; }
+  .btn-danger { background: var(--danger); color: #ffffff; border-color: var(--danger); }
+  .btn-danger:hover { opacity: 0.9; }
   
-  /* 头部现代精细化 */
-  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 16px; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; }
-  .topbar-left .subtitle { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
-  .topbar-left h1 { font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 12px; letter-spacing: -0.5px; }
-  .topbar-right { display: flex; gap: 12px; }
+  .tabs { display: flex; gap: 4px; background: var(--bg2); border-radius: var(--radius); padding: 5px; margin-bottom: 2rem; width: fit-content; border: 1px solid var(--border); }
+  .tab { padding: 8px 18px; border-radius: 6px; border: none; background: transparent; cursor: pointer; font-size: 13px; color: var(--text2); font-weight: 500; transition: all .15s; display: flex; align-items: center; gap: 6px; }
+  .tab.active { background: var(--bg); color: #3b82f6; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
   
-  /* 按钮高级感知 */
-  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: var(--radius); border: 1px solid var(--border2); background: var(--bg); color: var(--text); cursor: pointer; font-size: 13px; font-weight: 600; transition: all .2s cubic-bezier(0.4, 0, 0.2, 1); }
-  .btn:hover { background: var(--bg2); border-color: var(--text); transform: translateY(-1px); }
-  .btn-primary { background: var(--text); color: var(--bg); border-color: var(--text); }
-  .btn-primary:hover { opacity: 0.9; background: var(--text); border-color: var(--text); }
-  .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); border-color: transparent; }
-  .btn-danger:hover { background: var(--danger); color: #fff; }
+  .region-tabs { display: flex; gap: 10px; margin-bottom: 2rem; flex-wrap: wrap; }
+  .rtab { padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg); cursor: pointer; font-size: 13px; color: var(--text2); display: flex; align-items: center; gap: 8px; transition: all .15s; }
+  .rtab.active { border-color: #3b82f6; color: var(--text); background: var(--bg2); font-weight: 600; }
+  .rtab .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   
-  /* 导航选项卡小组件 */
-  .tabs { display: flex; gap: 6px; background: rgba(0,0,0,0.03); border-radius: var(--radius); padding: 4px; margin-bottom: 2.5rem; width: fit-content; }
-  @media (prefers-color-scheme: dark) { .tabs { background: rgba(255,255,255,0.04); } }
-  .tab { padding: 8px 20px; border-radius: calc(var(--radius) - 2px); border: none; background: transparent; cursor: pointer; font-size: 13px; color: var(--text2); font-weight: 600; transition: all .2s; display: flex; align-items: center; gap: 8px; }
-  .tab.active { background: var(--bg); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+  .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 2rem; }
+  .metric-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+  .metric-label { font-size: 12px; color: var(--text2); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; font-weight: 500; }
+  .metric-value { font-size: 24px; font-weight: 700; letter-spacing: -0.5px; }
+  .metric-sub { font-size: 12px; color: var(--text2); margin-top: 6px; }
+  .up { color: var(--success); font-weight: 600; }
+  .dn { color: var(--danger); font-weight: 600; }
   
-  .region-tabs { display: flex; gap: 8px; margin-bottom: 2rem; flex-wrap: wrap; }
-  .rtab { padding: 8px 18px; border-radius: 30px; border: 1px solid var(--border); background: var(--bg); cursor: pointer; font-size: 13px; color: var(--text2); display: flex; align-items: center; gap: 8px; font-weight: 500; transition: all .2s; }
-  .rtab.active { border-color: var(--text); color: var(--text); font-weight: 600; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
-  .rtab .dot { width: 6px; height: 6px; border-radius: 50%; }
-
-  /* 看板公共风格卡片 */
-  .section { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.75rem; margin-bottom: 1.75rem; box-shadow: 0 4px 20px rgba(0,0,0,0.01); position: relative; overflow: hidden; }
-  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 12px; }
-  .section-title { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 10px; letter-spacing: -0.3px; }
+  .section { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 10px; }
+  .section-title { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+  @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
   
-  /* 优化项5：全新的自由组合双月对比大看板 */
-  .bi-month-board { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.75rem; margin-bottom: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.015); border-left: 4px solid var(--accent); }
-  .board-ctrl { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 16px; }
-  .board-selectors { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--bg3); padding: 6px 12px; border-radius: var(--radius); }
-  .select-group { display: flex; align-items: center; gap: 4px; }
-  .board-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
-  .board-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s; }
-  .board-card:hover { transform: translateY(-2px); }
-  .b-title { font-size: 12px; color: var(--text2); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
-  .b-sub-info { font-size: 12px; color: var(--text2); display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 8px; margin-bottom: 10px; }
-  .b-main-diff { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; margin: 4px 0; color: var(--text); }
-  .b-rate { font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; }
-
-  .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 2rem; }
-  .metric-card { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.01); }
-  .metric-label { font-size: 12px; color: var(--text2); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
-  .metric-value { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
-  .metric-sub { font-size: 12px; color: var(--text2); margin-top: 8px; }
+  .chart-wrap { position: relative; width: 100%; height: 260px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text2); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   
-  .up { color: var(--success); }
-  .dn { color: var(--danger); }
-  
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.75rem; margin-bottom: 1.75rem; }
-  @media (max-width: 950px) { .two-col { grid-template-columns: 1fr; } }
-  
-  .chart-wrap { position: relative; width: 100%; height: 280px; }
-  
-  /* 现代紧凑型数据表格 */
-  .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg); }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
-  th { padding: 12px 16px; color: var(--text2); font-weight: 600; border-bottom: 1px solid var(--border); background: var(--bg2); font-size: 12px; text-transform: uppercase; letter-spacing: 0.3px; }
-  td { padding: 14px 16px; border-bottom: 1px solid var(--border); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 12px; color: var(--text2); font-weight: 500; border-bottom: 1px solid var(--border); white-space: nowrap; background: var(--bg2); }
+  td { padding: 12px 12px; border-bottom: 1px solid var(--border); max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: var(--bg2); }
   
-  .badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; letter-spacing: -0.2px; }
-  .b-TR { background: rgba(16, 185, 129, 0.1); color: var(--success); }
-  .b-TW { background: rgba(99, 102, 241, 0.1); color: var(--accent); }
-  .b-ES { background: rgba(59, 132, 246, 0.1); color: var(--info); }
-  .b-BR { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
-  .b-c { background: var(--bg3); color: var(--text2); }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+  .b-TR { background: #e3faf2; color: #0ca678; }
+  .b-TW { background: #fff4e6; color: #f76707; }
+  .b-ES { background: #edf2ff; color: #4c6ef5; }
+  .b-BR { background: #fff0f6; color: #d6336c; }
+  .b-c { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
   
-  /* 表单框架排版 */
-  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 1.5rem; }
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 1.5rem; }
   .form-group { display: flex; flex-direction: column; gap: 6px; }
-  .form-group label { font-size: 12px; color: var(--text2); font-weight: 600; }
-  .form-group input, .form-group select {
-    padding: 10px 14px; border: 1px solid var(--border2); border-radius: var(--radius);
-    background: var(--bg); color: var(--text); font-size: 13px; transition: all 0.2s; font-family: inherit;
+  .form-group label { font-size: 12px; color: var(--text2); font-weight: 500; }
+  .form-group input, .form-group select, .form-group textarea {
+    padding: 9px 12px; border: 1px solid var(--border2); border-radius: var(--radius);
+    background: var(--bg); color: var(--text); font-size: 13px; font-family: inherit; transition: border-color 0.15s;
   }
-  .form-group input:focus, .form-group select:focus { border-color: var(--text); outline: none; box-shadow: 0 0 0 3px rgba(0,0,0,0.03); }
+  .form-group input:focus, .form-group select:focus { border-color: #3b82f6; outline: none; }
   
-  /* 日期模式切换组件 */
-  .mode-switch { display: inline-flex; background: var(--bg3); border-radius: 8px; padding: 3px; gap: 2px; align-self: flex-start; margin-bottom: 10px; }
-  .mode-btn { border: none; background: transparent; padding: 5px 12px; font-size: 11px; font-weight: 600; color: var(--text2); border-radius: 6px; cursor: pointer; transition: all 0.15s; }
-  .mode-btn.active { background: var(--bg); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .upload-box { border: 2px dashed #3b82f6; border-radius: var(--radius-lg); padding: 3rem; text-align: center; background: rgba(59,130,246,0.02); cursor: pointer; transition: all 0.2s; margin-bottom: 1.5rem; }
+  .upload-box:hover { background: rgba(59,130,246,0.05); border-color: #2563eb; }
+  .upload-box i { font-size: 42px; color: #3b82f6; margin-bottom: 10px; display: block; }
+  .upload-box p { font-size: 14px; color: var(--text2); font-weight: 500; }
+  .upload-box input { display: none; }
 
-  .upload-box { border: 2px dashed var(--border2); border-radius: var(--radius-lg); padding: 2.5rem; text-align: center; background: var(--bg2); cursor: pointer; transition: all 0.2s; margin-bottom: 1.5rem; }
-  .upload-box:hover { border-color: var(--text); background: var(--bg); }
-  .upload-box i { font-size: 36px; color: var(--text2); margin-bottom: 8px; display: block; }
-  .upload-box p { font-size: 13px; color: var(--text2); font-weight: 500; }
-  
   .view { display: none; }
   .view.active { display: block; }
-  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(10px); background: var(--text); color: var(--bg); padding: 12px 24px; border-radius: var(--radius); font-size: 13px; font-weight: 600; opacity: 0; transition: all .25s ease-out; pointer-events: none; z-index: 9999; box-shadow: 0 8px 30px rgba(0,0,0,0.15); }
+  .toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(10px); background: #212529; color: #ffffff; padding: 12px 24px; border-radius: var(--radius); font-size: 13px; font-weight: 500; opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .action-btn { background: none; border: none; cursor: pointer; color: var(--text2); font-size: 14px; padding: 6px; border-radius: 6px; }
-  .action-btn:hover { background: var(--bg3); color: var(--text); }
-  .empty { text-align: center; padding: 4rem; color: var(--text2); font-size: 13px; }
-  select.select-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; border: 1px solid var(--border2); background: var(--bg); color: var(--text); font-weight: 500; }
+  .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+  .action-btn { background: none; border: none; cursor: pointer; color: var(--text2); font-size: 14px; padding: 4px 8px; border-radius: 4px; transition: all 0.15s; }
+  .action-btn:hover { background: var(--bg3); }
+  .action-btn.edit:hover { color: #1c7ed6; }
+  .action-btn.del:hover { color: #c92a2a; }
+  .empty { text-align: center; padding: 3rem; color: var(--text2); font-size: 13px; }
+  .week-range { font-family: monospace; font-size: 12px; color: var(--text); font-weight: 600; }
+  .note-link { color: #1c7ed6; text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; gap: 3px; }
+  .note-link:hover { text-decoration: underline; }
+  
+  /* 升级新增样式 */
+  .date-mode-toggle { display: inline-flex; gap: 4px; background: var(--bg3); padding: 3px; border-radius: 6px; margin-bottom: 8px; width: fit-content; }
+  .date-mode-btn { border: none; padding: 4px 12px; font-size: 11px; font-weight: 600; border-radius: 4px; cursor: pointer; background: transparent; color: var(--text2); transition: all 0.1s; }
+  .date-mode-btn.active { background: var(--bg); color: #3b82f6; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+  .compare-flex { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 1.5rem; background: var(--bg2); padding: 12px; border-radius: var(--radius); border: 1px solid var(--border); }
+  .compare-box { background: var(--bg); border: 1px solid var(--border); padding: 12px 16px; border-radius: var(--radius); flex: 1; min-width: 200px; }
+  .compare-title { font-size: 12px; color: var(--text2); font-weight: 600; margin-bottom: 4px; }
+  .compare-num { font-size: 18px; font-weight: 700; }
 </style>
 </head>
 <body>
 <div class="container">
   <div class="topbar">
     <div class="topbar-left">
-      <div class="subtitle">KOL MATRIX COMPREHENSIVE</div>
-      <h1><i class="ti ti-chart-bar-popular"></i> 推广数据全维核算系统</h1>
+      <div class="subtitle">KOL DATA SYSTEM</div>
+      <h1><i class="ti ti-chart-bar-popular"></i>推广数据管理系统</h1>
     </div>
     <div class="topbar-right">
-      <button class="btn" onclick="exportCSV()"><i class="ti ti-download"></i>导出大盘明细</button>
-      <button class="btn btn-primary" onclick="showView('add')"><i class="ti ti-plus"></i>流水补录</button>
+      <button class="btn" onclick="exportCSV()"><i class="ti ti-download"></i>导出明细</button>
+      <button class="btn btn-primary" onclick="showView('add')"><i class="ti ti-plus"></i>数据录入</button>
     </div>
   </div>
 
   <div class="tabs">
-    <button class="tab active" onclick="showView('dashboard')"><i class="ti ti-grid-pattern"></i>全局总览看板</button>
-    <button class="tab" onclick="showView('daily')"><i class="ti ti-clock-hour-4"></i>日报流水明细</button>
-    <button class="tab" onclick="showView('weekly')"><i class="ti ti-calendar-week"></i>分地区周核算</button>
-    <button class="tab" onclick="showView('materials')"><i class="ti ti-movie"></i>台土素材专项</button>
-    <button class="tab" onclick="showView('add')"><i class="ti ti-edit-circle"></i>录入与维护</button>
+    <button class="tab active" onclick="showView('dashboard')"><i class="ti ti-layout-dashboard"></i>数据总览</button>
+    <button class="tab" onclick="showView('daily')"><i class="ti ti-list-details"></i>日报明细</button>
+    <button class="tab" onclick="showView('weekly')"><i class="ti ti-calendar-stats"></i>周区间核算</button>
+    <button class="tab" onclick="showView('materials')"><i class="ti ti-clapper-board"></i>台土素材看板</button>
+    <button class="tab" onclick="showView('add')"><i class="ti ti-file-import"></i>导入与录入</button>
   </div>
 
   <div id="view-dashboard" class="view active">
-    <div class="bi-month-board">
-      <div class="board-ctrl">
-        <span class="section-title"><i class="ti ti-columns-2"></i>自定义双月高级级差核算对比大盘</span>
-        <div class="board-selectors">
-          <select id="bm-region" class="select-sm" onchange="calculateBiMonth()"></select>
-          
-          <div class="select-group">
-            <select id="bm-base-year" class="select-sm" onchange="calculateBiMonth()">
-              <option value="2025">2025年</option><option value="2026" selected>2026年</option>
-            </select>
-            <select id="bm-base-months" class="select-sm" onchange="calculateBiMonth()">
-              <option value="01-02">1-2月</option><option value="03-04" selected>3-4月</option>
-              <option value="05-06">5-6月</option><option value="07-08">7-8月</option>
-              <option value="09-10">9-10月</option><option value="11-12">11-12月</option>
-            </select>
-          </div>
-          <span style="font-size:11px;color:var(--text2);font-weight:700;">对比</span>
-          <div class="select-group">
-            <select id="bm-target-year" class="select-sm" onchange="calculateBiMonth()">
-              <option value="2025">2025年</option><option value="2026" selected>2026年</option>
-            </select>
-            <select id="bm-target-months" class="select-sm" onchange="calculateBiMonth()">
-              <option value="01-02">1-2月</option><option value="03-04">3-4月</option>
-              <option value="05-06" selected>5-6月</option><option value="07-08">7-8月</option>
-              <option value="09-10">9-10月</option><option value="11-12">11-12月</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      <div class="board-grid">
-        <div class="board-card">
-          <div class="b-title">周期累计推广消耗</div>
-          <div class="b-sub-info"><span id="bm-lbl-b1">基准: $0</span><span id="bm-lbl-t1">对比: $0</span></div>
-          <div class="b-main-diff" id="bm-v1-diff">$0.00</div>
-          <div class="b-rate" id="bm-v1-rate">--</div>
-        </div>
-        <div class="board-card">
-          <div class="b-title">周期总计获客注册</div>
-          <div class="b-sub-info"><span id="bm-lbl-b2">基准: 0人</span><span id="bm-lbl-t2">对比: 0人</span></div>
-          <div class="b-main-diff" id="bm-v2-diff">0 人</div>
-          <div class="b-rate" id="bm-v2-rate">--</div>
-        </div>
-        <div class="board-card">
-          <div class="b-title">周期全媒体总播放量</div>
-          <div class="b-sub-info"><span id="bm-lbl-b3">基准: 0次</span><span id="bm-lbl-t3">对比: 0次</span></div>
-          <div class="b-main-diff" id="bm-v3-diff">0 次</div>
-          <div class="b-rate" id="bm-v3-rate">--</div>
-        </div>
-      </div>
-    </div>
-
     <div class="region-tabs">
-      <button class="rtab active" onclick="setRegion('all')"><span class="dot" style="background:var(--text2)"></span>大盘全地区</button>
-      <button class="rtab" onclick="setRegion('TR')"><span class="dot" style="background:var(--success)"></span>🇹🇷 土耳其地区</button>
-      <button class="rtab" onclick="setRegion('TW')"><span class="dot" style="background:var(--accent)"></span>🇹🇼 台湾地区</button>
-      <button class="rtab" onclick="setRegion('ES')"><span class="dot" style="background:var(--info)"></span>🌎 西语大区</button>
-      <button class="rtab" onclick="setRegion('BR')"><span class="dot" style="background:var(--danger)"></span>🇧🇷 巴西大区</button>
+      <button class="rtab active" onclick="setRegion('all')"><span class="dot" style="background:#6c757d"></span>全部地区</button>
+      <button class="rtab" onclick="setRegion('TR')"><span class="dot" style="background:#0ca678"></span>🇹🇷 土耳其</button>
+      <button class="rtab" onclick="setRegion('TW')"><span class="dot" style="background:#f76707"></span>🇹🇼 台湾</button>
+      <button class="rtab" onclick="setRegion('ES')"><span class="dot" style="background:#4c6ef5"></span>🌎 西语</button>
+      <button class="rtab" onclick="setRegion('BR')"><span class="dot" style="background:#d6336c"></span>🇧🇷 巴西</button>
     </div>
     
     <div class="metrics-grid" id="metrics-grid"></div>
+
+    <div class="section">
+      <div class="section-header"><span class="section-title"><i class="ti ti-git-compare"></i>双月度推广消耗与获客级差核算</span></div>
+      <div style="display: flex; gap: 12px; margin-bottom: 1rem; flex-wrap: wrap; align-items: center;">
+        <label style="font-size: 12px; font-weight: 600;">对比月份 A:</label>
+        <input type="month" id="comp-month-a" onchange="calculateComparison()" style="font-size:13px;padding:6px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);">
+        <label style="font-size: 12px; font-weight: 600; margin-left: 10px;">对比月份 B:</label>
+        <input type="month" id="comp-month-b" onchange="calculateComparison()" style="font-size:13px;padding:6px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);">
+      </div>
+      <div class="compare-flex" id="compare-results-wrap">
+         </div>
+    </div>
     
     <div class="two-col">
       <div class="section">
-        <div class="section-header"><span class="section-title"><i class="ti ti-chart-pie-2"></i>推广渠道资金消耗占比</span></div>
+        <div class="section-header"><span class="section-title"><i class="ti ti-chart-donut-4"></i>渠道消耗占比</span></div>
         <div class="chart-wrap"><canvas id="chart-channels"></canvas></div>
       </div>
       <div class="section">
-        <div class="section-header"><span class="section-title"><i class="ti ti-chart-bar"></i>视频形式：消耗成本 vs 累计播放</span></div>
+        <div class="section-header"><span class="section-title"><i class="ti ti-chart-columns"></i>内容形式：消耗 vs 总播放</span></div>
         <div class="chart-wrap"><canvas id="chart-content-types"></canvas></div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div class="section">
+        <div class="section-header"><span class="section-title"><i class="ti ti-users-plus"></i>新增用户趋势（近7天）</span></div>
+        <div class="legend" id="legend-users"></div>
+        <div class="chart-wrap"><canvas id="chart-users"></canvas></div>
+      </div>
+      <div class="section">
+        <div class="section-header"><span class="section-title"><i class="ti ti-currency-dollar"></i>消耗趋势（近7天）</span></div>
+        <div class="legend" id="legend-cost"></div>
+        <div class="chart-wrap"><canvas id="chart-cost"></canvas></div>
       </div>
     </div>
   </div>
@@ -238,28 +200,30 @@
   <div id="view-daily" class="view">
     <div class="section">
       <div class="section-header">
-        <span class="section-title"><i class="ti ti-filter"></i>智能化过滤与穿透检索</span>
-        <span id="daily-count" style="font-size:12px;color:var(--text2);font-weight:600;"></span>
+        <span class="section-title"><i class="ti ti-search"></i>数据精准检索</span>
+        <span id="daily-count" style="font-size:12px;color:var(--text2);"></span>
       </div>
-      <div style="display:flex;gap:12px;margin-bottom:1.5rem;flex-wrap:wrap;align-items:center;">
-        <select id="filter-region" onchange="renderDaily()" class="select-sm">
-          <option value="">筛选所有地区</option>
-          <option value="TR">🇹🇷 土耳其</option><option value="TW">🇹🇼 台湾</option>
-          <option value="ES">🌎 西语</option><option value="BR">🇧🇷 巴西</option>
+      <div style="display:flex;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center;">
+        <select id="filter-region" onchange="renderDaily()" style="font-size:13px;padding:6px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);">
+          <option value="">全部地区</option>
+          <option value="TR">🇹🇷 土耳其</option>
+          <option value="TW">🇹🇼 台湾</option>
+          <option value="ES">🌎 西语</option>
+          <option value="BR">🇧🇷 巴西</option>
         </select>
-        <select id="filter-channel" onchange="renderDaily()" class="select-sm">
-          <option value="">筛选所有推广渠道</option>
-          <option value="TikTok">TikTok</option><option value="YouTube">YouTube</option><option value="Instagram">Instagram</option>
+        <select id="filter-channel" onchange="renderDaily()" style="font-size:13px;padding:6px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);">
+          <option value="">全部渠道</option>
+          <option value="TikTok">TikTok</option>
+          <option value="YouTube">YouTube</option>
+          <option value="Instagram">Instagram</option>
         </select>
-        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);">
-          <span>精准筛选至某一天：</span>
-          <input type="date" id="filter-exact-date" onchange="renderDaily()" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:12px;">
-          <button class="btn" style="padding:4px 8px;font-size:11px;" onclick="document.getElementById('filter-exact-date').value='';renderDaily();">清除单日</button>
-        </div>
+        <label style="font-size: 12px; color: var(--text2);">精准单日检索:</label>
+        <input type="date" id="filter-date" onchange="renderDaily()" style="font-size:13px;padding:6px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);">
+        <button class="btn" style="padding: 5px 10px;" onclick="document.getElementById('filter-date').value=''; renderDaily();">清空单日</button>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>发生日期</th><th>核算大区</th><th>发布渠道</th><th>内容展现形式</th><th>推广数</th><th>账面消耗(USD)</th><th>新增转化</th><th>总播放量数据</th><th>核算CPA</th><th>原始备注/主链</th><th>管理</th></tr></thead>
+          <thead><tr><th>日期</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗(USD)</th><th>新增用户</th><th>播放数据</th><th>核算CPA</th><th>备注/链接</th><th>操作</th></tr></thead>
           <tbody id="daily-tbody"></tbody>
         </table>
       </div>
@@ -268,18 +232,28 @@
 
   <div id="view-weekly" class="view">
     <div class="section">
-      <div class="section-header"><span class="section-title"><i class="ti ti-trending-up"></i>滚动周度跨度大盘成本曲线走势</span></div>
-      <div class="chart-wrap"><canvas id="chart-weekly"></canvas></div>
+      <div class="section-header"><span class="section-title"><i class="ti ti-chart-arrows"></i>每周推广消耗走势（近6周）</span></div>
+      <div class="chart-wrap" style="height:260px;margin-bottom:1rem;"><canvas id="chart-weekly"></canvas></div>
     </div>
     <div class="section">
-      <div class="section-header"><span class="section-title"><i class="ti ti-table"></i>分地区自然周具体日期段核算动态表</span></div>
-      <div style="display:flex;gap:12px;margin-bottom:1.5rem;">
-        <select id="weekly-filter-region" onchange="renderWeekly()" class="select-sm"><option value="">全部核算地区</option><option value="TR">土耳其</option><option value="TW">台湾</option><option value="ES">西语</option><option value="BR">巴西</option></select>
-        <select id="weekly-filter-range" onchange="renderWeekly()" class="select-sm"><option value="">全部核算周区间</option></select>
+      <div class="section-header">
+        <span class="section-title"><i class="ti ti-table-alias"></i>周区间级动态核算表</span>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap;">
+        <select id="weekly-filter-region" onchange="renderWeekly()" style="font-size:13px;padding:6px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);">
+          <option value="">全部地区</option>
+          <option value="TR">🇹🇷 土耳其</option>
+          <option value="TW">🇹🇼 台湾</option>
+          <option value="ES">🌎 西语</option>
+          <option value="BR">🇧🇷 巴西</option>
+        </select>
+        <select id="weekly-filter-range" onchange="renderWeekly()" style="font-size:13px;padding:6px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);">
+          <option value="">全部周次</option>
+        </select>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>具体周日期段 (周一 至 周日)</th><th>核算大区</th><th>累计发条数</th><th>总计消耗(USD)</th><th>周期总播放量</th><th>获取新注册</th><th>周综合获客CPA</th></tr></thead>
+          <thead><tr><th>具体周区间段 (周一 至 周日)</th><th>地区</th><th>推广条数</th><th>总消耗 (USD)</th><th>总播放量</th><th>新增用户</th><th>综合 CPA</th></tr></thead>
           <tbody id="weekly-tbody"></tbody>
         </table>
       </div>
@@ -287,44 +261,61 @@
   </div>
 
   <div id="view-materials" class="view">
-    <div class="two-col">
-      <div class="section">
-        <div class="section-header"><span class="section-title"><i class="ti ti-edit-circle"></i>🇹🇷 🇹🇼 台土素材投放情况单条补录</span></div>
-        <div class="form-grid" style="grid-template-columns:1fr 1fr;">
-          <div class="form-group"><label>投放日期 *</label><input type="date" id="m-date"></div>
-          <div class="form-group"><label>限定核心地区 *</label><select id="m-region"><option value="TW">🇹🇼 台湾地区</option><option value="TR">🇹🇷 土耳其地区</option></select></div>
-          <div class="form-group" style="grid-column: span 2;"><label>素材命名/代号标示 *</label><input type="text" id="m-name" placeholder="例如：202605_真人实拍剧情_V1"></div>
-          <div class="form-group"><label>该素材单日/单周消耗(USD)</label><input type="number" id="m-cost" placeholder="0.00" step="0.01"></div>
-          <div class="form-group"><label>该素材独立播放量</label><input type="number" id="m-views" placeholder="0"></div>
-          <div class="form-group" style="grid-column: span 2;"><label>针对素材留资/效果转化数</label><input type="number" id="m-leads" placeholder="0"></div>
-        </div>
-        <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="saveMaterial()"><i class="ti ti-cloud-upload"></i>确认归档该素材数据</button>
-      </div>
-      
-      <div class="section">
-        <div class="section-header"><span class="section-title"><i class="ti ti-report-analytics"></i>精选素材核心能效聚合速报</span></div>
-        <div class="metrics-grid" style="grid-template-columns:1fr 1fr; gap:12px; margin-bottom:0;">
-          <div class="metric-card" style="background:var(--bg2);">
-            <div class="metric-label">🇹🇼 台湾素材总消耗</div><div class="metric-value" id="lbl-mat-tw-cost">$0</div>
-          </div>
-          <div class="metric-card" style="background:var(--bg2);">
-            <div class="metric-label">🇹🇷 土耳其素材总消耗</div><div class="metric-value" id="lbl-mat-tr-cost">$0</div>
-          </div>
-          <div class="metric-card" style="background:var(--bg2);">
-            <div class="metric-label">台土总计总播放</div><div class="metric-value" id="lbl-mat-views" style="color:var(--accent);">0</div>
-          </div>
-          <div class="metric-card" style="background:var(--bg2);">
-            <div class="metric-label">综合大盘留资能效</div><div class="metric-value" id="lbl-mat-leads" style="color:var(--success);">0</div>
-          </div>
-        </div>
-      </div>
+    <div class="section">
+      <div class="section-header"><span class="section-title"><i class="ti ti-calculator"></i>🇹🇷 🇹🇼 台土素材高级汇总指标</span></div>
+      <div class="metrics-grid" id="material-summary-grid"></div>
     </div>
 
     <div class="section">
-      <div class="section-header"><span class="section-title"><i class="ti ti-article"></i>台土双区素材投放归档明细总揽表</span></div>
+      <div class="section-header"><span class="section-title"><i class="ti ti-edit"></i>台土独立素材记录录入</span></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>投放时间段 *</label>
+          <input type="text" id="m-range" placeholder="例如：05.10-05.16 或 单日">
+        </div>
+        <div class="form-group">
+          <label>国家地区 *</label>
+          <select id="m-region">
+            <option value="TW">🇹🇼 台湾</option>
+            <option value="TR">🇹🇷 土耳其</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>素材名称 *</label>
+          <input type="text" id="m-name" placeholder="输入监测素材唯一标识">
+        </div>
+        <div class="form-group">
+          <label>tt spk 新增 *</label>
+          <input type="number" id="m-spk-users" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label>tt 总新增 *</label>
+          <input type="number" id="m-total-users" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label>tt spk 消耗 (USD) *</label>
+          <input type="number" id="m-spk-cost" placeholder="0.00" min="0" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>tt 总消耗 (USD) *</label>
+          <input type="number" id="m-total-cost" placeholder="0.00" min="0" step="0.01">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="saveMaterialRecord()"><i class="ti ti-device-floppy"></i>保存素材单据</button>
+    </div>
+
+    <div class="section">
+      <div class="section-header"><span class="section-title"><i class="ti ti-folder"></i>台土素材归档明细明细流</span></div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>投放日期</th><th>归属地区</th><th>素材代号/标示名称</th><th>素材消耗成本</th><th>独立播放量数据</th><th>获取独立留资</th><th>留资成本单价</th><th>操作</th></tr></thead>
+          <thead>
+            <tr>
+              <th>时间段</th><th>地区</th><th>素材名称</th>
+              <th>tt spk 新增</th><th>tt 总新增</th><th>spk新增占比</th>
+              <th>tt spk 消耗</th><th>tt 总消耗</th><th>spk消耗占比</th>
+              <th>tt spk cpr</th><th>tt 总cpr</th><th>操作</th>
+            </tr>
+          </thead>
           <tbody id="materials-tbody"></tbody>
         </table>
       </div>
@@ -333,74 +324,93 @@
 
   <div id="view-add" class="view">
     <div class="section">
-      <div class="section-header"><span class="section-title"><i class="ti ti-upload"></i>自动化多维大盘表格流导入 (支持雷达汇总合并)</span></div>
+      <div class="section-header"><span class="section-title"><i class="ti ti-upload"></i>表格流自动解析归档</span></div>
       <div class="upload-box" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
-        <i class="ti ti-file-analytics"></i>
-        <p>拖拽或点击上传大盘全媒体报表明细 Excel / CSV 文件（系统将对重合项目开启智能合并）</p>
+        <i class="ti ti-copy-check"></i>
+        <p>拖拽或点击选择上传 Excel 或 CSV 文件（已过滤收益/ROI指标）</p>
         <input type="file" id="file-input" accept=".csv, .xlsx, .xls" onchange="handleFileSelect(event)">
       </div>
     </div>
 
     <div class="section">
       <div class="section-header">
-        <span class="section-title" id="form-title"><i class="ti ti-ballpen"></i>大盘推广账单单条精细化流水补录</span>
-        <span id="edit-indicator" style="display:none;" class="badge b-TW">处于编辑覆盖状态</span>
+        <span class="section-title" id="form-title"><i class="ti ti-ballpen"></i>单条/周期范围数据录入</span>
+        <span id="edit-indicator" style="display:none;" class="badge b-TW">覆盖编辑模式</span>
       </div>
-      
-      <div class="mode-switch">
-        <button class="mode-btn active" id="mode-single" onclick="setEntryDateMode('single')">指定具体单日</button>
-        <button class="mode-btn" id="mode-range" onclick="setEntryDateMode('range')">录入固定周期范围 (支持按天摊销)</button>
-      </div>
-
       <input type="hidden" id="f-id">
-      <div class="form-grid">
-        <div class="form-group" id="box-start-date"><label id="lbl-start-date">指定发生日期 *</label><input type="date" id="f-date"></div>
-        <div class="form-group" id="box-end-date" style="display:none;"><label>截止结束日期 *</label><input type="date" id="f-end-date"></div>
-        
-        <div class="form-group">
-          <label>核算指定大区 *</label>
-          <select id="f-region">
-            <option value="TR">🇹🇷 土耳其地区</option><option value="TW">🇹🇼 台湾地区</option>
-            <option value="ES">🌎 西语大区</option><option value="BR">🇧🇷 巴西大区</option>
-          </select>
+      
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 12px; color: var(--text2); display: block; margin-bottom: 4px;">日期录入模式：</label>
+        <div class="date-mode-toggle">
+          <button class="date-mode-btn active" id="btn-mode-single" onclick="switchDateMode('single')">具体单日</button>
+          <button class="date-mode-btn" id="btn-mode-range" onclick="switchDateMode('range')">周期范围</button>
         </div>
-        <div class="form-group">
-          <label>推广发布渠道 *</label>
-          <select id="f-channel">
-            <option value="TikTok">TikTok</option><option value="YouTube">YouTube</option><option value="Instagram">Instagram</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>内容具体表现形式 *</label>
-          <select id="f-content-type">
-            <option value="video">video</option><option value="reel">reel</option>
-            <option value="story">story</option><option value="post">post</option>
-            <option value="shorts">shorts</option><option value="comment">comment</option>
-          </select>
-        </div>
-        <div class="form-group"><label>推广发生有效条数</label><input type="number" id="f-count" placeholder="1" min="0"></div>
-        <div class="form-group"><label>推广消耗总金额 (USD)</label><input type="number" id="f-cost" placeholder="0.00" min="0" step="0.01"></div>
-        <div class="form-group"><label>此单据获取新注册用户数</label><input type="number" id="f-users" placeholder="0" min="0"></div>
-        
-        <div class="form-group"><label>该周期/单日大盘总播放量</label><input type="number" id="f-views" placeholder="形式总和合并口径" min="0"></div>
-        
-        <div class="form-group" style="grid-column: span 2;"><label>账单追溯备注 / 核心推广落地链接</label><input type="text" id="f-note" placeholder="可录入主要跳转主链URL或结算凭证号"></div>
       </div>
 
-      <div style="display:flex;gap:12px;margin-top:1rem;">
-        <button class="btn btn-primary" onclick="saveRecord()"><i class="ti ti-device-floppy"></i>确认账目提交存盘</button>
-        <button class="btn" onclick="clearForm()"><i class="ti ti-refresh"></i>放弃并清空</button>
+      <div class="form-grid">
+        <div class="form-group" id="date-input-container">
+          <label>选择日期 *</label>
+          <input type="date" id="f-date">
+        </div>
+        <div class="form-group">
+          <label>地区 *</label>
+          <select id="f-region">
+            <option value="TR">🇹🇷 土耳其</option>
+            <option value="TW">🇹🇼 台湾</option>
+            <option value="ES">🌎 西语</option>
+            <option value="BR">🇧🇷 巴西</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>渠道 *</label>
+          <select id="f-channel">
+            <option value="TikTok">TikTok</option>
+            <option value="YouTube">YouTube</option>
+            <option value="Instagram">Instagram</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>内容形式 *</label>
+          <select id="f-content-type">
+            <option value="video">video</option>
+            <option value="reel">reel</option>
+            <option value="story">story</option>
+            <option value="post">post</option>
+            <option value="shorts">shorts</option>
+            <option value="comment">comment</option>
+          </select>
+        </div>
+        <div class="form-group"><label>推广条数</label><input type="number" id="f-count" placeholder="1" min="0"></div>
+        <div class="form-group"><label>消耗（USD）</label><input type="number" id="f-cost" placeholder="0.00" min="0" step="0.01"></div>
+        <div class="form-group"><label>新增用户量</label><input type="number" id="f-users" placeholder="0" min="0"></div>
+        <div class="form-group"><label>总播放量</label><input type="number" id="f-views" placeholder="0" min="0"></div>
+        <div class="form-group"><label>备注/链接</label><input type="text" id="f-note" placeholder="URL或文本标注"></div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:0.5rem;">
+        <button class="btn btn-primary" onclick="saveRecord()"><i class="ti ti-device-floppy"></i>保存表单</button>
+        <button class="btn" onclick="clearForm()"><i class="ti ti-refresh"></i>重置</button>
       </div>
     </div>
 
     <div class="section">
       <div class="section-header">
-        <span class="section-title"><i class="ti ti-history"></i>系统全局最近录入的15条实时账单快照流水</span>
-        <button class="btn btn-danger" style="padding:6px 14px; font-size:12px;" onclick="if(confirm('🚨 危险确认：是否确定要一键销毁清除本系统本地缓存库中的全量历史明细流水？'))clearAll()"><i class="ti ti-trash"></i>清空本地核心数据库</button>
+        <span class="section-title"><i class="ti ti-history-toggle"></i>最新历史数据级流</span>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <select id="clean-filter-region" onchange="renderRecent()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);">
+            <option value="">筛选清空指定：全部地区</option>
+            <option value="TR">土耳其</option>
+            <option value="TW">台湾</option>
+            <option value="ES">西语</option>
+            <option value="BR">巴西</option>
+          </select>
+          <button class="btn btn-danger" style="padding:4px 12px; font-size:12px;" onclick="batchDeleteFiltered()"><i class="ti ti-layers-subtract"></i>批量删除选中地区数据</button>
+          <button class="btn" style="color:var(--danger); border-color:rgba(201,42,42,0.2); padding:4px 12px; font-size:12px;" onclick="if(confirm('🚨 警告：是否确定清空系统所有核心大盘推广数据？'))clearAll()"><i class="ti ti-trash"></i>清空全部大盘数据</button>
+        </div>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>对账发生日</th><th>核算地区</th><th>渠道平台</th><th>展示形式</th><th>发帖条数</th><th>总计消耗(USD)</th><th>新增获客</th><th>总播放量数据</th><th>追溯备注描述</th><th>管理</th></tr></thead>
+          <thead><tr><th>日期/区间</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗</th><th>新增用户</th><th>播放量</th><th>备注</th><th>操作</th></tr></thead>
           <tbody id="recent-tbody"></tbody>
         </table>
       </div>
@@ -412,88 +422,59 @@
 
 <script>
 const REGIONS = {
-  TR: { name: '土耳其', flag: '🇹🇷', color: '#10b981' },
-  TW: { name: '台湾',   flag: '🇹🇼', color: '#6366f1' },
-  ES: { name: '西语',   flag: '🌎',  color: '#3b82f6' },
-  BR: { name: '巴西',   flag: '🇧🇷', color: '#ef4444' },
+  TR: { name: '土耳其', flag: '🇹🇷', color: '#0ca678' },
+  TW: { name: '台湾',   flag: '🇹🇼', color: '#f76707' },
+  ES: { name: '西语',   flag: '🌎',  color: '#4c6ef5' },
+  BR: { name: '巴西',   flag: '🇧🇷', color: '#d6336c' },
 };
-const CHANNEL_COLORS = { 'TikTok': '#1a1a1e', 'YouTube': '#3b82f6', 'Instagram': '#ec4899' };
+
+const CHANNEL_COLORS = { 'TikTok': '#1e293b', 'YouTube': '#3b82f6', 'Instagram': '#8b5cf6' };
 
 let records = [];
-let materials = [];
+let materialRecords = [];
 let currentRegion = 'all';
-let entryDateMode = 'single'; // 'single' 或 'range'
+let currentFormDateMode = 'single'; // single 或 range
 let charts = {};
 
+// 初始化加载本地数据库
 function loadRecords() {
-  try {
-    let rData = localStorage.getItem('kol_records_v8');
-    records = rData ? JSON.parse(rData) : [];
-    let mData = localStorage.getItem('kol_materials_v8');
-    materials = mData ? JSON.parse(mData) : [];
+  try { 
+    const s = localStorage.getItem('kol_records_v6_classic'); 
+    records = s ? JSON.parse(s) : []; 
+    if(!Array.isArray(records)) records = [];
     
-    if(records.length === 0) generateMockData();
-    if(materials.length === 0) generateMaterialMocks();
-  } catch(e) { records = []; materials = []; }
+    const m = localStorage.getItem('kol_materials_v6');
+    materialRecords = m ? JSON.parse(m) : [];
+    if(!Array.isArray(materialRecords)) materialRecords = [];
+  } catch(e) { records = []; materialRecords = []; }
 }
 
-function generateMockData() {
-  const regList = ['TR','TW','ES','BR'];
-  const chList = ['TikTok','YouTube','Instagram'];
-  const tyList = ['video','reel','shorts'];
-  const baseDate = new Date();
-  for(let i=0; i<45; i++) {
-    const pastDays = Math.floor(Math.random()*45);
-    const d = new Date(baseDate.getTime() - pastDays*24*3600*1000);
-    const cost = Math.floor(Math.random()*200) + 40;
-    const users = Math.floor(cost / (Math.random()*0.4 + 0.1));
-    records.push({
-      id: Math.random().toString(36).slice(2),
-      date: d.toISOString().slice(0,10),
-      region: regList[Math.floor(Math.random()*regList.length)],
-      channel: chList[Math.floor(Math.random()*chList.length)],
-      contentType: tyList[Math.floor(Math.random()*tyList.length)],
-      count: Math.floor(Math.random()*3)+1,
-      cost: cost,
-      users: users,
-      views: users * (Math.floor(Math.random()*150) + 40),
-      note: ''
-    });
+function persistRecords() {
+  try { localStorage.setItem('kol_records_v6_classic', JSON.stringify(records)); } catch(e) {}
+}
+
+function persistMaterials() {
+  try { localStorage.setItem('kol_materials_v6', JSON.stringify(materialRecords)); } catch(e) {}
+}
+
+function switchDateMode(mode) {
+  currentFormDateMode = mode;
+  document.getElementById('btn-mode-single').classList.toggle('active', mode === 'single');
+  document.getElementById('btn-mode-range').classList.toggle('active', mode === 'range');
+  
+  const container = document.getElementById('date-input-container');
+  if (mode === 'single') {
+    container.innerHTML = `<label>选择日期 *</label><input type="date" id="f-date">`;
+    document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
+  } else {
+    container.innerHTML = `
+      <label>周期段范围 *</label>
+      <div style="display:flex; gap:4px; align-items:center;">
+        <input type="date" id="f-date-start"> <span style="font-size:12px;color:var(--text2)">至</span> <input type="date" id="f-date-end">
+      </div>`;
+    document.getElementById('f-date-start').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('f-date-end').value = new Date().toISOString().slice(0, 10);
   }
-  persist();
-}
-
-function generateMaterialMocks() {
-  const baseDate = new Date();
-  const regs = ['TW', 'TR'];
-  for(let i=0; i<8; i++) {
-    const pastDays = Math.floor(Math.random()*15);
-    const d = new Date(baseDate.getTime() - pastDays*24*3600*1000);
-    const cost = Math.floor(Math.random()*150) + 50;
-    materials.push({
-      id: Math.random().toString(36).slice(2),
-      date: d.toISOString().slice(0,10),
-      region: regs[Math.floor(Math.random()*regs.length)],
-      name: `2026_M_PROMO_STILLS_V${i+1}`,
-      cost: cost,
-      views: cost * Math.floor(Math.random()*200 + 100),
-      leads: Math.floor(cost / (Math.random()*3 + 1))
-    });
-  }
-  persist();
-}
-
-function persist() {
-  localStorage.setItem('kol_records_v8', JSON.stringify(records));
-  localStorage.setItem('kol_materials_v8', JSON.stringify(materials));
-}
-
-function getWeekStr(ds) {
-  const d = new Date(ds);
-  if(isNaN(d.getTime())) return '未知时间';
-  const jan1 = new Date(d.getFullYear(), 0, 1);
-  const w = Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
-  return d.getFullYear() + '-W' + String(w).padStart(2, '0');
 }
 
 function getWeekRangeLabel(weekStr) {
@@ -508,8 +489,17 @@ function getWeekRangeLabel(weekStr) {
     const targetMonday = new Date(firstMonday.getTime() + (week - 1) * 7 * 24 * 60 * 60 * 1000);
     const targetSunday = new Date(targetMonday.getTime() + 6 * 24 * 60 * 60 * 1000);
     const f = (d) => `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
-    return `${f(targetMonday)} 至 ${f(targetSunday)}`;
+    return `${f(targetMonday)}-${f(targetSunday)}`;
   } catch(e) { return weekStr; }
+}
+
+function getWeekStr(ds) {
+  if(ds.includes(' 至 ')) ds = ds.split(' 至 ')[0];
+  const d = new Date(ds);
+  if(isNaN(d.getTime())) return '未知周';
+  const jan1 = new Date(d.getFullYear(), 0, 1);
+  const w = Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
+  return d.getFullYear() + '-W' + String(w).padStart(2, '0');
 }
 
 function sum(arr, key) { return arr.reduce((s, r) => s + (parseFloat(r[key]) || 0), 0); }
@@ -518,13 +508,15 @@ function pct(a, b) { return b === 0 ? 0 : Math.round((a - b) / b * 100); }
 function showView(v) {
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   document.getElementById('view-' + v).classList.add('active');
-  const views = ['dashboard', 'daily', 'weekly', 'materials', 'add'];
-  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', views[i] === v));
   
-  if (v === 'dashboard') renderDashboard();
+  const tabs = document.querySelectorAll('.tab');
+  const views = ['dashboard', 'daily', 'weekly', 'materials', 'add'];
+  tabs.forEach((t, i) => t.classList.toggle('active', views[i] === v));
+  
+  if (v === 'dashboard') { renderDashboard(); calculateComparison(); }
   if (v === 'daily') renderDaily();
-  if (v === 'weekly') { updateWeeklyDropdownFilters(); renderWeekly(); }
-  if (v === 'materials') renderMaterialsView();
+  if (v === 'weekly') { updateWeeklyFilters(); renderWeekly(); }
+  if (v === 'materials') renderMaterialsPanel();
   if (v === 'add') renderRecent();
 }
 
@@ -535,110 +527,124 @@ function setRegion(r) {
   renderDashboard();
 }
 
-function setEntryDateMode(mode) {
-  entryDateMode = mode;
-  document.getElementById('mode-single').classList.toggle('active', mode === 'single');
-  document.getElementById('mode-range').classList.toggle('active', mode === 'range');
-  document.getElementById('lbl-start-date').textContent = mode === 'single' ? '指定发生日期 *' : '周期开始日期 *';
-  document.getElementById('box-end-date').style.display = mode === 'range' ? 'flex' : 'none';
-}
-
 function renderDashboard() {
-  initBiMonthRegionDropdown();
-  calculateBiMonth();
   renderMetrics();
+  renderTrendCharts();
   renderDistributionCharts();
 }
 
-function initBiMonthRegionDropdown() {
-  const rSel = document.getElementById('bm-region');
-  if(!rSel.innerHTML) {
-    rSel.innerHTML = '<option value="all">🌍 大盘全大区汇总</option>' + Object.keys(REGIONS).map(k => `<option value="${k}">${REGIONS[k].flag} ${REGIONS[k].name}</option>`).join('');
-  }
-}
-
-// 优化项5：全新的自由跨年度/跨月份任意双月跨度级差核算引擎
-function calculateBiMonth() {
-  const r = document.getElementById('bm-region').value;
-  
-  const bYear = document.getElementById('bm-base-year').value;
-  const bMonths = document.getElementById('bm-base-months').value;
-  const tYear = document.getElementById('bm-target-year').value;
-  const tMonths = document.getElementById('bm-target-months').value;
-  
-  // 更新卡片小表头标签展现
-  document.getElementById('bm-lbl-b1').textContent = `基准: ${bYear}年${bMonths}月`;
-  document.getElementById('bm-lbl-t1').textContent = `对比: ${tYear}年${tMonths}月`;
-  document.getElementById('bm-lbl-b2').textContent = `基准: ${bYear}年${bMonths}月`;
-  document.getElementById('bm-lbl-t2').textContent = `对比: ${tYear}年${tMonths}月`;
-  document.getElementById('bm-lbl-b3').textContent = `基准: ${bYear}年${bMonths}月`;
-  document.getElementById('bm-lbl-t3').textContent = `对比: ${tYear}年${tMonths}月`;
-
-  const getRanges = (year, monthPair) => {
-    const parts = monthPair.split('-');
-    const startMonth = parts[0];
-    const endMonth = parts[1];
-    return {
-      start: `${year}-${startMonth}-01`,
-      end: `${year}-${endMonth}-31` // 简单闭区间处理
-    };
-  };
-
-  const baseRange = getRanges(bYear, bMonths);
-  const targetRange = getRanges(tYear, tMonths);
-
-  let baseData = records.filter(x => x.date >= baseRange.start && x.date <= baseRange.end);
-  let targetData = records.filter(x => x.date >= targetRange.start && x.date <= targetRange.end);
-
-  if(r !== 'all') {
-    baseData = baseData.filter(x => x.region === r);
-    targetData = targetData.filter(x => x.region === r);
-  }
-
-  // 计算项1：推广消耗
-  const c1_b = sum(baseData, 'cost'), c1_t = sum(targetData, 'cost');
-  const diff1 = c1_t - c1_b; const rate1 = pct(c1_t, c1_b);
-  document.getElementById('bm-v1-diff').textContent = (diff1 >= 0 ? '+$' : '-$') + Math.abs(diff1).toLocaleString(undefined, {minimumFractionDigits:2});
-  document.getElementById('bm-v1-rate').innerHTML = `<span class="${rate1>=0?'up':'dn'}">${rate1>=0?'↑':'↓'} ${Math.abs(rate1)}%</span> 级差变化率`;
-
-  // 计算项2：新注册用户
-  const c2_b = sum(baseData, 'users'), c2_t = sum(targetData, 'users');
-  const diff2 = c2_t - c2_b; const rate2 = pct(c2_t, c2_b);
-  document.getElementById('bm-v2-diff').textContent = (diff2 >= 0 ? '+' : '') + diff2.toLocaleString() + ' 人';
-  document.getElementById('bm-v2-rate').innerHTML = `<span class="${rate2>=0?'up':'dn'}">${rate2>=0?'↑':'↓'} ${Math.abs(rate2)}%</span> 级差变化率`;
-
-  // 计算项3：全媒体播放
-  const c3_b = sum(baseData, 'views'), c3_t = sum(targetData, 'views');
-  const diff3 = c3_t - c3_b; const rate3 = pct(c3_t, c3_b);
-  document.getElementById('bm-v3-diff').textContent = (diff3 >= 0 ? '+' : '') + diff3.toLocaleString() + ' 次';
-  document.getElementById('bm-v3-rate').innerHTML = `<span class="${rate3>=0?'up':'dn'}">${rate3>=0?'↑':'↓'} ${Math.abs(rate3)}%</span> 级差变化率`;
-}
-
+// 移除大盘指标卡片中的收益/ROI
 function renderMetrics() {
+  const today = new Date().toISOString().slice(0, 7); 
+  const all14 = [];
+  for (let i = 13; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); all14.push(d.toISOString().slice(0, 10)); }
+  const thisWeek = all14.slice(7);
+  const prevWeek = all14.slice(0, 7);
+  
   const base = currentRegion === 'all' ? records : records.filter(r => r.region === currentRegion);
-  const totalCost = sum(base, 'cost');
-  const totalUsers = sum(base, 'users');
-  const totalViews = sum(base, 'views');
-  const cpa = totalUsers > 0 ? '$' + (totalCost / totalUsers).toFixed(2) : '—';
+  const tw = base.filter(r => r.date && thisWeek.some(d => r.date.includes(d)));
+  const pw = base.filter(r => r.date && prevWeek.some(d => r.date.includes(d)));
+  const tMonth = base.filter(r => r.date && r.date.includes(today));
+  
+  const twCost = sum(tw, 'cost'), twUsers = sum(tw, 'users'), twViews = sum(tw, 'views');
+  const tmCost = sum(tMonth, 'cost'), tmUsers = sum(tMonth, 'users');
+  
+  const monthCPA = tmUsers > 0 ? '$' + (tmCost / tmUsers).toFixed(2) : '—';
 
   const items = [
-    { label: '大盘账面总计消耗', icon: 'ti-coin', val: '$' + totalCost.toLocaleString(undefined, {maximumFractionDigits:2}) },
-    { label: '大盘获取注册总数', icon: 'ti-users', val: totalUsers.toLocaleString() + ' 人' },
-    { label: '大盘多形式合并总播放', icon: 'ti-device-tv', val: totalViews.toLocaleString() + ' 次' },
-    { label: '大盘大中华区综合 CPA', icon: 'ti-report-money', val: cpa },
+    { label: '本周大盘消耗', icon: 'ti-coin', val: '$' + twCost.toLocaleString(), diff: pct(twCost, sum(pw,'cost')) },
+    { label: '本周获客总量', icon: 'ti-users-plus', val: twUsers.toLocaleString() + ' 人', diff: pct(twUsers, sum(pw,'users')) },
+    { label: '本周总播放数据', icon: 'ti-eye', val: twViews.toLocaleString() + ' 次', diff: pct(twViews, sum(pw,'views')) },
+    { label: '月度大盘核算 CPA', icon: 'ti-calculator', val: monthCPA, diff: null, subText: '当前月份综合平均成本' },
   ];
   
   document.getElementById('metrics-grid').innerHTML = items.map(m => `
     <div class="metric-card">
       <div class="metric-label"><i class="ti ${m.icon}"></i>${m.label}</div>
       <div class="metric-value">${m.val}</div>
+      <div class="metric-sub">${m.diff !== null ? `<span class="${m.diff >= 0 ? 'up' : 'dn'}">${m.diff >= 0 ? '↑' : '↓'}${Math.abs(m.diff)}%</span> vs 上周同期` : (m.subText)}</div>
     </div>`).join('');
+}
+
+// 自由双月数据差值对比逻辑
+function calculateComparison() {
+  const mA = document.getElementById('comp-month-a').value;
+  const mB = document.getElementById('comp-month-b').value;
+  
+  if (!mA || !mB) {
+    document.getElementById('compare-results-wrap').innerHTML = `<div style="color:var(--text2); font-size:13px; text-align:center; width:100%;">💡 请先选择任意需要做交叉对比的两个月份</div>`;
+    return;
+  }
+  
+  const base = currentRegion === 'all' ? records : records.filter(r => r.region === currentRegion);
+  const dataA = base.filter(r => r.date && r.date.includes(mA));
+  const dataB = base.filter(r => r.date && r.date.includes(mB));
+  
+  const costA = sum(dataA, 'cost'), usersA = sum(dataA, 'users'), cpaA = usersA > 0 ? (costA / usersA) : 0;
+  const costB = sum(dataB, 'cost'), usersB = sum(dataB, 'users'), cpaB = usersB > 0 ? (costB / usersB) : 0;
+  
+  const costDiff = costB - costA;
+  const usersDiff = usersB - usersA;
+  const cpaDiff = cpaB - cpaA;
+  
+  document.getElementById('compare-results-wrap').innerHTML = `
+    <div class="compare-box">
+      <div class="compare-title">月份消耗总差额 (B - A)</div>
+      <div class="compare-num ${costDiff >= 0 ? 'up' : 'dn'}">${costDiff >= 0 ? '+' : ''}$${costDiff.toLocaleString()}</div>
+      <div style="font-size:11px; color:var(--text2); margin-top:4px;">A月: $${costA.toLocaleString()} | B月: $${costB.toLocaleString()}</div>
+    </div>
+    <div class="compare-box">
+      <div class="compare-title">新增注册用户差值 (B - A)</div>
+      <div class="compare-num ${usersDiff >= 0 ? 'up' : 'dn'}">${usersDiff >= 0 ? '+' : ''}${usersDiff.toLocaleString()} 人</div>
+      <div style="font-size:11px; color:var(--text2); margin-top:4px;">A月: ${usersA.toLocaleString()} | B月: ${usersB.toLocaleString()}</div>
+    </div>
+    <div class="compare-box">
+      <div class="compare-title">核心获客 CPA 波动级差</div>
+      <div class="compare-num ${cpaDiff <= 0 ? 'up' : 'dn'}">${cpaDiff >= 0 ? '+' : ''}$${cpaDiff.toFixed(2)}</div>
+      <div style="font-size:11px; color:var(--text2); margin-top:4px;">A月CPA: $${cpaA.toFixed(2)} | B月CPA: $${cpaB.toFixed(2)}</div>
+    </div>
+  `;
+}
+
+function renderTrendCharts() {
+  const dates = [];
+  for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); dates.push(d.toISOString().slice(0, 10)); }
+  const labels = dates.map(d => d.slice(5));
+  const rks = currentRegion === 'all' ? Object.keys(REGIONS) : [currentRegion];
+  const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)';
+  const tickColor = isDark ? '#909296' : '#6c757d';
+
+  const makeDS = (key) => rks.map(r => ({
+    label: REGIONS[r] ? REGIONS[r].name : r,
+    data: dates.map(d => sum(records.filter(x => x.date && x.date.includes(d) && x.region === r), key)),
+    borderColor: REGIONS[r] ? REGIONS[r].color : '#888',
+    backgroundColor: REGIONS[r] ? REGIONS[r].color + '15' : '#88815',
+    tension: 0.3, pointRadius: 4, borderWidth: 2, fill: rks.length === 1
+  }));
+
+  const opts = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false }, ticks: { color: tickColor, font: { size: 11 } } },
+      y: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 } } }
+    }
+  };
+
+  ['chart-users', 'chart-cost'].forEach(id => { if (charts[id]) { charts[id].destroy(); delete charts[id]; } });
+
+  document.getElementById('legend-users').innerHTML = rks.map(r => `<span class="legend-item"><span class="legend-dot" style="background:${REGIONS[r].color}"></span>${REGIONS[r].flag} ${REGIONS[r].name}</span>`).join('');
+  document.getElementById('legend-cost').innerHTML = document.getElementById('legend-users').innerHTML;
+
+  charts['chart-users'] = new Chart(document.getElementById('chart-users'), { type: 'line', data: { labels, datasets: makeDS('users') }, options: opts });
+  charts['chart-cost']  = new Chart(document.getElementById('chart-cost'),  { type: 'line', data: { labels, datasets: makeDS('cost')  }, options: opts });
 }
 
 function renderDistributionCharts() {
   const base = currentRegion === 'all' ? records : records.filter(r => r.region === currentRegion);
   const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
-  const tickColor = isDark ? '#86868b' : '#6e6e73';
+  const tickColor = isDark ? '#909296' : '#6c757d';
 
   const channels = ['TikTok', 'YouTube', 'Instagram'];
   const channelData = channels.map(c => sum(base.filter(r => r.channel === c), 'cost'));
@@ -652,19 +658,20 @@ function renderDistributionCharts() {
         data: channelData,
         backgroundColor: channels.map(c => CHANNEL_COLORS[c] || '#888'),
         borderWidth: isDark ? 2 : 3,
-        borderColor: isDark ? '#1a1a1e' : '#ffffff'
+        borderColor: isDark ? '#25262b' : '#ffffff',
+        hoverOffset: 6
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { position: 'right', labels: { color: tickColor, font: { size: 12, weight: '600' } } } },
-      cutout: '70%'
+      plugins: { legend: { position: 'right', labels: { color: tickColor, font: { size: 12, weight: '500' }, boxWidth: 12, padding: 15 } } },
+      cutout: '65%'
     }
   });
 
   const contentTypes = ['video', 'reel', 'story', 'post', 'shorts', 'comment'];
-  const contentCost = contentTypes.map(t => sum(base.filter(r => r.contentType === t), 'cost'));
-  const contentViews = contentTypes.map(t => sum(base.filter(r => r.contentType === t), 'views'));
+  const contentCostSums = contentTypes.map(t => sum(base.filter(r => r.contentType === t), 'cost'));
+  const contentViewsSums = contentTypes.map(t => sum(base.filter(r => r.contentType === t), 'views'));
 
   if (charts['chart-content-types']) charts['chart-content-types'].destroy();
   charts['chart-content-types'] = new Chart(document.getElementById('chart-content-types'), {
@@ -672,76 +679,85 @@ function renderDistributionCharts() {
     data: {
       labels: contentTypes,
       datasets: [
-        { label: '成本消耗 (USD)', data: contentCost, backgroundColor: '#6366f1', borderRadius: 5 },
-        { label: '形式大盘总播放量', data: contentViews, backgroundColor: 'rgba(99, 102, 241, 0.2)', borderRadius: 5 }
+        { label: '消耗 (USD)', data: contentCostSums, backgroundColor: '#3b82f6', borderRadius: 4, yAxisID: 'y' },
+        { label: '播放量', data: contentViewsSums, backgroundColor: '#a78bfa', borderRadius: 4, yAxisID: 'y1' }
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { position: 'top', labels: { color: tickColor } } },
+      plugins: { legend: { position: 'top', labels: { color: tickColor, font: { size: 11 } } } },
       scales: {
         x: { ticks: { color: tickColor } },
-        y: { ticks: { color: tickColor }, grid: { color: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)' } }
+        y: { type: 'linear', position: 'left', ticks: { color: tickColor }, grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)' } },
+        y1: { type: 'linear', position: 'right', ticks: { color: tickColor }, grid: { drawOnChartArea: false } }
       }
     }
   });
 }
 
-// 优化项4：支持精确到某一天的穿透过滤渲染
+// 渲染明细：已升级为具体单日级匹配，剔除了收益和ROI相关
 function renderDaily() {
   const fr = document.getElementById('filter-region').value;
   const fc = document.getElementById('filter-channel').value;
-  const exactDate = document.getElementById('filter-exact-date').value;
+  const fd = document.getElementById('filter-date').value; 
   
   let data = [...records].sort((a,b) => b.date.localeCompare(a.date));
   if (fr) data = data.filter(r => r.region === fr);
   if (fc) data = data.filter(r => r.channel === fc);
-  if (exactDate) data = data.filter(r => r.date === exactDate); // 精准匹配单日
+  if (fd) data = data.filter(r => r.date && r.date.includes(fd));
   
-  document.getElementById('daily-count').textContent = `共检索到 ${data.length} 行流水记录`;
+  document.getElementById('daily-count').textContent = '已检索匹配 ' + data.length + ' 条单据';
   document.getElementById('daily-tbody').innerHTML = data.length === 0
-    ? `<tr><td colspan="11" class="empty">无对应匹配的账目，请调整单日过滤或大区选项</td></tr>`
+    ? `<tr><td colspan="11" class="empty">无匹配过滤数据，请精确选择查询条件</td></tr>`
     : data.map(r => {
-        const cost = +r.cost || 0; const users = +r.users || 0;
+        const cost = +r.cost || 0;
+        const users = +r.users || 0;
         return `<tr>
-          <td><strong>${r.date}</strong></td>
+          <td><strong style="font-family:monospace;">${r.date}</strong></td>
           <td><span class="badge b-${r.region}">${(REGIONS[r.region] || {flag:'', name: r.region}).flag} ${(REGIONS[r.region] || {name:r.region}).name}</span></td>
           <td><span class="badge b-c">${r.channel || '—'}</span></td>
-          <td><code>${r.contentType || '—'}</code></td>
-          <td>${(+r.count || 0)}</td>
-          <td>$${cost.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
-          <td style="color:var(--success); font-weight:600;">${users.toLocaleString()}</td>
-          <td style="color:var(--accent); font-weight:600;">${(+r.views || 0).toLocaleString()}</td>
-          <td><strong>${users > 0 ? '$' + (cost/users).toFixed(2) : '—'}</strong></td>
-          <td>${r.note ? (r.note.startsWith('http') ? `<a href="${r.note}" target="_blank" style="color:var(--info)">查看主链</a>` : r.note) : '—'}</td>
+          <td><strong>${r.contentType || '—'}</strong></td>
+          <td>${(+r.count || 0).toLocaleString()}</td>
+          <td>$${cost.toLocaleString()}</td>
+          <td><span style="color:#2b8a3e; font-weight:600;">${users.toLocaleString()}</span></td>
+          <td style="color:#6366f1;">${(+r.views || 0).toLocaleString()}</td>
+          <td><strong style="color:var(--danger)">${users > 0 ? '$' + (cost/users).toFixed(2) : '—'}</strong></td>
+          <td>${getNoteHtml(r)}</td>
           <td>
-            <button class="action-btn" onclick="editRecord('${r.id}')"><i class="ti ti-edit"></i></button>
-            <button class="action-btn" onclick="deleteRecord('${r.id}')"><i class="ti ti-trash"></i></button>
+            <button class="action-btn edit" onclick="editRecord('${r.id}')"><i class="ti ti-edit"></i></button>
+            <button class="action-btn del" onclick="deleteRecord('${r.id}')"><i class="ti ti-trash"></i></button>
           </td>
         </tr>`;
     }).join('');
 }
 
-function updateWeeklyDropdownFilters() {
+function updateWeeklyFilters() {
   const weekSet = new Set();
-  records.forEach(r => weekSet.add(getWeekStr(r.date)));
+  records.forEach(r => { if(r.date) weekSet.add(getWeekStr(r.date)); });
   const sortedWeeks = Array.from(weekSet).sort();
+  
   const select = document.getElementById('weekly-filter-range');
-  select.innerHTML = '<option value="">全部核算周区间日期段</option>';
+  const currentVal = select.value;
+  select.innerHTML = '<option value="">全部周次</option>';
   sortedWeeks.forEach(w => {
-    const opt = document.createElement('option'); opt.value = w;
-    opt.textContent = getWeekRangeLabel(w); select.appendChild(opt);
+    const opt = document.createElement('option');
+    opt.value = w;
+    opt.textContent = getWeekRangeLabel(w);
+    select.appendChild(opt);
   });
+  select.value = currentVal;
 }
 
 function renderWeekly() {
   const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
-  const tickColor = isDark ? '#86868b' : '#6e6e73';
+  const tickColor = isDark ? '#909296' : '#6c757d';
+
   const wFilter = document.getElementById('weekly-filter-range').value;
   const rFilter = document.getElementById('weekly-filter-region').value;
 
   const weekMap = {};
   records.forEach(r => {
+    if(!r.date) return;
     const wk = getWeekStr(r.date);
     if (!weekMap[wk]) weekMap[wk] = {};
     if (!weekMap[wk][r.region]) weekMap[wk][r.region] = { count:0, cost:0, users:0, views:0 };
@@ -763,120 +779,174 @@ function renderWeekly() {
       datasets: rks.map(r => ({
         label: REGIONS[r].name,
         data: chartWeeks.map(w => weekMap[w] && weekMap[w][r] ? weekMap[w][r].cost : 0),
-        backgroundColor: REGIONS[r].color,
+        backgroundColor: REGIONS[r].color + 'cc',
         borderRadius: 4
       }))
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { labels: { color: tickColor } } },
-      scales: { y: { ticks: { color: tickColor }, grid: { color: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)' } }, x: { ticks: { color: tickColor } } }
+      scales: { x: { grid: { display: false }, ticks: { color: tickColor, font: { size: 10 } } }, y: { ticks: { color: tickColor } } }
     }
   });
 
   let rows = '';
   allWeeks.slice().reverse().forEach(w => {
-    if (wFilter && w !== wFilter) return;
+    if (wFilter && w !== wFilter) return; 
     rks.forEach(r => {
-      if (rFilter && r !== rFilter) return;
       const d = weekMap[w] && weekMap[w][r];
-      if (!d || (d.count===0 && d.cost===0 && d.users===0)) return;
+      if (!d || (d.count===0 && d.cost===0 && d.users===0 && d.views===0)) return;
+      if (rFilter && r !== rFilter) return; 
       rows += `<tr>
-        <td><span style="font-family:monospace;font-weight:600;color:var(--accent);">${getWeekRangeLabel(w)}</span></td>
+        <td><span class="week-range">${getWeekRangeLabel(w)}</span></td>
         <td><span class="badge b-${r}">${REGIONS[r].flag} ${REGIONS[r].name}</span></td>
-        <td>${d.count}</td>
-        <td>$${d.cost.toLocaleString(undefined,{minimumFractionDigits:2})}</td>
-        <td style="color:var(--accent); font-weight:600;">${Math.round(d.views).toLocaleString()}</td>
-        <td style="color:var(--success); font-weight:600;">${Math.round(d.users).toLocaleString()}</td>
-        <td><span style="font-weight:700;">${d.users > 0 ? '$' + (d.cost/d.users).toFixed(2) : '—'}</span></td>
+        <td>${Math.round(d.count).toLocaleString()}</td>
+        <td>$${d.cost.toLocaleString()}</td>
+        <td style="color:#6366f1;font-weight:600;">${Math.round(d.views).toLocaleString()}</td>
+        <td style="color:#2b8a3e;font-weight:600;">${Math.round(d.users).toLocaleString()}</td>
+        <td><span style="font-size:13px; color:#c92a2a; font-weight:700;">${d.users > 0 ? '$' + (d.cost/d.users).toFixed(2) : '—'}</span></td>
       </tr>`;
     });
   });
-  document.getElementById('weekly-tbody').innerHTML = rows || `<tr><td colspan="7" class="empty">无匹配的周合并明细数据</td></tr>`;
+  document.getElementById('weekly-tbody').innerHTML = rows || `<tr><td colspan="7" class="empty">无匹配多维周对账数据</td></tr>`;
 }
 
-// 优化项3：台土大区独立素材模块配套方法
-function renderMaterialsView() {
-  document.getElementById('m-date').value = new Date().toISOString().slice(0, 10);
-  
-  // 计算台土素材报表数据
-  const twMat = materials.filter(x => x.region === 'TW');
-  const trMat = materials.filter(x => x.region === 'TR');
-  
-  document.getElementById('lbl-mat-tw-cost').textContent = '$' + sum(twMat, 'cost').toLocaleString(undefined, {minimumFractionDigits:2});
-  document.getElementById('lbl-mat-tr-cost').textContent = '$' + sum(trMat, 'cost').toLocaleString(undefined, {minimumFractionDigits:2});
-  document.getElementById('lbl-mat-views').textContent = sum(materials, 'views').toLocaleString() + ' 次';
-  document.getElementById('lbl-mat-leads').textContent = sum(materials, 'leads').toLocaleString() + ' 留资';
-
-  const tbody = document.getElementById('materials-tbody');
-  tbody.innerHTML = materials.length === 0
-    ? `<tr><td colspan="8" class="empty">暂未单独补录台土两个核心地区的素材表现数据</td></tr>`
-    : [...materials].sort((a,b)=>b.date.localeCompare(a.date)).map(m => {
-        const c = +m.cost || 0; const l = +m.leads || 0;
-        return `<tr>
-          <td>${m.date}</td>
-          <td><span class="badge b-${m.region}">${REGIONS[m.region].flag} ${REGIONS[m.region].name}</span></td>
-          <td><b style="color:var(--text);">${m.name}</b></td>
-          <td>$${c.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
-          <td style="color:var(--accent);">${(+m.views||0).toLocaleString()}</td>
-          <td style="color:var(--success); font-weight:600;">${l.toLocaleString()}</td>
-          <td><strong>${l > 0 ? '$' + (c/l).toFixed(2) : '—'}</strong></td>
-          <td><button class="action-btn" style="color:var(--danger);" onclick="deleteMaterial('${m.id}')"><i class="ti ti-trash"></i></button></td>
-        </tr>`;
-    }).join('');
-}
-
-function saveMaterial() {
-  const date = document.getElementById('m-date').value;
+// 独占板块：台土素材投放数据流核算
+function saveMaterialRecord() {
+  const range = document.getElementById('m-range').value.trim();
   const region = document.getElementById('m-region').value;
   const name = document.getElementById('m-name').value.trim();
-  const cost = parseFloat(document.getElementById('m-cost').value) || 0;
-  const views = parseInt(document.getElementById('m-views').value) || 0;
-  const leads = parseInt(document.getElementById('m-leads').value) || 0;
+  const spkUsers = parseFloat(document.getElementById('m-spk-users').value) || 0;
+  const totalUsers = parseFloat(document.getElementById('m-total-users').value) || 0;
+  const spkCost = parseFloat(document.getElementById('m-spk-cost').value) || 0;
+  const totalCost = parseFloat(document.getElementById('m-total-cost').value) || 0;
 
-  if(!date || !name) { toast('❌ 发生日期与素材代号名称为必填项'); return; }
+  if (!range || !name) { toast('❌ 投放时间段与素材名称不能为空'); return; }
   
-  materials.push({ id: Date.now().toString(36), date, region, name, cost, views, leads });
-  persist(); renderMaterialsView();
+  materialRecords.push({ id: Date.now(), range, region, name, spkUsers, totalUsers, spkCost, totalCost });
+  persistMaterials();
+  toast('✓ 素材投放明细成功建档归册');
   
+  // 清空表单
+  document.getElementById('m-range').value = '';
   document.getElementById('m-name').value = '';
-  document.getElementById('m-cost').value = '';
-  document.getElementById('m-views').value = '';
-  document.getElementById('m-leads').value = '';
-  toast('✓ 该素材投放账目已成功归档入库');
+  ['m-spk-users','m-total-users','m-spk-cost','m-total-cost'].forEach(id => document.getElementById(id).value = '');
+  renderMaterialsPanel();
 }
 
 function deleteMaterial(id) {
-  if(confirm('确认销毁丢弃该独立素材历史单证吗？')) {
-    materials = materials.filter(m => m.id !== id); persist(); renderMaterialsView();
-    toast('✓ 素材流单据已销毁');
+  if (confirm('确定移除该素材监控数据？')) {
+    materialRecords = materialRecords.filter(x => x.id !== id);
+    persistMaterials();
+    renderMaterialsPanel();
+    toast('已移除');
   }
 }
 
-function renderRecent() {
-  if (!document.getElementById('f-date').value) document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
-  if (!document.getElementById('f-end-date').value) document.getElementById('f-end-date').value = new Date().toISOString().slice(0, 10);
+function renderMaterialsPanel() {
+  const tbody = document.getElementById('materials-tbody');
   
-  const recent = [...records].sort((a,b) => b.date.localeCompare(a.date)).slice(0, 15);
+  // 计算高级汇总
+  const sumSpkUsers = sum(materialRecords, 'spkUsers');
+  const sumTotalUsers = sum(materialRecords, 'totalUsers');
+  const sumSpkCost = sum(materialRecords, 'spkCost');
+  const sumTotalCost = sum(materialRecords, 'totalCost');
+  
+  const pctUsers = sumTotalUsers > 0 ? ((sumSpkUsers / sumTotalUsers) * 100).toFixed(1) + '%' : '0%';
+  const pctCost = sumTotalCost > 0 ? ((sumSpkCost / sumTotalCost) * 100).toFixed(1) + '%' : '0%';
+  const totalSpkCpr = sumSpkUsers > 0 ? '$' + (sumSpkCost / sumSpkUsers).toFixed(2) : '—';
+  const totalAllCpr = sumTotalUsers > 0 ? '$' + (sumTotalCost / sumTotalUsers).toFixed(2) : '—';
+
+  document.getElementById('material-summary-grid').innerHTML = `
+    <div class="metric-card" style="border-left: 4px solid #f76707;">
+      <div class="metric-label">TT SPK 核心总获客</div>
+      <div class="metric-value">${sumSpkUsers.toLocaleString()} 人</div>
+      <div class="metric-sub">占TT总新增比重 <span class="up">${pctUsers}</span></div>
+    </div>
+    <div class="metric-card" style="border-left: 4px solid #0ca678;">
+      <div class="metric-label">TT SPK 核心总消耗</div>
+      <div class="metric-value">$${sumSpkCost.toLocaleString()}</div>
+      <div class="metric-sub">占TT总消耗比重 <span class="dn">${pctCost}</span></div>
+    </div>
+    <div class="metric-card" style="border-left: 4px solid #1c7ed6;">
+      <div class="metric-label">综合 TT SPK CPR</div>
+      <div class="metric-value" style="color:var(--danger)">${totalSpkCpr}</div>
+      <div class="metric-sub">全素材平均获客成本</div>
+    </div>
+    <div class="metric-card" style="border-left: 4px solid #6c757d;">
+      <div class="metric-label">综合 大盘总 CPR</div>
+      <div class="metric-value">${totalAllCpr}</div>
+      <div class="metric-sub">台土大盘总转化成本</div>
+    </div>
+  `;
+
+  tbody.innerHTML = materialRecords.length === 0 
+    ? `<tr><td colspan="12" class="empty">暂无台土三方定制独立监测素材流数据</td></tr>`
+    : materialRecords.map(r => {
+        const uPct = r.totalUsers > 0 ? ((r.spkUsers/r.totalUsers)*100).toFixed(1) + '%' : '0%';
+        const cPct = r.totalCost > 0 ? ((r.spkCost/r.totalCost)*100).toFixed(1) + '%' : '0%';
+        const spkCpr = r.spkUsers > 0 ? '$' + (r.spkCost/r.spkUsers).toFixed(2) : '—';
+        const totalCpr = r.totalUsers > 0 ? '$' + (r.totalCost/r.totalUsers).toFixed(2) : '—';
+        return `<tr>
+          <td><strong>${r.range}</strong></td>
+          <td><span class="badge b-${r.region}">${REGIONS[r.region].flag} ${REGIONS[r.region].name}</span></td>
+          <td><code style="font-weight:700; background:var(--bg3); padding:2px 6px; border-radius:4px;">${r.name}</code></td>
+          <td>${r.spkUsers.toLocaleString()}</td>
+          <td>${r.totalUsers.toLocaleString()}</td>
+          <td class="up">${uPct}</td>
+          <td>$${r.spkCost.toLocaleString()}</td>
+          <td>$${r.totalCost.toLocaleString()}</td>
+          <td class="dn">${cPct}</td>
+          <td><strong style="color:var(--danger)">${spkCpr}</strong></td>
+          <td>${totalCpr}</td>
+          <td><button class="action-btn del" onclick="deleteMaterial(${r.id})"><i class="ti ti-trash"></i></button></td>
+        </tr>`;
+      }).join('');
+}
+
+function renderRecent() {
+  const cleanFilter = document.getElementById('clean-filter-region').value;
+  let list = [...records].sort((a,b) => b.date.localeCompare(a.date));
+  if(cleanFilter) list = list.filter(r => r.region === cleanFilter);
+  
+  const recent = list.slice(0, 15);
   document.getElementById('recent-tbody').innerHTML = recent.length === 0
-    ? `<tr><td colspan="10" class="empty">本地缓存库为空</td></tr>`
+    ? `<tr><td colspan="10" class="empty">未检索到任何录入记录明细流</td></tr>`
     : recent.map(r => `<tr>
-      <td>${r.date}</td>
+      <td><span style="font-family:monospace; font-weight:600;">${r.date}</span></td>
       <td><span class="badge b-${r.region}">${REGIONS[r.region]?REGIONS[r.region].flag:''} ${REGIONS[r.region]?REGIONS[r.region].name:r.region}</span></td>
-      <td>${r.channel}</td><td>${r.contentType}</td><td>${r.count}</td>
-      <td>$${(+r.cost).toLocaleString()}</td><td>${r.users}</td><td>${r.views || 0}</td>
-      <td>${r.note || '—'}</td>
+      <td>${r.channel}</td>
+      <td>${r.contentType}</td>
+      <td>${r.count}</td>
+      <td>$${(+r.cost).toLocaleString()}</td>
+      <td>${r.users}</td>
+      <td>${r.views || 0}</td>
+      <td>${getNoteHtml(r)}</td>
       <td>
-        <button class="action-btn" onclick="editRecord('${r.id}')"><i class="ti ti-edit"></i></button>
-        <button class="action-btn" onclick="deleteRecord('${r.id}')"><i class="ti ti-trash"></i></button>
+        <button class="action-btn edit" onclick="editRecord('${r.id}')"><i class="ti ti-edit"></i></button>
+        <button class="action-btn del" onclick="deleteRecord('${r.id}')"><i class="ti ti-trash"></i></button>
       </td>
     </tr>`).join('');
 }
 
-// 优化项1：保存时支持时间跨度按天摊销逻辑
+function batchDeleteFiltered() {
+  const cleanFilter = document.getElementById('clean-filter-region').value;
+  if (!cleanFilter) {
+    toast('⚠️ 请先选择具体国家地区再执行清洗！');
+    return;
+  }
+  const targetName = REGIONS[cleanFilter].name;
+  if (confirm(`🚨 安全确认：确定批量清空归档库中所有属于【${targetName}】的数据单据？`)) {
+    const beforeLen = records.length;
+    records = records.filter(r => r.region !== cleanFilter);
+    persistRecords(); renderRecent();
+    toast(`✓ 已彻底移除【${targetName}】大盘维度的 ${beforeLen - records.length} 条记录`);
+  }
+}
+
+// 支持自由日期段或者单日录入
 function saveRecord() {
   const id = document.getElementById('f-id').value;
-  const startDateStr = document.getElementById('f-date').value;
   const region = document.getElementById('f-region').value;
   const channel = document.getElementById('f-channel').value;
   const contentType = document.getElementById('f-content-type').value;
@@ -886,50 +956,45 @@ function saveRecord() {
   const views = parseFloat(document.getElementById('f-views').value) || 0;
   const note = document.getElementById('f-note').value.trim();
 
-  if (!startDateStr) { toast('❌ 对账起始时间不得为空'); return; }
-
-  if (entryDateMode === 'single' || id) {
-    // 正常单日录入或处于编辑状态覆盖
-    const payload = { id, date: startDateStr, region, channel, contentType, count, cost, users, views, note };
-    if (id) {
-      const idx = records.findIndex(r => r.id === id);
-      if (idx > -1) records[idx] = payload;
-    } else {
-      payload.id = 'R' + Date.now() + Math.random().toString(36).slice(2);
-      records.push(payload);
-    }
+  let finalDateStr = '';
+  if (currentFormDateMode === 'single') {
+    finalDateStr = document.getElementById('f-date').value;
+    if (!finalDateStr) { toast('❌ 录入指定日期不能为空'); return; }
   } else {
-    // 周期范围录入：启动自动化均摊算法
-    const endDateStr = document.getElementById('f-end-date').value;
-    if(!endDateStr || endDateStr < startDateStr) { toast('❌ 截止结束日期不合法'); return; }
-    
-    const start = new Date(startDateStr); const end = new Date(endDateStr);
-    const dayDiff = Math.round((end - start) / (24 * 3600 * 1000)) + 1;
-    
-    const perCost = cost / dayDiff; const perUsers = users / dayDiff;
-    const perViews = views / dayDiff; const perCount = count / dayDiff;
-    
-    for(let i=0; i<dayDiff; i++) {
-      const curr = new Date(start.getTime() + i*24*3600*1000);
-      records.push({
-        id: 'R' + Date.now() + Math.random().toString(36).slice(2),
-        date: curr.toISOString().slice(0, 10),
-        region, channel, contentType,
-        count: perCount, cost: perCost, users: perUsers, views: perViews,
-        note: `[区间均摊] ${note}`
-      });
-    }
-    toast(`✓ 已安全启动智能均摊，数据自动分拆写入 ${dayDiff} 天中`);
+    const s = document.getElementById('f-date-start').value;
+    const e = document.getElementById('f-date-end').value;
+    if (!s || !e) { toast('❌ 开始与结束日期不能为空'); return; }
+    finalDateStr = `${s} 至 ${e}`;
   }
 
-  persist(); clearForm(); renderRecent();
+  const payload = { id, date: finalDateStr, region, channel, contentType, count, cost, users, views, note };
+
+  if (id) {
+    const idx = records.findIndex(r => r.id === id);
+    if (idx > -1) { records[idx] = payload; toast('✓ 对应档单据修改成功'); }
+  } else {
+    payload.id = Date.now() + Math.random().toString(36).slice(2);
+    records.push(payload); toast('✓ 大盘对账记录成功录入');
+  }
+
+  persistRecords(); clearForm(); renderRecent();
 }
 
 function editRecord(id) {
   const r = records.find(x => x.id === id); if (!r) return;
-  showView('add'); setEntryDateMode('single');
+  showView('add');
+  
+  if (r.date && r.date.includes(' 至 ')) {
+    switchDateMode('range');
+    const parts = r.date.split(' 至 ');
+    document.getElementById('f-date-start').value = parts[0];
+    document.getElementById('f-date-end').value = parts[1];
+  } else {
+    switchDateMode('single');
+    document.getElementById('f-date').value = r.date;
+  }
+  
   document.getElementById('f-id').value = r.id;
-  document.getElementById('f-date').value = r.date;
   document.getElementById('f-region').value = r.region;
   document.getElementById('f-channel').value = r.channel || 'TikTok';
   document.getElementById('f-content-type').value = r.contentType || 'video';
@@ -938,83 +1003,169 @@ function editRecord(id) {
   document.getElementById('f-users').value = r.users;
   document.getElementById('f-views').value = r.views || 0;
   document.getElementById('f-note').value = r.note || '';
-  document.getElementById('form-title').innerHTML = `<i class="ti ti-edit"></i> 对已有单条记录执行数据修正`;
+  document.getElementById('form-title').innerHTML = `<i class="ti ti-edit"></i> 修改覆盖对账模式`;
   document.getElementById('edit-indicator').style.display = 'inline-block';
 }
 
 function clearForm() {
   document.getElementById('f-id').value = '';
-  ['f-count','f-cost','f-users','f-views','f-note'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
-  document.getElementById('form-title').innerHTML = `<i class="ti ti-ballpen"></i> 大盘推广账单单条精细化流水补录`;
+  ['f-count','f-cost','f-users','f-views','f-note'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+  switchDateMode(currentFormDateMode);
+  document.getElementById('form-title').innerHTML = `<i class="ti ti-ballpen"></i> 单条/周期范围数据录入`;
   document.getElementById('edit-indicator').style.display = 'none';
 }
 
 function deleteRecord(id) {
-  if(confirm('确认丢弃此笔单日流水明细记录？')) {
-    records = records.filter(r => r.id !== id); persist();
-    renderRecent(); toast('✓ 明细流水已安全移除');
+  if(confirm('确认作废删除此项大盘对账数据？')) {
+    records = records.filter(r => r.id !== id); persistRecords();
+    if(document.getElementById('view-daily').classList.contains('active')) renderDaily();
+    if(document.getElementById('view-add').classList.contains('active')) renderRecent();
+    toast('单据已永久作废');
   }
 }
 
-function clearAll() { records = []; materials = []; persist(); renderRecent(); toast('全量数据已清空恢复初始化状态'); }
+function clearAll() { records = []; persistRecords(); renderRecent(); toast('本地全量大盘数据库已重置清空'); }
 function handleDrop(e) { e.preventDefault(); const files = e.dataTransfer.files; if (files.length > 0) processFile(files[0]); }
 function handleFileSelect(e) { const files = e.target.files; if (files.length > 0) processFile(files[0]); }
 
+function getNoteHtml(r) {
+  let txt = r.note || '—';
+  if (txt.startsWith('http://') || txt.startsWith('https://')) return `<a href="${txt}" target="_blank" class="note-link"><i class="ti ti-link"></i> 推广主链</a>`;
+  return txt;
+}
+
+function parseRowByRadar(row) {
+  const keys = Object.keys(row);
+  const matched = { date: null, region: 'TR', channel: 'TikTok', type: 'video', count: 1, cost: 0, users: 0, views: 0, note: '' };
+
+  const findVal = (keywords) => {
+    const foundKey = keys.find(k => {
+      const ck = k.toLowerCase().replace(/[\s\uFEFF\xa0]/g, '');
+      return keywords.some(kw => ck.includes(kw));
+    });
+    return foundKey !== undefined ? row[foundKey] : null;
+  };
+
+  const dVal  = findVal(['日期', 'date', 'time', 'day', '发布']);
+  const rVal  = findVal(['地区', '国家', 'region', 'country', 'site']);
+  const cVal  = findVal(['渠道', '平台', 'channel', 'platform']);
+  const tVal  = findVal(['形式', '类型', 'type', 'content', '内容']);
+  const cnVal = findVal(['推广数', '条数', '数量', 'count', 'num']);
+  const csVal = findVal(['消耗', '花费', 'cost', 'spend', 'price', '金额']);
+  const uVal  = findVal(['新增', '用户', 'users', 'install', 'reg', '激活']);
+  const vVal  = findVal(['播放', '观看', 'views', 'play', 'click']);
+  const nVal  = findVal(['url', '链接', '备注', 'note']);
+
+  if (!dVal) return null;
+  matched.date = formatUploadedDate(dVal);
+  if (!matched.date || matched.date === 'Invalid Date') return null;
+
+  if (rVal) {
+    const rs = String(rVal).trim();
+    if (rs.includes('土耳其') || rs.toUpperCase() === 'TR') matched.region = 'TR';
+    else if (rs.includes('台湾') || rs.toUpperCase() === 'TW') matched.region = 'TW';
+    else if (rs.includes('西语') || rs.toUpperCase() === 'ES') matched.region = 'ES';
+    else if (rs.includes('巴西') || rs.toUpperCase() === 'BR') matched.region = 'BR';
+  }
+
+  if (cVal) matched.channel = String(cVal).trim();
+  if (tVal) matched.type = String(tVal).trim();
+  if (cnVal !== null) matched.count = parseFloat(cnVal) || 1;
+  if (csVal !== null) matched.cost = parseFloat(csVal) || 0;
+  if (uVal !== null) matched.users = parseFloat(uVal) || 0;
+  if (vVal !== null) matched.views = parseFloat(vVal) || 0;
+  if (nVal) matched.note = String(nVal).trim();
+
+  return matched;
+}
+
 function processFile(file) {
-  const reader = new FileReader(); const ext = file.name.split('.').pop().toLowerCase();
+  const reader = new FileReader();
+  const ext = file.name.split('.').pop().toLowerCase();
+  toast('⏳ 正在解析经典数据格式并智能对齐...');
+  
   reader.onload = function(e) {
-    const data = e.target.result; let count = 0;
+    const data = e.target.result;
+    let successCount = 0;
+    let mergeCount = 0;
+
+    const pushOrMerge = (parsed) => {
+      const target = records.find(x => x.date === parsed.date && x.region === parsed.region && x.channel === parsed.channel && x.contentType === parsed.type);
+      if (target) {
+        if(parsed.users > 0) target.users = (target.users || 0) + parsed.users;
+        if(parsed.views > 0) target.views = (target.views || 0) + parsed.views;
+        mergeCount++;
+      } else {
+        records.push({
+          id: Date.now() + Math.random().toString(36).slice(2),
+          date: parsed.date, region: parsed.region, channel: parsed.channel,
+          contentType: parsed.type, count: parsed.count, cost: parsed.cost,
+          users: parsed.users, views: parsed.views, note: parsed.note
+        });
+        successCount++;
+      }
+    };
+
     try {
-      let rows = [];
       if (ext === 'csv') {
-        const txt = new TextDecoder('utf-8').decode(data);
-        rows = parseCSVToArray(txt);
+        const text = new TextDecoder('utf-8').decode(data);
+        parseCSVToArray(text).forEach(row => {
+          const p = parseRowByRadar(row);
+          if (p && p.date) pushOrMerge(p);
+        });
       } else {
         const wb = XLSX.read(data, { type: 'array' });
-        rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-      }
-      rows.forEach(row => {
-        const d = formatUploadedDate(row['日期'] || row['date']);
-        if(d) {
-          records.push({
-            id: 'IMP'+Math.random().toString(36).slice(2),
-            date: d, region: row['地区']||'TR', channel: row['渠道']||'TikTok',
-            contentType: row['内容形式']||'video', count: parseFloat(row['推广数量'])||1,
-            cost: parseFloat(row['消耗'])||0, users: parseFloat(row['新增用户'])||0,
-            views: parseFloat(row['总播放量'])||0, note: row['备注']||''
+        wb.SheetNames.forEach(name => {
+          XLSX.utils.sheet_to_json(wb.Sheets[name]).forEach(row => {
+            const p = parseRowByRadar(row);
+            if (p && p.date) pushOrMerge(p);
           });
-          count++;
-        }
-      });
-      persist(); renderRecent(); toast(`✓ 批量表格成功上传导流 ${count} 条明细`);
-    } catch (err) { toast('❌ 文件解构失败，请对齐表头名称'); }
+        });
+      }
+
+      persistRecords(); renderRecent();
+      toast(`✓ 成功导入 ${successCount} 条数据，智能对齐合并 ${mergeCount} 条历史数据`);
+    } catch (err) {
+      toast('❌ 解析格式异常，请检查表格字段');
+    }
   };
   reader.readAsArrayBuffer(file);
 }
 
 function formatUploadedDate(val) {
-  if(!val) return null;
-  if (typeof val === 'number') return XLSX.utils.parse_date(val).toISOString().slice(0, 10);
-  return String(val).trim().replace(/\//g, '-').slice(0, 10);
+  if (typeof val === 'number') { 
+    try { return XLSX.utils.parse_date(val).toISOString().slice(0, 10); } catch(e){}
+  }
+  let str = String(val).trim().replace(/\//g, '-');
+  if(str.length === 8 && !str.includes('-')) return `${str.slice(0,4)}-${str.slice(4,6)}-${str.slice(6,8)}`;
+  return str.slice(0, 10);
 }
 
 function parseCSVToArray(text) {
-  const lines = text.split('\n').map(l => l.trim()).filter(l => l); if(lines.length === 0) return [];
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+  if(lines.length === 0) return [];
   const headers = lines[0].replace(/^\uFEFF/, '').split(',');
   return lines.slice(1).map(line => {
     const values = line.split(','); const obj = {};
-    headers.forEach((h, i) => { obj[h.trim()] = values[i]?values[i].trim():''; }); return obj;
+    headers.forEach((h, i) => { let v = values[i]; if (v && v.startsWith('"') && v.endsWith('"')) v = v.slice(1, -1); obj[h.trim()] = v; });
+    return obj;
   });
 }
 
 function exportCSV() {
-  if (records.length === 0) { toast('暂无流水账数据可以导出'); return; }
-  const header = '日期,地区,渠道,内容形式,推广数量,消耗(USD),新增注册用户,总播放量,备注';
-  const rows = records.map(r => `${r.date},${r.region},${r.channel},${r.contentType},${r.count},${r.cost},${r.users},${r.views||0},"${r.note||''}"`);
+  if (records.length === 0) { toast('暂无对账明细可导出'); return; }
+  const header = '日期,地区,渠道,内容形式,推广数量,消耗(USD),新增注册用户,播放量,CPA,备注';
+  const rows = records
+    .sort((a,b) => b.date.localeCompare(a.date))
+    .map(r => `${r.date},${REGIONS[r.region]?REGIONS[r.region].name:r.region},${r.channel},${r.contentType},${r.count},${r.cost},${r.users},${r.views||0},${r.users>0?(r.cost/r.users).toFixed(2):'0'},"${r.note||''}"`);
   const csv = '\uFEFF' + [header, ...rows].join('\n');
-  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-  a.download = 'KOL_Financial_Core_Export.csv'; a.click();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = 'KOL_Classic_Export_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  toast('✓ 全量报表成功导出');
 }
 
 let toastTimer;
@@ -1023,7 +1174,9 @@ function toast(msg) {
   clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
 }
 
+// 系统首次进入初始化加载
 loadRecords();
+switchDateMode('single');
 </script>
 </body>
 </html>
