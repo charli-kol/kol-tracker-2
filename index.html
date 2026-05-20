@@ -118,6 +118,8 @@
     .vs-badge { font-size: 11px; font-weight: 700; color: #3b82f6; padding: 2px 8px; border: 1px solid #3b82f6; border-radius: 10px; }
     .tracking-region-block { margin-bottom: 2rem; }
     .tracking-region-title { font-size: 16px; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+    .dashboard-period-row { display: flex; gap: 1.5rem; margin-bottom: 2rem; flex-wrap: wrap; }
+    .period-block { flex: 1; min-width: 280px; }
   </style>
 </head>
 <body>
@@ -144,7 +146,10 @@
       <button class="rtab" onclick="setRegion('BR')"><span class="dot" style="background:#d6336c"></span>🇧🇷 巴西</button>
       <div class="month-filter-wrap"><label for="dashboard-month-filter" style="font-size:13px;color:var(--text2);">📅 月度筛选</label><select id="dashboard-month-filter" onchange="renderDashboard()"><option value="">全部月份</option></select></div>
     </div>
-    <div class="metrics-grid" id="metrics-grid"></div>
+    <div class="dashboard-period-row">
+      <div class="period-block"><div class="section"><div class="section-header"><span class="section-title"><i class="ti ti-calendar-month"></i>本月核心指标</span></div><div class="metrics-grid" id="month-metrics-grid"></div></div></div>
+      <div class="period-block"><div class="section"><div class="section-header"><span class="section-title"><i class="ti ti-calendar-week"></i>本周核心指标</span></div><div class="metrics-grid" id="week-metrics-grid"></div></div></div>
+    </div>
     <div class="two-col">
       <div class="section"><div class="section-header"><span class="section-title"><i class="ti ti-chart-donut-4"></i>渠道消耗占比</span></div><div class="chart-wrap"><canvas id="chart-channels"></canvas></div></div>
       <div class="section"><div class="section-header"><span class="section-title"><i class="ti ti-chart-columns"></i>内容形式：消耗情况分析</span></div><div class="chart-wrap"><canvas id="chart-content-types"></canvas></div></div>
@@ -168,26 +173,19 @@
   </div>
 
   <div id="view-views_panel" class="view">
-    <div class="two-col"><div class="section"><div class="section-header"><span class="section-title"><i class="ti ti-circle-plus"></i>大盘总播放量独立录入端</span></div><div class="form-group" style="margin-bottom:12px;"><label>日期维度模式</label><select id="vp-mode" onchange="toggleVpDateMode()"><option value="single">独立单日总播放</option><option value="range">独立周期总播放</option></select></div><div class="form-group" id="vp-date-wrapper" style="margin-bottom:12px;"><label>选择目标日期 *</label><input type="date" id="vp-date"></div><div class="form-grid" style="grid-template-columns:1fr;gap:12px;margin-bottom:12px;"><div class="form-group"><label>对应目标业务地区 *</label><select id="vp-region"><option value="TR">🇹🇷 土耳其</option><option value="TW">🇹🇼 台湾</option><option value="ES">🌎 西语</option><option value="BR">🇧🇷 巴西</option></select></div><div class="form-group"><label>独立总播放量数值 *</label><input type="number" id="vp-count" placeholder="请输入完整播放总量" min="0"></div></div><div style="display:flex;gap:10px;margin-top:12px;"><button class="btn btn-primary" onclick="saveVpRecord()"><i class="ti ti-lock-check"></i>锁入大盘播放数据库</button><button class="btn" onclick="clearVpForm()"><i class="ti ti-refresh"></i>重置</button></div></div><div class="section"><div class="section-header"><span class="section-title"><i class="ti ti-report-analytics"></i>各地区大盘独立播放归档统计</span></div><div class="table-wrap" style="max-height:230px;"><table><thead><tr><th>地区</th><th>单日记录</th><th>周期记录</th><th>归档累计播放总和</th></tr></thead><tbody id="vp-summary-tbody"></tbody></table></div><button class="btn btn-danger" style="width:100%;justify-content:center;margin-top:14px;font-size:12px;padding:6px;" onclick="if(confirm('🚨 确定清空所有总播放量？')) { vpRecords=[]; persistVp(); renderVpView(); updateMonthSelectors(); toast('大盘播放量已清空'); }"><i class="ti ti-trash"></i>清空总播放量独立数据库</button></div></div>
+    <div class="two-col"><div class="section"><div class="section-header"><span class="section-title"><i class="ti ti-circle-plus"></i>大盘总播放量独立录入端</span></div><div class="form-group" style="margin-bottom:12px;"><label>日期维度模式</label><select id="vp-mode" onchange="toggleVpDateMode()"><option value="single">独立单日总播放</option><option value="range">独立周期总播放</option></select></div><div class="form-group" id="vp-date-wrapper" style="margin-bottom:12px;"><label>选择目标日期 *</label><input type="date" id="vp-date"></div><div class="form-grid" style="grid-template-columns:1fr;gap:12px;margin-bottom:12px;"><div class="form-group"><label>对应目标业务地区 *</label><select id="vp-region"><option value="TR">🇹🇷 土耳其</option><option value="TW">🇹🇼 台湾</option><option value="ES">🌎 西语</option><option value="BR">🇧🇷 巴西</option></select></div><div class="form-group"><label>独立总播放量数值 *</label><input type="number" id="vp-count" placeholder="请输入完整播放总量" min="0"></div></div><div style="display:flex;gap:10px;margin-top:12px;"><button class="btn btn-primary" onclick="saveVpRecord()"><i class="ti ti-lock-check"></i>锁入大盘播放数据库</button><button class="btn" onclick="clearVpForm()"><i class="ti ti-refresh"></i>重置</button></div>
+      <div style="margin-top:1.5rem;"><div class="section-header"><span class="section-title"><i class="ti ti-upload"></i>上传播放量表格 (日期/播放量/国家)</span></div><div class="upload-box" onclick="document.getElementById('vp-file-input').click()" ondragover="event.preventDefault()" ondrop="handleVpDrop(event)"><i class="ti ti-file-spreadsheet"></i><p>将播放量表格拖拽到此处，或点击上传</p><input type="file" id="vp-file-input" accept=".csv, .xlsx, .xls" onchange="handleVpFileSelect(event)"></div></div></div>
+    <div class="section"><div class="section-header"><span class="section-title"><i class="ti ti-report-analytics"></i>各地区大盘独立播放归档统计</span></div><div class="table-wrap" style="max-height:230px;"><table><thead><tr><th>地区</th><th>单日记录</th><th>周期记录</th><th>归档累计播放总和</th></tr></thead><tbody id="vp-summary-tbody"></tbody></table></div><button class="btn btn-danger" style="width:100%;justify-content:center;margin-top:14px;font-size:12px;padding:6px;" onclick="if(confirm('🚨 确定清空所有总播放量？')) { vpRecords=[]; persistVp(); renderVpView(); updateMonthSelectors(); toast('大盘播放量已清空'); }"><i class="ti ti-trash"></i>清空总播放量独立数据库</button></div></div>
     <div class="section"><div class="section-header"><span class="section-title"><i class="ti ti-database"></i>大盘独立总播放量流水归档台账</span></div><div class="table-wrap"><table><thead><tr><th>模式</th><th>归档日期区间/日期</th><th>结算地区</th><th>独立大盘总播放数</th><th>操作</th></tr></thead><tbody id="vp-tbody"></tbody></table></div></div>
   </div>
 
   <div id="view-tracking" class="view">
     <div class="section"><div class="section-header"><span class="section-title"><i class="ti ti-edit-circle"></i>TW & TR 素材追踪数据录入</span></div>
-      <div class="form-grid">
-        <div class="form-group"><label>目标地区 *</label><select id="t-region"><option value="TW">🇹🇼 台湾</option><option value="TR">🇹🇷 土耳其</option></select></div>
-        <div class="form-group"><label>投放时间段 *</label><input type="text" id="t-range" placeholder="例如：2026/05/01-2026/05/07"></div>
-        <div class="form-group"><label>TT SPK 新增 *</label><input type="number" id="t-tt-spk-users" placeholder="0" min="0"></div>
-        <div class="form-group"><label>TT 总新增 *</label><input type="number" id="t-tt-total-users" placeholder="0" min="0"></div>
-        <div class="form-group"><label>TT SPK 消耗 (USD) *</label><input type="number" id="t-tt-spk-cost" placeholder="0.00" min="0" step="0.01"></div>
-        <div class="form-group"><label>TT 总消耗 (USD) *</label><input type="number" id="t-tt-total-cost" placeholder="0.00" min="0" step="0.01"></div>
-      </div>
+      <div class="form-grid"><div class="form-group"><label>目标地区 *</label><select id="t-region"><option value="TW">🇹🇼 台湾</option><option value="TR">🇹🇷 土耳其</option></select></div><div class="form-group"><label>投放时间段 *</label><input type="text" id="t-range" placeholder="例如：2026/05/01-2026/05/07"></div><div class="form-group"><label>TT SPK 新增 *</label><input type="number" id="t-tt-spk-users" placeholder="0" min="0"></div><div class="form-group"><label>TT 总新增 *</label><input type="number" id="t-tt-total-users" placeholder="0" min="0"></div><div class="form-group"><label>TT SPK 消耗 (USD) *</label><input type="number" id="t-tt-spk-cost" placeholder="0.00" min="0" step="0.01"></div><div class="form-group"><label>TT 总消耗 (USD) *</label><input type="number" id="t-tt-total-cost" placeholder="0.00" min="0" step="0.01"></div></div>
       <div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveTrackingRecord()"><i class="ti ti-device-floppy"></i>归档保存追踪数据</button></div>
     </div>
-
     <div id="tracking-tw-block" class="tracking-region-block"></div>
     <div id="tracking-tr-block" class="tracking-region-block"></div>
-
     <div class="section"><div class="section-header"><span class="section-title"><i class="ti ti-calendar-month"></i>月维度投放素材分析</span></div>
       <div style="display:flex;gap:12px;margin-bottom:1rem;"><select id="tracking-month-filter" onchange="renderTrackingMonthly()" style="padding:6px 12px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg);color:var(--text);"><option value="">全部月份</option></select></div>
       <div class="table-wrap"><table class="tracking-monthly-table"><thead><tr><th>月份</th><th>地区</th><th>SPK新增合计</th><th>总新增合计</th><th>SPK消耗合计</th><th>总消耗合计</th><th>SPK新增占比</th><th>SPK消耗占比</th><th>SPK CPR</th><th>总CPR</th></tr></thead><tbody id="tracking-monthly-tbody"></tbody></table></div>
@@ -304,38 +302,59 @@
     return base;
   }
 
+  function getVpSumForPeriod(datesArray, regionFilter) {
+    let total = 0;
+    const vpBase = regionFilter === 'all' ? vpRecords : vpRecords.filter(v=>v.region===regionFilter);
+    vpBase.forEach(v => {
+      if(v.mode === 'single' && datesArray.includes(v.date)) total += v.views;
+      if(v.mode === 'range') {
+        const [sD, eD] = v.date.split(' 至 ');
+        if(datesArray.some(d => d >= sD && d <= eD)) total += v.views;
+      }
+    });
+    return total;
+  }
+
   function renderDashboard() {
     const base = getFilteredBase();
-    const baseVp = currentRegion==='all' ? vpRecords : vpRecords.filter(r=>r.region===currentRegion);
     const monthFilterVal = document.getElementById('dashboard-month-filter')?.value;
+    const today = new Date(); const todayStr = today.toISOString().slice(0,10);
+    const currentYear = today.getFullYear(), currentMonth = today.getMonth();
 
-    const all14 = []; for (let i=13;i>=0;i--) { const d=new Date(); d.setDate(d.getDate()-i); all14.push(d.toISOString().slice(0,10)); }
-    const twDates = all14.slice(7), pwDates = all14.slice(0,7);
-    const twR = base.filter(r=>twDates.includes(r.date.slice(0,10))), pwR = base.filter(r=>pwDates.includes(r.date.slice(0,10)));
+    const monthDates = []; const firstDay = new Date(currentYear, currentMonth, 1); const lastDay = new Date(currentYear, currentMonth+1, 0);
+    for(let d=new Date(firstDay); d<=lastDay; d.setDate(d.getDate()+1)) monthDates.push(d.toISOString().slice(0,10));
+    const weekDates = []; const dayOfWeek = today.getDay(); const monday = new Date(today); monday.setDate(today.getDate() - (dayOfWeek===0?6:dayOfWeek-1));
+    for(let i=0;i<7;i++){ const d=new Date(monday); d.setDate(monday.getDate()+i); weekDates.push(d.toISOString().slice(0,10)); }
 
-    const getVpSumByDates = (dArr) => {
-      let s = 0;
-      baseVp.forEach(v => {
-        if(v.mode === 'single' && dArr.includes(v.date)) s += v.views;
-        if(v.mode === 'range') { const [sD, eD] = v.date.split(' 至 '); if(dArr.some(d => d >= sD && d <= eD)) s += v.views; }
-      });
-      return s;
-    };
+    const monthR = base.filter(r=>monthDates.includes(r.date.slice(0,10)));
+    const weekR = base.filter(r=>weekDates.includes(r.date.slice(0,10)));
+    const prevMonthDates = []; const prevLast = new Date(currentYear, currentMonth, 0);
+    for(let d=new Date(currentYear, currentMonth-1, 1); d<=prevLast; d.setDate(d.getDate()+1)) prevMonthDates.push(d.toISOString().slice(0,10));
+    const prevWeekDates = []; const prevMonday = new Date(monday); prevMonday.setDate(monday.getDate()-7);
+    for(let i=0;i<7;i++){ const d=new Date(prevMonday); d.setDate(prevMonday.getDate()+i); prevWeekDates.push(d.toISOString().slice(0,10)); }
 
-    const twViews = getVpSumByDates(twDates);
-    const twCost=sum(twR,'cost'), twUsers=sum(twR,'users');
-    const pwCost=sum(pwR,'cost'), pwUsers=sum(pwR,'users');
+    const monthCost=sum(monthR,'cost'), monthUsers=sum(monthR,'users');
+    const weekCost=sum(weekR,'cost'), weekUsers=sum(weekR,'users');
+    const prevMonthCost=sum(base.filter(r=>prevMonthDates.includes(r.date.slice(0,10))),'cost');
+    const prevWeekCost=sum(base.filter(r=>prevWeekDates.includes(r.date.slice(0,10))),'cost');
+    const monthViews = getVpSumForPeriod(monthDates, currentRegion);
+    const weekViews = getVpSumForPeriod(weekDates, currentRegion);
+    const monthCPA = monthUsers>0 ? '$'+(monthCost/monthUsers).toFixed(2) : '—';
+    const weekCPA = weekUsers>0 ? '$'+(weekCost/weekUsers).toFixed(2) : '—';
 
-    const tMonthBase = monthFilterVal ? base.filter(r=>r.date.includes(monthFilterVal)) : base.filter(r=>r.date.includes(new Date().toISOString().slice(0,7)));
-    const tmCost=sum(tMonthBase,'cost'), tmUsers=sum(tMonthBase,'users');
-    const monthCPA = tmUsers>0 ? '$'+(tmCost/tmUsers).toFixed(2) : '—';
+    document.getElementById('month-metrics-grid').innerHTML = [
+      { label:'月度总消耗', val:'$'+monthCost.toLocaleString(), sub:`<span class="${pct(monthCost,prevMonthCost)>=0?'up':'dn'}">${pct(monthCost,prevMonthCost)>=0?'↑':'↓'}${Math.abs(pct(monthCost,prevMonthCost))}%</span> vs 上月` },
+      { label:'月度新增用户', val:monthUsers.toLocaleString()+' 人', sub:'' },
+      { label:'月度大盘播放量', val:monthViews.toLocaleString()+' 次', sub:'' },
+      { label:'月度核算 CPA', val:monthCPA, sub: monthFilterVal ? `${monthFilterVal} 转化成本` : '当月平均成本' }
+    ].map(m=>`<div class="metric-card"><div class="metric-label">${m.label}</div><div class="metric-value">${m.val}</div><div class="metric-sub">${m.sub}</div></div>`).join('');
 
-    document.getElementById('metrics-grid').innerHTML = [
-      { label:'本周总消耗', icon:'ti-coin', val:'$'+twCost.toLocaleString(), sub:`<span class="${pct(twCost,pwCost)>=0?'up':'dn'}">${pct(twCost,pwCost)>=0?'↑':'↓'}${Math.abs(pct(twCost,pwCost))}%</span> vs 上周` },
-      { label:'本周新增用户', icon:'ti-users-plus', val:twUsers.toLocaleString()+' 人', sub:`<span class="${pct(twUsers,pwUsers)>=0?'up':'dn'}">${pct(twUsers,pwUsers)>=0?'↑':'↓'}${Math.abs(pct(twUsers,pwUsers))}%</span> vs 上周` },
-      { label:'本周独立大盘播放量', icon:'ti-eye', val:twViews.toLocaleString()+' 次', sub:'独立板块录入归档总计' },
-      { label:'月度大盘核算 CPA', icon:'ti-calculator', val:monthCPA, sub: monthFilterVal ? `${monthFilterVal} 转化成本` : '当前月份转化平均成本' }
-    ].map(m=>`<div class="metric-card"><div class="metric-label"><i class="ti ${m.icon}"></i>${m.label}</div><div class="metric-value">${m.val}</div><div class="metric-sub">${m.sub}</div></div>`).join('');
+    document.getElementById('week-metrics-grid').innerHTML = [
+      { label:'本周总消耗', val:'$'+weekCost.toLocaleString(), sub:`<span class="${pct(weekCost,prevWeekCost)>=0?'up':'dn'}">${pct(weekCost,prevWeekCost)>=0?'↑':'↓'}${Math.abs(pct(weekCost,prevWeekCost))}%</span> vs 上周` },
+      { label:'本周新增用户', val:weekUsers.toLocaleString()+' 人', sub:'' },
+      { label:'本周大盘播放量', val:weekViews.toLocaleString()+' 次', sub:'' },
+      { label:'本周核算 CPA', val:weekCPA, sub:'周平均转化成本' }
+    ].map(m=>`<div class="metric-card"><div class="metric-label">${m.label}</div><div class="metric-value">${m.val}</div><div class="metric-sub">${m.sub}</div></div>`).join('');
 
     renderTrendCharts(); renderDistributionCharts();
   }
@@ -449,7 +468,7 @@
     else { const sD = document.getElementById('vp-start').value; const eD = document.getElementById('vp-end').value; if(!sD || !eD) { toast('❌ 周期范围不完整'); return; } dateStr = `${sD} 至 ${eD}`; }
     if(countVal <= 0) { toast('❌ 播放量不合法'); return; }
     const existIdx = vpRecords.findIndex(v => v.mode === mode && v.date === dateStr && v.region === region);
-    if(existIdx > -1) { vpRecords[existIdx].views = Math.max(vpRecords[existIdx].views, countVal); toast(`ℹ️ 同期已存在记录，已提取最大值覆盖`); }
+    if(existIdx > -1) { vpRecords[existIdx].views = countVal; toast(`ℹ️ 同期已存在记录，已直接覆盖更新`); }
     else { vpRecords.push({ id:'vp_'+Date.now(), mode, date:dateStr, region, views:countVal }); toast('✓ 独立总播放量锁入成功'); }
     persistVp(); clearVpForm(); renderVpView(); updateMonthSelectors(); updateDashboardMonthFilter();
   }
@@ -458,6 +477,41 @@
   function renderVpView() {
     document.getElementById('vp-tbody').innerHTML = vpRecords.length === 0 ? `<tr><td colspan="5" class="empty">无独立总播放量归档台账</td></tr>` : vpRecords.slice().reverse().map(v=>`<tr><td><span class="badge b-c">${v.mode==='single'?'单日':'独立周期'}</span></td><td><strong>${v.date}</strong></td><td><span class="badge b-${v.region}">${REGIONS[v.region]?REGIONS[v.region].flag+' '+REGIONS[v.region].name:v.region}</span></td><td style="color:#6366f1;font-weight:700;">${v.views.toLocaleString()} 次</td><td><button class="action-btn del" onclick="deleteVpRecord('${v.id}')"><i class="ti ti-trash"></i></button></td></tr>`).join('');
     document.getElementById('vp-summary-tbody').innerHTML = Object.keys(REGIONS).map(r=>{ const sub = vpRecords.filter(v=>v.region === r); return `<tr><td><span class="badge b-${r}">${REGIONS[r].flag} ${REGIONS[r].name}</span></td><td>${sub.filter(v=>v.mode==='single').length} 次</td><td>${sub.filter(v=>v.mode==='range').length} 次</td><td style="color:#3b82f6;font-weight:700;">${sum(sub, 'views').toLocaleString()} 次</td></tr>`; }).join('');
+  }
+
+  function handleVpDrop(e){ e.preventDefault(); const f=e.dataTransfer.files; if(f.length>0) processVpFile(f[0]); }
+  function handleVpFileSelect(e){ const f=e.target.files; if(f.length>0) processVpFile(f[0]); }
+  function processVpFile(file){
+    const reader=new FileReader(), ext=file.name.split('.').pop().toLowerCase(); toast('播放量表格识别中...');
+    reader.onload=function(e){
+      try {
+        let rows = [];
+        if(ext==='csv') { const text = new TextDecoder('utf-8').decode(e.target.result); rows = text.split('\n').map(l=>l.split(',').map(cell=>cell.trim().replace(/^"|"$/g,''))); }
+        else { const wb=XLSX.read(e.target.result,{type:'array'}); rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1}); }
+        if(rows.length<2){ toast('❌ 表格无可读数据'); return; }
+        const headers = rows[0].map(h=>String(h||'').trim().toUpperCase());
+        const idxDate = headers.findIndex(h => h.includes('日期')||h.includes('DATE'));
+        const idxViews = headers.findIndex(h => h.includes('播放')||h.includes('VIEWS')||h.includes('观看'));
+        const idxRegion = headers.findIndex(h => h.includes('国家')||h.includes('地区')||h.includes('REGION'));
+        if(idxDate===-1 || idxViews===-1){ toast('❌ 表头需包含日期/播放量/国家'); return; }
+        let added=0, updated=0;
+        for(let i=1;i<rows.length;i++){
+          const row=rows[i]; if(!row||!row[idxDate]) continue;
+          let rawDate=String(row[idxDate]).trim().split('(')[0].split(' ')[0].replace(/\//g,'-');
+          const viewsVal = parseFloat(row[idxViews])||0;
+          let rawReg = idxRegion>-1 ? String(row[idxRegion]).trim().toUpperCase() : 'BR';
+          let matchedRegion = 'BR';
+          for(let k in REGIONS){ if(REGIONS[k].keywords.some(kw=>rawReg.includes(kw))){ matchedRegion=k; break; } }
+          if(!rawDate || viewsVal<=0) continue;
+          const exist = vpRecords.find(v=>v.mode==='single' && v.date===rawDate && v.region===matchedRegion);
+          if(exist){ exist.views = viewsVal; updated++; }
+          else { vpRecords.push({ id:'vp_'+Date.now()+Math.random(), mode:'single', date:rawDate, region:matchedRegion, views:viewsVal }); added++; }
+        }
+        persistVp(); renderVpView(); updateMonthSelectors(); updateDashboardMonthFilter();
+        toast(`✓ 播放量导入完成！新增${added}条，覆盖更新${updated}条`);
+      } catch(err){ console.error(err); toast('❌ 播放量表格解析错误'); }
+    };
+    reader.readAsArrayBuffer(file);
   }
 
   function saveTrackingRecord() {
@@ -498,23 +552,15 @@
     container.innerHTML = html;
   }
 
-  function renderTrackingView() {
-    renderTrackingRegionBlock('TW');
-    renderTrackingRegionBlock('TR');
-  }
+  function renderTrackingView() { renderTrackingRegionBlock('TW'); renderTrackingRegionBlock('TR'); }
 
   function updateTrackingMonthFilter() {
     const months = new Set();
-    trackingRecords.forEach(r => {
-      const m = r.range.match(/(\d{4})[\/-](\d{2})/);
-      if(m) months.add(`${m[1]}-${m[2]}`);
-    });
+    trackingRecords.forEach(r => { const m = r.range.match(/(\d{4})[\/-](\d{2})/); if(m) months.add(`${m[1]}-${m[2]}`); });
     const sel = document.getElementById('tracking-month-filter');
     const currentVal = sel.value;
     sel.innerHTML = '<option value="">全部月份</option>';
-    Array.from(months).sort().forEach(m => {
-      const opt = document.createElement('option'); opt.value = m; opt.textContent = m; sel.appendChild(opt);
-    });
+    Array.from(months).sort().forEach(m => { const opt = document.createElement('option'); opt.value = m; opt.textContent = m; sel.appendChild(opt); });
     if(months.has(currentVal)) sel.value = currentVal;
   }
   function renderTrackingMonthly() {
