@@ -486,30 +486,89 @@
     reader.onload=function(e){
       try {
         let rows = [];
-        if(ext==='csv') { const text = new TextDecoder('utf-8').decode(e.target.result); rows = text.split('\n').map(l=>l.split(',').map(cell=>cell.trim().replace(/^"|"$/g,''))); }
-        else { const wb=XLSX.read(e.target.result,{type:'array'}); rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1}); }
+        if(ext==='csv') { 
+          const text = new TextDecoder('utf-8').decode(e.target.result); 
+          rows = text.split('\n').map(l=>l.split(',').map(cell=>cell.trim().replace(/^"|"$/g,''))); 
+        }
+        else { 
+          const wb=XLSX.read(e.target.result,{type:'array', cellDates: true, dateNF: 'yyyy/mm/dd'});
+          rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, raw: false, dateNF: 'yyyy/mm/dd'});
+        }
         if(rows.length<2){ toast('❌ 表格无可读数据'); return; }
+        
+        // 日期转换函数：处理Excel数字日期和文本日期
+        function convertDate(val) {
+          if (!val) return null;
+          // 如果是数字（Excel序列号）
+          if (typeof val === 'number') {
+            const d = new Date((val - 25569) * 86400 * 1000);
+            if (!isNaN(d.getTime())) {
+              return d.toISOString().slice(0,10);
+            }
+          }
+          // 如果是字符串
+          let str = String(val).trim();
+          // 尝试匹配 2026/1/4 或 2026-01-04 等格式
+          const match = str.match(/(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})/);
+          if (match) {
+            const year = match[1];
+            const month = String(parseInt(match[2])).padStart(2,'0');
+            const day = String(parseInt(match[3])).padStart(2,'0');
+            return `${year}-${month}-${day}`;
+          }
+          return null;
+        }
+        
         const headers = rows[0].map(h=>String(h||'').trim().toUpperCase());
         const idxDate = headers.findIndex(h => h.includes('日期')||h.includes('DATE'));
         const idxViews = headers.findIndex(h => h.includes('播放')||h.includes('VIEWS')||h.includes('观看'));
         const idxRegion = headers.findIndex(h => h.includes('国家')||h.includes('地区')||h.includes('REGION'));
+        
         if(idxDate===-1 || idxViews===-1){ toast('❌ 表头需包含日期/播放量/国家'); return; }
+        
         let added=0, updated=0;
         for(let i=1;i<rows.length;i++){
-          const row=rows[i]; if(!row||!row[idxDate]) continue;
-          let rawDate=String(row[idxDate]).trim().split('(')[0].split(' ')[0].replace(/\//g,'-');
+          const row=rows[i]; 
+          if(!row || row[idxDate]===undefined || row[idxDate]===null) continue;
+          
+          // 转换日期
+          const rawDate = convertDate(row[idxDate]);
+          if (!rawDate) continue;
+          
           const viewsVal = parseFloat(row[idxViews])||0;
           let rawReg = idxRegion>-1 ? String(row[idxRegion]).trim().toUpperCase() : 'BR';
           let matchedRegion = 'BR';
-          for(let k in REGIONS){ if(REGIONS[k].keywords.some(kw=>rawReg.includes(kw))){ matchedRegion=k; break; } }
-          if(!rawDate || viewsVal<=0) continue;
+          for(let k in REGIONS){ 
+            if(REGIONS[k].keywords.some(kw=>rawReg.includes(kw))){ 
+              matchedRegion=k; 
+              break; 
+            } 
+          }
+          
+          if(viewsVal<=0) continue;
+          
           const exist = vpRecords.find(v=>v.mode==='single' && v.date===rawDate && v.region===matchedRegion);
-          if(exist){ exist.views = viewsVal; updated++; }
-          else { vpRecords.push({ id:'vp_'+Date.now()+Math.random(), mode:'single', date:rawDate, region:matchedRegion, views:viewsVal }); added++; }
+          if(exist){ 
+            exist.views = viewsVal; 
+            updated++; 
+          }
+          else { 
+            vpRecords.push({ 
+              id:'vp_'+Date.now()+'_'+Math.random().toString(36).slice(2,8), 
+              mode:'single', 
+              date:rawDate, 
+              region:matchedRegion, 
+              views:viewsVal 
+            }); 
+            added++; 
+          }
         }
         persistVp(); renderVpView(); updateMonthSelectors(); updateDashboardMonthFilter();
         toast(`✓ 播放量导入完成！新增${added}条，覆盖更新${updated}条`);
-      } catch(err){ console.error(err); toast('❌ 播放量表格解析错误'); }
+      } catch(err){ 
+        console.error(err); 
+        toast('❌ 播放量表格解析错误'); 
+      }
     };
     reader.readAsArrayBuffer(file);
   }
