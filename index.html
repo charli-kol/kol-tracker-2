@@ -318,45 +318,131 @@
   function renderDashboard() {
     const base = getFilteredBase();
     const monthFilterVal = document.getElementById('dashboard-month-filter')?.value;
-    const today = new Date(); const todayStr = today.toISOString().slice(0,10);
+    const today = new Date();
     const currentYear = today.getFullYear(), currentMonth = today.getMonth();
-
-    const monthDates = []; const firstDay = new Date(currentYear, currentMonth, 1); const lastDay = new Date(currentYear, currentMonth+1, 0);
-    for(let d=new Date(firstDay); d<=lastDay; d.setDate(d.getDate()+1)) monthDates.push(d.toISOString().slice(0,10));
-    const weekDates = []; const dayOfWeek = today.getDay(); const monday = new Date(today); monday.setDate(today.getDate() - (dayOfWeek===0?6:dayOfWeek-1));
-    for(let i=0;i<7;i++){ const d=new Date(monday); d.setDate(monday.getDate()+i); weekDates.push(d.toISOString().slice(0,10)); }
-
-    const monthR = base.filter(r=>monthDates.includes(r.date.slice(0,10)));
-    const weekR = base.filter(r=>weekDates.includes(r.date.slice(0,10)));
-    const prevMonthDates = []; const prevLast = new Date(currentYear, currentMonth, 0);
-    for(let d=new Date(currentYear, currentMonth-1, 1); d<=prevLast; d.setDate(d.getDate()+1)) prevMonthDates.push(d.toISOString().slice(0,10));
-    const prevWeekDates = []; const prevMonday = new Date(monday); prevMonday.setDate(monday.getDate()-7);
-    for(let i=0;i<7;i++){ const d=new Date(prevMonday); d.setDate(prevMonday.getDate()+i); prevWeekDates.push(d.toISOString().slice(0,10)); }
-
-    const monthCost=sum(monthR,'cost'), monthUsers=sum(monthR,'users');
-    const weekCost=sum(weekR,'cost'), weekUsers=sum(weekR,'users');
-    const prevMonthCost=sum(base.filter(r=>prevMonthDates.includes(r.date.slice(0,10))),'cost');
-    const prevWeekCost=sum(base.filter(r=>prevWeekDates.includes(r.date.slice(0,10))),'cost');
+    
+    // 确定要展示的目标月份
+    let targetYear = currentYear;
+    let targetMonth = currentMonth;
+    if (monthFilterVal) {
+      const [y, m] = monthFilterVal.split('-').map(Number);
+      targetYear = y;
+      targetMonth = m - 1; // JavaScript月份从0开始
+    }
+    
+    // 生成目标月份的日期数组
+    const monthDates = [];
+    const firstDay = new Date(targetYear, targetMonth, 1);
+    const lastDay = new Date(targetYear, targetMonth + 1, 0);
+    for(let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
+      monthDates.push(d.toISOString().slice(0, 10));
+    }
+    
+    // 生成本周日期数组（始终显示当前周）
+    const weekDates = [];
+    const dayOfWeek = today.getDay();
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    for(let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      weekDates.push(d.toISOString().slice(0, 10));
+    }
+    
+    // 生成上月日期数组（用于环比）
+    const prevMonthDates = [];
+    const prevFirstDay = new Date(targetYear, targetMonth - 1, 1);
+    const prevLastDay = new Date(targetYear, targetMonth, 0);
+    for(let d = new Date(prevFirstDay); d <= prevLastDay; d.setDate(d.getDate() + 1)) {
+      prevMonthDates.push(d.toISOString().slice(0, 10));
+    }
+    
+    // 生成上周日期数组（用于环比）
+    const prevWeekDates = [];
+    const prevMonday = new Date(monday);
+    prevMonday.setDate(monday.getDate() - 7);
+    for(let i = 0; i < 7; i++) {
+      const d = new Date(prevMonday);
+      d.setDate(prevMonday.getDate() + i);
+      prevWeekDates.push(d.toISOString().slice(0, 10));
+    }
+    
+    // 筛选各时期的数据
+    const monthR = base.filter(r => monthDates.includes(r.date.slice(0, 10)));
+    const weekR = base.filter(r => weekDates.includes(r.date.slice(0, 10)));
+    const prevMonthR = base.filter(r => prevMonthDates.includes(r.date.slice(0, 10)));
+    const prevWeekR = base.filter(r => prevWeekDates.includes(r.date.slice(0, 10)));
+    
+    // 计算各项指标
+    const monthCost = sum(monthR, 'cost');
+    const monthUsers = sum(monthR, 'users');
+    const weekCost = sum(weekR, 'cost');
+    const weekUsers = sum(weekR, 'users');
+    const prevMonthCost = sum(prevMonthR, 'cost');
+    const prevWeekCost = sum(prevWeekR, 'cost');
+    
+    // 计算播放量
     const monthViews = getVpSumForPeriod(monthDates, currentRegion);
     const weekViews = getVpSumForPeriod(weekDates, currentRegion);
-    const monthCPA = monthUsers>0 ? '$'+(monthCost/monthUsers).toFixed(2) : '—';
-    const weekCPA = weekUsers>0 ? '$'+(weekCost/weekUsers).toFixed(2) : '—';
-
+    
+    const monthCPA = monthUsers > 0 ? '$' + (monthCost / monthUsers).toFixed(2) : '—';
+    const weekCPA = weekUsers > 0 ? '$' + (weekCost / weekUsers).toFixed(2) : '—';
+    
+    // 月度环比
+    const monthCostChange = prevMonthCost > 0 ? pct(monthCost, prevMonthCost) : 0;
+    const weekCostChange = prevWeekCost > 0 ? pct(weekCost, prevWeekCost) : 0;
+    
+    // 生成月度指标卡片
+    const displayMonth = monthFilterVal || `${targetYear}-${String(targetMonth + 1).padStart(2, '0')}`;
     document.getElementById('month-metrics-grid').innerHTML = [
-      { label:'月度总消耗', val:'$'+monthCost.toLocaleString(), sub:`<span class="${pct(monthCost,prevMonthCost)>=0?'up':'dn'}">${pct(monthCost,prevMonthCost)>=0?'↑':'↓'}${Math.abs(pct(monthCost,prevMonthCost))}%</span> vs 上月` },
-      { label:'月度新增用户', val:monthUsers.toLocaleString()+' 人', sub:'' },
-      { label:'月度大盘播放量', val:monthViews.toLocaleString()+' 次', sub:'' },
-      { label:'月度核算 CPA', val:monthCPA, sub: monthFilterVal ? `${monthFilterVal} 转化成本` : '当月平均成本' }
-    ].map(m=>`<div class="metric-card"><div class="metric-label">${m.label}</div><div class="metric-value">${m.val}</div><div class="metric-sub">${m.sub}</div></div>`).join('');
-
+      { 
+        label: '月度总消耗', 
+        val: '$' + monthCost.toLocaleString(), 
+        sub: `<span class="${monthCostChange >= 0 ? 'up' : 'dn'}">${monthCostChange >= 0 ? '↑' : '↓'}${Math.abs(monthCostChange)}%</span> vs 上月` 
+      },
+      { 
+        label: '月度新增用户', 
+        val: monthUsers.toLocaleString() + ' 人', 
+        sub: `${displayMonth} 累计新增` 
+      },
+      { 
+        label: '月度大盘播放量', 
+        val: monthViews.toLocaleString() + ' 次', 
+        sub: '独立板块录入归档总计' 
+      },
+      { 
+        label: '月度核算 CPA', 
+        val: monthCPA, 
+        sub: `${displayMonth} 转化成本` 
+      }
+    ].map(m => `<div class="metric-card"><div class="metric-label">${m.label}</div><div class="metric-value">${m.val}</div><div class="metric-sub">${m.sub}</div></div>`).join('');
+    
+    // 生成本周指标卡片
     document.getElementById('week-metrics-grid').innerHTML = [
-      { label:'本周总消耗', val:'$'+weekCost.toLocaleString(), sub:`<span class="${pct(weekCost,prevWeekCost)>=0?'up':'dn'}">${pct(weekCost,prevWeekCost)>=0?'↑':'↓'}${Math.abs(pct(weekCost,prevWeekCost))}%</span> vs 上周` },
-      { label:'本周新增用户', val:weekUsers.toLocaleString()+' 人', sub:'' },
-      { label:'本周大盘播放量', val:weekViews.toLocaleString()+' 次', sub:'' },
-      { label:'本周核算 CPA', val:weekCPA, sub:'周平均转化成本' }
-    ].map(m=>`<div class="metric-card"><div class="metric-label">${m.label}</div><div class="metric-value">${m.val}</div><div class="metric-sub">${m.sub}</div></div>`).join('');
-
-    renderTrendCharts(); renderDistributionCharts();
+      { 
+        label: '本周总消耗', 
+        val: '$' + weekCost.toLocaleString(), 
+        sub: `<span class="${weekCostChange >= 0 ? 'up' : 'dn'}">${weekCostChange >= 0 ? '↑' : '↓'}${Math.abs(weekCostChange)}%</span> vs 上周` 
+      },
+      { 
+        label: '本周新增用户', 
+        val: weekUsers.toLocaleString() + ' 人', 
+        sub: '本周累计新增' 
+      },
+      { 
+        label: '本周大盘播放量', 
+        val: weekViews.toLocaleString() + ' 次', 
+        sub: '独立板块录入归档总计' 
+      },
+      { 
+        label: '本周核算 CPA', 
+        val: weekCPA, 
+        sub: '周平均转化成本' 
+      }
+    ].map(m => `<div class="metric-card"><div class="metric-label">${m.label}</div><div class="metric-value">${m.val}</div><div class="metric-sub">${m.sub}</div></div>`).join('');
+    
+    renderTrendCharts();
+    renderDistributionCharts();
   }
 
   function renderTrendCharts() {
