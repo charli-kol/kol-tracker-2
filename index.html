@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KOL 推广数据管理系统 v6.0</title>
+<title>KOL 推广数据管理系统 v7.0-Upgrade</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -117,6 +117,12 @@
   .week-range { font-family: monospace; font-size: 12px; color: var(--text); font-weight: 600; }
   .note-link { color: #1c7ed6; text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; gap: 3px; }
   .note-link:hover { text-decoration: underline; }
+
+  /* 新增双月对比与批量选择的专属样式 */
+  .comp-box-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 1rem; }
+  .comp-card { background: var(--bg2); padding: 12px; border-radius: var(--radius); border: 1px solid var(--border); }
+  .comp-num { font-size: 18px; font-weight: bold; margin-top: 4px; }
+  .row-check-input { width: 16px; height: 16px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -145,7 +151,7 @@
       <button class="rtab" onclick="setRegion('TR')"><span class="dot" style="background:#0ca678"></span>🇹🇷 土耳其</button>
       <button class="rtab" onclick="setRegion('TW')"><span class="dot" style="background:#f76707"></span>🇹🇼 台湾</button>
       <button class="rtab" onclick="setRegion('ES')"><span class="dot" style="background:#4c6ef5"></span>🌎 西语</button>
-      <button class="rtab" onclick="setRegion('BR')"><span class="dot" style="background:#d6336c"></span>🇧🇷 巴西</button>
+      <button class="rtab" onclick="setRegion('BR')"><span class="dot" style="background:#d6336c"></span>🇧睿 巴西</button>
     </div>
     
     <div class="metrics-grid" id="metrics-grid"></div>
@@ -178,10 +184,10 @@
   <div id="view-daily" class="view">
     <div class="section">
       <div class="section-header">
-        <span class="section-title"><i class="ti ti-search"></i>数据检索</span>
+        <span class="section-title"><i class="ti ti-search"></i>数据检索与批量过滤</span>
         <span id="daily-count" style="font-size:12px;color:var(--text2);"></span>
       </div>
-      <div style="display:flex;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap;">
+      <div style="display:flex;gap:12px;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center;">
         <select id="filter-region" onchange="renderDaily()" style="font-size:13px;padding:6px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;">
           <option value="">全部地区</option>
           <option value="TR">🇹🇷 土耳其</option>
@@ -196,10 +202,17 @@
           <option value="Instagram">Instagram</option>
         </select>
         <input type="month" id="filter-month" onchange="renderDaily()" style="font-size:13px;padding:6px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:inherit;">
+        
+        <button class="btn btn-danger" style="padding:6px 14px; font-size:12px; margin-left:auto;" onclick="batchDeleteDaily()"><i class="ti ti-trash-x"></i>删除选中记录</button>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>日期</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗(USD)</th><th>新增用户</th><th>总预估收益</th><th>播放数据</th><th>CPA</th><th>ROI</th><th>备注/链接</th><th>操作</th></tr></thead>
+          <thead>
+            <tr>
+              <th style="width:40px; text-align:center;"><input type="checkbox" id="daily-master-check" class="row-check-input" onclick="toggleSelectAllDaily(this)"></th>
+              <th>日期</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗(USD)</th><th>新增用户</th><th>总预估收益</th><th>播放数据</th><th>CPA</th><th>备注/链接/素材</th><th>操作</th>
+            </tr>
+          </thead>
           <tbody id="daily-tbody"></tbody>
         </table>
       </div>
@@ -207,6 +220,24 @@
   </div>
 
   <div id="view-weekly" class="view">
+    <div class="section">
+      <div class="section-header">
+        <span class="section-title"><i class="ti ti-git-compare"></i>月度高级核算与双月对比看板</span>
+      </div>
+      <div style="display:flex;gap:15px;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center;background:var(--bg2);padding:12px;border-radius:var(--radius);">
+        <div style="font-size:13px; font-weight:500;">
+          基础月份 (A): <input type="month" id="comp-month-base" onchange="calculateDoubleMonthCompare()" style="font-size:13px;padding:5px;border-radius:4px;border:1px solid var(--border2); background:var(--bg); color:var(--text)">
+        </div>
+        <div style="font-size:13px; font-weight:500;">
+          对比月份 (B): <input type="month" id="comp-month-target" onchange="calculateDoubleMonthCompare()" style="font-size:13px;padding:5px;border-radius:4px;border:1px solid var(--border2); background:var(--bg); color:var(--text)">
+        </div>
+        <div style="font-size:12px; color:var(--text2)">* 选择月份后，系统自动算环比增长率(MoM)、周环比估算及年环比(YoY)大盘表现</div>
+      </div>
+      <div id="double-month-result-container">
+        <div class="empty" style="padding:1rem;">请选择需要核算的双月份周期数据进行交叉比对</div>
+      </div>
+    </div>
+
     <div class="section">
       <div class="section-header"><span class="section-title"><i class="ti ti-chart-arrows"></i>每周核心核算走势（近6周）</span></div>
       <div class="chart-wrap" style="height:260px;margin-bottom:1rem;"><canvas id="chart-weekly"></canvas></div>
@@ -229,7 +260,7 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>具体周区间段 (周一 至 周日)</th><th>地区</th><th>推广条数</th><th>总消耗 (USD)</th><th>总播放量</th><th>新增用户</th><th>核算 CPA</th><th>综合 ROI</th></tr></thead>
+          <thead><tr><th>具体周区间段 (周一 至 周日)</th><th>地区</th><th>推广条数</th><th>总消耗 (USD)</th><th>总播放量</th><th>新增用户</th><th>核算 CPA</th></tr></thead>
           <tbody id="weekly-tbody"></tbody>
         </table>
       </div>
@@ -246,9 +277,49 @@
       </div>
     </div>
 
-    <div class="section">
+    <div class="section" style="border:1px solid rgba(59,130,246,0.3); background:rgba(59,130,246,0.01);">
       <div class="section-header">
-        <span class="section-title" id="form-title"><i class="ti ti-ballpen"></i>单条数据录入</span>
+        <span class="section-title" style="color:#3b82f6;"><i class="ti ti-movie"></i>周度总播放量批量补录与自定义周投放素材录入</span>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>指定补录/投放起始日期 (自定义周/月起点) *</label>
+          <input type="date" id="w-date">
+        </div>
+        <div class="form-group">
+          <label>核心对应地区 *</label>
+          <select id="w-region">
+            <option value="TR">🇹🇷 土耳其</option>
+            <option value="TW">🇹🇼 台湾</option>
+            <option value="ES">🌎 西语</option>
+            <option value="BR">🇧🇷 巴西</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>对应媒体渠道 *</label>
+          <select id="w-channel">
+            <option value="TikTok">TikTok</option>
+            <option value="YouTube">YouTube</option>
+            <option value="Instagram">Instagram</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>补录/追加周总播放量 (Views)</label>
+          <input type="number" id="w-views" placeholder="加进对应周内或覆盖新周期数据" min="0">
+        </div>
+        <div class="form-group" style="grid-column: span 2;">
+          <label>本周自定义投放素材板块 (名称/核心卖点/素材跟踪说明) </label>
+          <input type="text" id="w-material" placeholder="例：周核心爆款素材A - 剧情类高转化，自定义日期关联">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary" onclick="saveWeeklyBulkData()" style="background:#2563eb;"><i class="ti ti-square-plus"></i>确认执行数据补录与素材绑定</button>
+      </div>
+    </div>
+
+    <div class="section" style="margin-top:1.5rem;">
+      <div class="section-header">
+        <span class="section-title" id="form-title"><i class="ti ti-ballpen"></i>单条数据日常录入</span>
         <span id="edit-indicator" style="display:none;" class="badge b-TW">编辑模式</span>
       </div>
       <input type="hidden" id="f-id">
@@ -288,7 +359,7 @@
         <div class="form-group"><label>新增用户量</label><input type="number" id="f-users" placeholder="0" min="0"></div>
         <div class="form-group"><label>预估收益/回款(USD)</label><input type="number" id="f-revenue" placeholder="0.00" min="0" step="0.01"></div>
         <div class="form-group"><label>总播放量</label><input type="number" id="f-views" placeholder="0" min="0"></div>
-        <div class="form-group"><label>备注/链接</label><input type="text" id="f-note" placeholder="URL链接或说明"></div>
+        <div class="form-group" style="grid-column: span 2;"><label>备注 / 素材链接 / 自定义说明</label><input type="text" id="f-note" placeholder="URL链接、素材细节描述"></div>
       </div>
 
       <div style="display:flex;gap:10px;margin-top:0.5rem;">
@@ -314,7 +385,7 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>日期</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗</th><th>新增用户</th><th>收益</th><th>播放量</th><th>备注</th><th>操作</th></tr></thead>
+          <thead><tr><th>日期</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗</th><th>新增用户</th><th>收益</th><th>播放量</th><th>备注与素材</th><th>操作</th></tr></thead>
           <tbody id="recent-tbody"></tbody>
         </table>
       </div>
@@ -384,8 +455,8 @@ function showView(v) {
   document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', views[i] === v));
   if (v === 'dashboard') renderDashboard();
   if (v === 'daily') renderDaily();
-  if (v === 'weekly') { updateWeeklyFilters(); renderWeekly(); }
-  if (v === 'add') renderRecent();
+  if (v === 'weekly') { updateWeeklyFilters(); renderWeekly(); calculateDoubleMonthCompare(); }
+  if (v === 'add') { renderRecent(); if(!document.getElementById('w-date').value) document.getElementById('w-date').value = new Date().toISOString().slice(0, 10); }
 }
 
 function setRegion(r) {
@@ -523,6 +594,29 @@ function renderDistributionCharts() {
   });
 }
 
+// 需求1扩展：明细单全选与反选控制
+function toggleSelectAllDaily(masterBox) {
+  const checkBoxes = document.querySelectorAll('.daily-row-check');
+  checkBoxes.forEach(cb => cb.checked = masterBox.checked);
+}
+
+// 需求1扩展：批量勾选数据彻底清除逻辑
+function batchDeleteDaily() {
+  const checkBoxes = document.querySelectorAll('.daily-row-check:checked');
+  if (checkBoxes.length === 0) {
+    toast('⚠️ 请先勾选想要删除的单条或多条记录');
+    return;
+  }
+  if (confirm(`🚨 确定要一次性永久删除选中的 ${checkBoxes.length} 条推广明细记录吗？`)) {
+    const idsToDelete = Array.from(checkBoxes).map(cb => cb.value);
+    records = records.filter(r => !idsToDelete.includes(r.id));
+    persistRecords();
+    renderDaily();
+    document.getElementById('daily-master-check').checked = false;
+    toast(`✓ 成功批量删除 ${checkBoxes.length} 条流水数据`);
+  }
+}
+
 function renderDaily() {
   const fr = document.getElementById('filter-region').value;
   const fc = document.getElementById('filter-channel').value;
@@ -541,6 +635,7 @@ function renderDaily() {
         const users = +r.users || 0;
         const rev = +r.revenue || 0;
         return `<tr>
+          <td style="text-align:center;"><input type="checkbox" class="daily-row-check row-check-input" value="${r.id}"></td>
           <td>${r.date}</td>
           <td><span class="badge b-${r.region}">${(REGIONS[r.region] || {flag:'', name: r.region}).flag} ${(REGIONS[r.region] || {name:r.region}).name}</span></td>
           <td><span class="badge b-c">${r.channel || '—'}</span></td>
@@ -551,7 +646,6 @@ function renderDaily() {
           <td style="color:#e67e22;">$${rev.toLocaleString()}</td>
           <td style="color:#6366f1;">${(+r.views || 0).toLocaleString()}</td>
           <td><strong>${users > 0 ? '$' + (cost/users).toFixed(2) : '—'}</strong></td>
-          <td><span class="${rev >= cost ? 'up' : 'dn'}">${cost > 0 ? (rev/cost).toFixed(2) + 'x' : '—'}</span></td>
           <td>${getNoteHtml(r)}</td>
           <td>
             <button class="action-btn edit" onclick="editRecord('${r.id}')"><i class="ti ti-edit"></i></button>
@@ -576,6 +670,68 @@ function updateWeeklyFilters() {
     select.appendChild(opt);
   });
   select.value = currentVal;
+}
+
+// 需求2核心扩展：双月多重指标深度比对与环比逻辑函数
+function calculateDoubleMonthCompare() {
+  const baseMonth = document.getElementById('comp-month-base').value;
+  const targetMonth = document.getElementById('comp-month-target').value;
+  const container = document.getElementById('double-month-result-container');
+  
+  if (!baseMonth || !targetMonth) {
+    container.innerHTML = `<div class="empty" style="padding:1rem;">请完整选择基础月份与对比月份进行深度指标核算</div>`;
+    return;
+  }
+  
+  const baseData = records.filter(r => r.date.startsWith(baseMonth));
+  const targetData = records.filter(r => r.date.startsWith(targetMonth));
+  
+  const bCost = sum(baseData, 'cost'), tCost = sum(targetData, 'cost');
+  const bViews = sum(baseData, 'views'), tViews = sum(targetData, 'views');
+  const bUsers = sum(baseData, 'users'), tUsers = sum(targetData, 'users');
+  
+  const bCpa = bUsers > 0 ? bCost / bUsers : 0;
+  const tCpa = tUsers > 0 ? tCost / tUsers : 0;
+  
+  const costPct = pct(tCost, bCost);
+  const viewsPct = pct(tViews, bViews);
+  const usersPct = pct(tUsers, bUsers);
+  const cpaPct = bCpa > 0 ? Math.round(((tCpa - bCpa) / bCpa) * 100) : 0;
+
+  // 估算周环比与年环比状态
+  const baseYear = parseInt(baseMonth.split('-')[0]);
+  const targetYear = parseInt(targetMonth.split('-')[0]);
+  const isYoYCalculated = (targetYear - baseYear === 1) && (baseMonth.split('-')[1] === targetMonth.split('-')[1]);
+  
+  container.innerHTML = `
+    <div class="comp-box-grid">
+      <div class="comp-card">
+        <div class="metric-label"><i class="ti ti-currency-dollar"></i>总推广消耗对比</div>
+        <div class="comp-num">$${tCost.toLocaleString()} <span style="font-size:12px; font-weight:normal; color:var(--text2);">vs $${bCost.toLocaleString()}</span></div>
+        <div class="metric-sub">总环比: <span class="${costPct >= 0 ? 'up' : 'dn'}">${costPct >= 0 ? '↑' : '↓'}${Math.abs(costPct)}%</span></div>
+      </div>
+      <div class="comp-card">
+        <div class="metric-label"><i class="ti ti-device-tv"></i>总播放量对比</div>
+        <div class="comp-num">${tViews.toLocaleString()} <span style="font-size:12px; font-weight:normal; color:var(--text2);">vs ${bViews.toLocaleString()}</span></div>
+        <div class="metric-sub">总环比: <span class="${viewsPct >= 0 ? 'up' : 'dn'}">${viewsPct >= 0 ? '↑' : '↓'}${Math.abs(viewsPct)}%</span></div>
+      </div>
+      <div class="comp-card">
+        <div class="metric-label"><i class="ti ti-users"></i>获取新增用户对比</div>
+        <div class="comp-num">${tUsers.toLocaleString()} 人 <span style="font-size:12px; font-weight:normal; color:var(--text2);">vs ${bUsers.toLocaleString()}</span></div>
+        <div class="metric-sub">总环比: <span class="${usersPct >= 0 ? 'up' : 'dn'}">${usersPct >= 0 ? '↑' : '↓'}${Math.abs(usersPct)}%</span></div>
+      </div>
+      <div class="comp-card">
+        <div class="metric-label"><i class="ti ti-math-symbols"></i>核算综合 CPA 对比</div>
+        <div class="comp-num">${tCpa > 0 ? '$' + tCpa.toFixed(2) : '—'} <span style="font-size:12px; font-weight:normal; color:var(--text2);">vs ${bCpa > 0 ? '$' + bCpa.toFixed(2) : '—'}</span></div>
+        <div class="metric-sub">成本波动: <span class="${cpaPct <= 0 ? 'up' : 'dn'}">${cpaPct >= 0 ? '↑' : '↓'}${Math.abs(cpaPct)}%</span></div>
+      </div>
+    </div>
+    <div style="margin-top:12px; padding:10px; background:var(--bg3); border-radius:6px; font-size:12px; font-weight:500; display:flex; gap:20px;">
+      <span><i class="ti ti-git-branch"></i> 周期性质核算诊断:</span>
+      <span style="color:var(--info);">${isYoYCalculated ? '✓ 当前对比组合完美匹配【年度同比 (YoY)】核算维度' : 'ℹ️ 当前属于【月度环比 (MoM)】大盘对比核算'}</span>
+      <span>| 平均周化波动估算: <b class="${usersPct >= 0 ? 'up' : 'dn'}">${(usersPct/4.3).toFixed(1)}%</b></span>
+    </div>
+  `;
 }
 
 function renderWeekly() {
@@ -635,16 +791,13 @@ function renderWeekly() {
         <td style="color:#6366f1;font-weight:600;">${Math.round(d.views).toLocaleString()}</td>
         <td style="color:#2b8a3e;font-weight:600;">${Math.round(d.users).toLocaleString()}</td>
         <td><span style="font-size:13px; color:#c92a2a; font-weight:700;">${d.users > 0 ? '$' + (d.cost/d.users).toFixed(2) : '—'}</span></td>
-        <td><span class="${d.revenue >= d.cost ? 'up' : 'dn'}" style="font-weight:700;">${d.cost > 0 ? (d.revenue/d.cost).toFixed(2) + 'x' : '—'}</span></td>
-      </tr>`;
+        </tr>`;
     });
   });
-  document.getElementById('weekly-tbody').innerHTML = rows || `<tr><td colspan="8" class="empty">无匹配多维周对账数据</td></tr>`;
+  document.getElementById('weekly-tbody').innerHTML = rows || `<tr><td colspan="7" class="empty">无匹配多维周对账数据</td></tr>`;
 }
 
 function renderRecent() {
-  if (!document.getElementById('f-date').value) document.getElementById('f-date').value = new Date().toISOString().slice(0, 10);
-  
   const cleanFilter = document.getElementById('clean-filter-region').value;
   let list = [...records].sort((a,b) => b.date.localeCompare(a.date));
   if(cleanFilter) {
@@ -687,6 +840,59 @@ function batchDeleteFiltered() {
     renderRecent();
     toast(`✓ 已成功清理【${targetName}】维度的 ${deletedCount} 条历史上传数据`);
   }
+}
+
+// 需求4核心扩展：专门用于周/月度总播放量追溯补录及自定义周投放素材绑定的处理函数
+function saveWeeklyBulkData() {
+  const wDate = document.getElementById('w-date').value;
+  const wRegion = document.getElementById('w-region').value;
+  const wChannel = document.getElementById('w-channel').value;
+  const wViewsVal = parseFloat(document.getElementById('w-views').value) || 0;
+  const wMaterialVal = document.getElementById('w-material').value.trim();
+
+  if(!wDate) {
+    toast('❌ 必须指定一个具体的定位日期段起点');
+    return;
+  }
+  if(wViewsVal === 0 && !wMaterialVal) {
+    toast('⚠️ 播放量和素材内容不能同时为空，请至少填写一项进行追加');
+    return;
+  }
+
+  // 智能寻找在同一天、同一地区、同一媒体上最匹配的已有流水行进行融合
+  let target = records.find(x => x.date === wDate && x.region === wRegion && x.channel === wChannel);
+  
+  if (target) {
+    // 补录现有流水记录
+    if(wViewsVal > 0) target.views = (parseFloat(target.views) || 0) + wViewsVal;
+    if(wMaterialVal) {
+      target.note = target.note ? (target.note + " | " + wMaterialVal) : wMaterialVal;
+    }
+    toast('✓ 智能识别成功！已将播放量或周素材追溯追加至当前历史已有流水中');
+  } else {
+    // 独立新建一个自定义周周期的汇总对账节点行
+    const newId = Date.now() + Math.random().toString(36).slice(2);
+    records.push({
+      id: newId,
+      date: wDate,
+      region: wRegion,
+      channel: wChannel,
+      contentType: 'video', // 默认归档为主要视频流
+      count: 0,
+      cost: 0,
+      users: 0,
+      revenue: 0,
+      views: wViewsVal,
+      note: wMaterialVal ? `[周素材投放]: ${wMaterialVal}` : '周数据独立总数补录'
+    });
+    toast('✓ 已为您成功建立一条独立的周总播放量/周自定义素材对账流水行');
+  }
+
+  persistRecords();
+  // 清空补录表单
+  document.getElementById('w-views').value = '';
+  document.getElementById('w-material').value = '';
+  renderRecent();
 }
 
 function saveRecord() {
@@ -782,7 +988,7 @@ function parseRowByRadar(row) {
   const uVal  = findVal(['新增', '用户', 'users', 'install', 'reg', '激活', '注册']);
   const revVal = findVal(['收益', '回款', 'revenue', 'income', '赚取']);
   const vVal  = findVal(['播放', '观看', 'views', 'play', 'click', '流量']);
-  const nVal  = findVal(['url', '链接', '备注', 'note', 'desc']);
+  const nVal = findVal(['url', '链接', '备注', 'note', 'desc', '素材']);
 
   if (!dVal) return null;
   matched.date = formatUploadedDate(dVal);
@@ -884,7 +1090,7 @@ function parseCSVToArray(text) {
 
 function exportCSV() {
   if (records.length === 0) { toast('暂无数据导出'); return; }
-  const header = '日期,地区,渠道,内容形式,推广数量,消耗(USD),新增注册用户,总预估收益,播放量,CPA,备注';
+  const header = '日期,地区,渠道,内容形式,推广数量,消耗(USD),新增注册用户,总预估收益,播放量,CPA,备注与素材';
   const rows = records
     .sort((a,b) => b.date.localeCompare(a.date))
     .map(r => `${r.date},${REGIONS[r.region]?REGIONS[r.region].name:r.region},${r.channel},${r.contentType},${r.count},${r.cost},${r.users},${r.revenue||0},${r.views||0},${r.users>0?(r.cost/r.users).toFixed(2):'0'},"${r.note||''}"`);
