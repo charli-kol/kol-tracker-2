@@ -350,47 +350,279 @@
   }
 
   function renderWeekly() { 
-    let wf = document.getElementById('weekly-filter-range').value, rf = document.getElementById('weekly-filter-region').value; 
-    let wm = {}; 
-    records.forEach(r=>{ let wk = getWeekStr(r.date); if(!wm[wk]) wm[wk] = {}; if(!wm[wk][r.region]) wm[wk][r.region] = { count:0, cost:0, users:0 }; wm[wk][r.region].count += (+r.count||0); wm[wk][r.region].cost += (+r.cost||0); wm[wk][r.region].users += (+r.users||0); }); 
-    let aw = Object.keys(wm).sort(), cw = aw.slice(-6), rks = Object.keys(REGIONS); 
-    if(charts['chart-weekly']) charts['chart-weekly'].destroy(); 
-    let tc = matchMedia('(prefers-color-scheme:dark)').matches?'#909296':'#6c757d'; 
-    charts['chart-weekly'] = new Chart(document.getElementById('chart-weekly'), { type:'bar', data:{ labels:cw.map(w=>getWeekRangeLabel(w)), datasets:rks.map(r=>({ label:REGIONS[r].name, data:cw.map(w=>wm[w]&&wm[w][r]?wm[w][r].cost:0), backgroundColor:REGIONS[r].color+'cc' })) }, options:{ responsive:true, maintainAspectRatio:false, scales:{ x:{ ticks:{color:tc} }, y:{ ticks:{color:tc} } } } }); 
-    let rows = ''; 
-    aw.slice().reverse().forEach(w=>{ if(wf && w!==wf) return; rks.forEach(r=>{ if(rf && r!==rf) return; let d = wm[w] && wm[w][r]; if(!d) return; let wv = 0; vpRecords.filter(v=>v.region===r).forEach(v=>{ if(v.mode==='single' && getWeekStr(v.date)===w) wv += v.views; if(v.mode==='range'){ let p = v.date.split(' 至 '); let yw = w.split('-W'); let mon = new Date(yw[0],0,4); mon.setDate(mon.getDate() - (mon.getDay()||7) + 1 + (yw[1]-1)*7); let dd = []; for(let i=0;i<7;i++){ let cd = new Date(mon); cd.setDate(mon.getDate()+i); dd.push(cd.toISOString().slice(0,10)); } if(dd.some(x=> x>=p[0] && x<=p[1])) wv += v.views; } }); rows += `<tr><td class="week-range">${getWeekRangeLabel(w)}</td><td class="badge b-${r}">${REGIONS[r].flag} ${REGIONS[r].name}</td><td>${d.count}</td><td>$${d.cost.toLocaleString()}</td><td style="color:#2b8a3e;">${d.users.toLocaleString()}</td><td style="color:#6366f1;">${wv.toLocaleString()}</td><td>${d.users>0?'$'+(d.cost/d.users).toFixed(2):'—'}</td></tr>`; }); }); 
-    document.getElementById('weekly-tbody').innerHTML = rows || '<tr><td colspan="7" class="empty">无周核算数据</td></tr>'; 
+  let wf = document.getElementById('weekly-filter-range').value; 
+  let rf = document.getElementById('weekly-filter-region').value; 
+  let wm = {}; 
+  
+  // 按周汇总数据
+  records.forEach(r => { 
+    let wk = getWeekStr(r.date); 
+    if(!wm[wk]) wm[wk] = {}; 
+    if(!wm[wk][r.region]) wm[wk][r.region] = { count: 0, cost: 0, users: 0 }; 
+    wm[wk][r.region].count += (+r.count || 0); 
+    wm[wk][r.region].cost += (+r.cost || 0); 
+    wm[wk][r.region].users += (+r.users || 0); 
+  }); 
+  
+  // 获取所有周并排序（最新的在前）
+  let aw = Object.keys(wm).sort().reverse();
+  
+  // 获取最近6周用于图表
+  let cw = aw.slice(0, 6);
+  let rks = Object.keys(REGIONS); 
+  
+  // 渲染每周消耗图表
+  if(charts['chart-weekly']) charts['chart-weekly'].destroy(); 
+  let tc = matchMedia('(prefers-color-scheme:dark)').matches ? '#909296' : '#6c757d'; 
+  
+  if(cw.length > 0) {
+    charts['chart-weekly'] = new Chart(document.getElementById('chart-weekly'), { 
+      type: 'bar', 
+      data: { 
+        labels: cw.map(w => getWeekRangeLabel(w)), 
+        datasets: rks.map(r => ({ 
+          label: REGIONS[r].name, 
+          data: cw.map(w => (wm[w] && wm[w][r]) ? wm[w][r].cost : 0), 
+          backgroundColor: REGIONS[r].color + 'cc' 
+        })) 
+      }, 
+      options: { 
+        responsive: true, 
+        maintainAspectRatio: false, 
+        scales: { 
+          x: { ticks: { color: tc } }, 
+          y: { ticks: { color: tc } } 
+        } 
+      } 
+    });
   }
+  
+  // 构建表格行
+  let rows = ''; 
+  aw.forEach(w => { 
+    if(wf && w !== wf) return; 
+    rks.forEach(r => { 
+      if(rf && r !== rf) return; 
+      let d = wm[w] && wm[w][r]; 
+      if(!d) return; 
+      
+      // 计算该周的视频播放量
+      let wv = 0; 
+      vpRecords.filter(v => v.region === r).forEach(v => { 
+        if(v.mode === 'single' && getWeekStr(v.date) === w) { 
+          wv += v.views; 
+        } 
+        if(v.mode === 'range') { 
+          let p = v.date.split(' 至 '); 
+          let yw = w.split('-W'); 
+          let mon = new Date(yw[0], 0, 4); 
+          mon.setDate(mon.getDate() - (mon.getDay() || 7) + 1 + (yw[1] - 1) * 7); 
+          let dd = []; 
+          for(let i = 0; i < 7; i++) { 
+            let cd = new Date(mon); 
+            cd.setDate(mon.getDate() + i); 
+            dd.push(cd.toISOString().slice(0, 10)); 
+          } 
+          if(dd.some(x => x >= p[0] && x <= p[1])) { 
+            wv += v.views; 
+          } 
+        } 
+      }); 
+      
+      rows += `<tr>
+        <td class="week-range">${getWeekRangeLabel(w)}</td>
+        <td><span class="badge b-${r}">${REGIONS[r].flag} ${REGIONS[r].name}</span></td>
+        <td style="text-align: center;">${d.count}</td>
+        <td style="text-align: right;">$${d.cost.toLocaleString()}</td>
+        <td style="text-align: right; color: #2b8a3e; font-weight: 600;">${d.users.toLocaleString()}</td>
+        <td style="text-align: right; color: #6366f1; font-weight: 600;">${wv.toLocaleString()}</td>
+        <td style="text-align: right;">${d.users > 0 ? '$' + (d.cost / d.users).toFixed(2) : '—'}</td>
+      </tr>`; 
+    }); 
+  }); 
+  
+  document.getElementById('weekly-tbody').innerHTML = rows || '<tr><td colspan="7" class="empty">无周核算数据</td></tr>'; 
+}
 
   function updateMonthSelectors() { 
-    let mSet = new Set(); 
-    function add(s){ let m=s.match(/(\d{4})-(\d{2})/); if(m) mSet.add(m[1]+'-'+m[2]); } 
-    records.forEach(r=>{ if(r.date.includes(' 至 ')) r.date.split(' 至 ').forEach(add); else add(r.date); }); 
-    vpRecords.forEach(v=>{ if(v.date.includes(' 至 ')) v.date.split(' 至 ').forEach(add); else add(v.date); }); 
-    let list = Array.from(mSet).sort(); 
-    ['compare-month-a','compare-month-b','compare-month-c','compare-month-d'].forEach((id,i)=>{ let el = document.getElementById(id), saved = el.value; el.innerHTML = '<option value="">— 选择月份 —</option>'; list.forEach(m=>{ let o = document.createElement('option'); o.value=m; o.textContent=m; el.appendChild(o); }); if(list.length) { if(list.includes(saved)) el.value = saved; else { if(i===0||i===2) el.value = list[Math.max(0,list.length-2)] || list[0]; if(i===1||i===3) el.value = list[list.length-1] || list[0]; } } }); 
+  let mSet = new Set(); 
+  
+  // 从 records 中提取月份
+  records.forEach(r => { 
+    // 处理单日格式 YYYY-MM-DD
+    let singleMatch = r.date.match(/^(\d{4})-(\d{2})/);
+    if(singleMatch) {
+      mSet.add(singleMatch[1] + '-' + singleMatch[2]);
+    }
+    // 处理周期格式 YYYY-MM-DD 至 YYYY-MM-DD
+    let rangeMatch = r.date.match(/(\d{4})-(\d{2})/);
+    if(rangeMatch) {
+      mSet.add(rangeMatch[1] + '-' + rangeMatch[2]);
+    }
+  }); 
+  
+  // 从 vpRecords 中提取月份
+  vpRecords.forEach(v => { 
+    let singleMatch = v.date.match(/^(\d{4})-(\d{2})/);
+    if(singleMatch) {
+      mSet.add(singleMatch[1] + '-' + singleMatch[2]);
+    }
+    let rangeMatch = v.date.match(/(\d{4})-(\d{2})/);
+    if(rangeMatch) {
+      mSet.add(rangeMatch[1] + '-' + rangeMatch[2]);
+    }
+  }); 
+  
+  let list = Array.from(mSet).sort(); 
+  
+  // 更新四个月份选择器
+  let selectIds = ['compare-month-a', 'compare-month-b', 'compare-month-c', 'compare-month-d'];
+  for(let idx = 0; idx < selectIds.length; idx++) {
+    let id = selectIds[idx];
+    let el = document.getElementById(id); 
+    if(!el) continue;
+    let saved = el.value; 
+    el.innerHTML = '<option value="">— 选择月份 —</option>'; 
+    for(let i = 0; i < list.length; i++) {
+      let m = list[i];
+      let opt = document.createElement('option'); 
+      opt.value = m; 
+      opt.textContent = m; 
+      el.appendChild(opt); 
+    }
+    if(list.length > 0) { 
+      if(list.includes(saved)) { 
+        el.value = saved; 
+      } else { 
+        if(idx === 0 || idx === 2) {
+          el.value = list[Math.max(0, list.length - 2)] || list[0];
+        }
+        if(idx === 1 || idx === 3) {
+          el.value = list[list.length - 1] || list[0];
+        }
+      } 
+    } 
   }
+}
 
   function getMonthStats(m, reg) { 
-    if(!m) return { count:0, cost:0, users:0, views:0, cpa:null }; 
-    let sub = records.filter(r=>r.region===reg && r.date.includes(m)); 
-    let vw=0; vpRecords.filter(v=>v.region===reg && v.date.includes(m)).forEach(v=>{ vw+=v.views; }); 
-    let tc = sum(sub,'cost'), tu = sum(sub,'users'); 
-    return { count:sum(sub,'count'), cost:tc, users:tu, views:vw, cpa:tu>0?tc/tu:null }; 
-  }
+  if(!m) return { count: 0, cost: 0, users: 0, views: 0, cpa: null }; 
+  
+  // 筛选该月份的所有记录
+  let sub = records.filter(r => r.region === reg && r.date.includes(m)); 
+  
+  // 计算播放量
+  let vw = 0; 
+  vpRecords.filter(v => v.region === reg && v.date.includes(m)).forEach(v => { 
+    vw += v.views; 
+  }); 
+  
+  let tc = sum(sub, 'cost'); 
+  let tu = sum(sub, 'users'); 
+  
+  return { 
+    count: sum(sub, 'count'), 
+    cost: tc, 
+    users: tu, 
+    views: vw, 
+    cpa: tu > 0 ? tc / tu : null 
+  }; 
+}
 
   function buildCompareRows(s, p, showDiff) { 
-    let rows = [{ label:'总消耗 (USD)', value:'$'+s.cost.toLocaleString(), current:s.cost, previous:p?p.cost:null },{ label:'转化新增用户', value:s.users.toLocaleString()+' 人', current:s.users, previous:p?p.users:null },{ label:'独立大盘播放总量', value:s.views.toLocaleString()+' 次', current:s.views, previous:p?p.views:null },{ label:'核算 CPA', value:s.cpa?'$'+s.cpa.toFixed(2):'—', current:s.cpa, previous:p&&p.cpa?p.cpa:null }]; 
-    let html=''; for(let i=0;i<rows.length;i++){ let row=rows[i]; let diffHtml=''; if(showDiff && p && row.previous!==null && row.current!==null && row.previous!==0){ let change = ((row.current - row.previous)/row.previous*100); let cls = change>=0?'up':'dn'; let arrow = change>=0?'↑':'↓'; diffHtml = ' <span class="diff-badge '+cls+'">'+arrow+Math.abs(change).toFixed(1)+'%</span>'; } html += '<div class="compare-row"><span class="label">'+row.label+'</span><span class="value">'+row.value+diffHtml+'</span></div>'; } return html; 
-  }
+  let rows = [
+    { label: '💰 总消耗 (USD)', value: '$' + (s.cost || 0).toLocaleString(), current: s.cost, previous: p ? p.cost : null },
+    { label: '👥 转化新增用户', value: (s.users || 0).toLocaleString() + ' 人', current: s.users, previous: p ? p.users : null },
+    { label: '📺 独立大盘播放总量', value: (s.views || 0).toLocaleString() + ' 次', current: s.views, previous: p ? p.views : null },
+    { label: '📊 核算 CPA', value: s.cpa ? '$' + s.cpa.toFixed(2) : '—', current: s.cpa, previous: p && p.cpa ? p.cpa : null }
+  ]; 
+  
+  let html = ''; 
+  for(let i = 0; i < rows.length; i++) { 
+    let row = rows[i]; 
+    let diffHtml = ''; 
+    if(showDiff && p && row.previous !== null && row.current !== null && row.previous !== 0 && row.current !== 0) { 
+      let change = ((row.current - row.previous) / row.previous * 100); 
+      let cls = change >= 0 ? 'up' : 'dn'; 
+      let arrow = change >= 0 ? '↑' : '↓'; 
+      diffHtml = ' <span class="diff-badge ' + cls + '">' + arrow + Math.abs(change).toFixed(1) + '%</span>'; 
+    } 
+    html += '<div class="compare-row"><span class="label">' + row.label + '</span><span class="value">' + row.value + diffHtml + '</span></div>'; 
+  } 
+  return html; 
+}
 
   function renderMonthlyCompare() { 
-    let ma = document.getElementById('compare-month-a').value, mb = document.getElementById('compare-month-b').value, mc = document.getElementById('compare-month-c').value, md = document.getElementById('compare-month-d').value; 
-    let body = document.getElementById('monthly-compare-body'); 
-    if(!ma && !mb && !mc && !md) { body.innerHTML = '<div class="empty">请自由定制并选取对比组月份</div>'; return; } 
-    let h = ''; 
-    Object.keys(REGIONS).forEach(r=>{ let sa = getMonthStats(ma,r), sb = getMonthStats(mb,r), sc = getMonthStats(mc,r), sd = getMonthStats(md,r); let hasData = (ma && (sa.cost>0||sa.users>0||sa.views>0)) || (mb && (sb.cost>0||sb.users>0||sb.views>0)) || (mc && (sc.cost>0||sc.users>0||sc.views>0)) || (md && (sd.cost>0||sd.users>0||sd.views>0)); if(!hasData) return; h += '<div class="monthly-section"><div class="monthly-region-header"><span class="monthly-region-title"><span>'+REGIONS[r].flag+'</span><span>'+REGIONS[r].name+'</span></span></div>'; if(ma && mb) { h += '<div class="compare-block-title"><i class="ti ti-chart-bar"></i> 对比组 1 ('+ma+' vs '+mb+')</div><div class="compare-grid"><div class="compare-card"><div class="compare-card-title">基准月: '+ma+'</div>'+buildCompareRows(sa,null,false)+'</div><div class="compare-card"><div class="compare-card-title">对比月: '+mb+'</div>'+buildCompareRows(sb,sa,true)+'</div></div>'; } if(mc && md) { h += '<div class="compare-block-title" style="color:#10b981;border-left-color:#10b981;"><i class="ti ti-chart-bar"></i> 对比组 2 ('+mc+' vs '+md+')</div><div class="compare-grid"><div class="compare-card"><div class="compare-card-title">基准月: '+mc+'</div>'+buildCompareRows(sc,null,false)+'</div><div class="compare-card"><div class="compare-card-title">对比月: '+md+'</div>'+buildCompareRows(sd,sc,true)+'</div></div>'; } if(ma && !mb) h += '<div class="compare-block-title"><i class="ti ti-chart-bar"></i> 月份数据: '+ma+'</div><div class="compare-grid"><div class="compare-card">'+buildCompareRows(sa,null,false)+'</div></div>'; if(mb && !ma) h += '<div class="compare-block-title"><i class="ti ti-chart-bar"></i> 月份数据: '+mb+'</div><div class="compare-grid"><div class="compare-card">'+buildCompareRows(sb,null,false)+'</div></div>'; if(mc && !md) h += '<div class="compare-block-title" style="color:#10b981;border-left-color:#10b981;"><i class="ti ti-chart-bar"></i> 月份数据: '+mc+'</div><div class="compare-grid"><div class="compare-card">'+buildCompareRows(sc,null,false)+'</div></div>'; if(md && !mc) h += '<div class="compare-block-title" style="color:#10b981;border-left-color:#10b981;"><i class="ti ti-chart-bar"></i> 月份数据: '+md+'</div><div class="compare-grid"><div class="compare-card">'+buildCompareRows(sd,null,false)+'</div></div>'; h += '</div>'; }); body.innerHTML = h || '<div class="empty">所选月份当前无有效归档台账</div>'; 
+  let ma = document.getElementById('compare-month-a').value; 
+  let mb = document.getElementById('compare-month-b').value; 
+  let mc = document.getElementById('compare-month-c').value; 
+  let md = document.getElementById('compare-month-d').value; 
+  let body = document.getElementById('monthly-compare-body'); 
+  
+  if(!ma && !mb && !mc && !md) { 
+    body.innerHTML = '<div class="empty">请在上方选择对比月份</div>'; 
+    return; 
+  } 
+  
+  let h = ''; 
+  let rks = Object.keys(REGIONS);
+  
+  for(let idx = 0; idx < rks.length; idx++) {
+    let r = rks[idx];
+    let sa = getMonthStats(ma, r); 
+    let sb = getMonthStats(mb, r); 
+    let sc = getMonthStats(mc, r); 
+    let sd = getMonthStats(md, r); 
+    
+    let hasData = (ma && (sa.cost > 0 || sa.users > 0 || sa.views > 0)) || 
+                  (mb && (sb.cost > 0 || sb.users > 0 || sb.views > 0)) || 
+                  (mc && (sc.cost > 0 || sc.users > 0 || sc.views > 0)) || 
+                  (md && (sd.cost > 0 || sd.users > 0 || sd.views > 0)); 
+    
+    if(!hasData) continue; 
+    
+    h += '<div class="monthly-section">';
+    h += '<div class="monthly-region-header">';
+    h += '<span class="monthly-region-title">';
+    h += '<span>' + REGIONS[r].flag + '</span>';
+    h += '<span>' + REGIONS[r].name + '</span>';
+    h += '</span></div>';
+    
+    // 对比组1
+    if(ma && mb) { 
+      h += '<div class="compare-block-title"><i class="ti ti-chart-bar"></i> 对比组 1 (' + ma + ' vs ' + mb + ')</div>';
+      h += '<div class="compare-grid">';
+      h += '<div class="compare-card"><div class="compare-card-title">📅 ' + ma + '</div>' + buildCompareRows(sa, null, false) + '</div>';
+      h += '<div class="compare-card"><div class="compare-card-title">📅 ' + mb + '</div>' + buildCompareRows(sb, sa, true) + '</div>';
+      h += '</div>';
+    } else if(ma && !mb) {
+      h += '<div class="compare-block-title"><i class="ti ti-chart-bar"></i> 月份数据: ' + ma + '</div>';
+      h += '<div class="compare-grid"><div class="compare-card">' + buildCompareRows(sa, null, false) + '</div></div>';
+    } else if(mb && !ma) {
+      h += '<div class="compare-block-title"><i class="ti ti-chart-bar"></i> 月份数据: ' + mb + '</div>';
+      h += '<div class="compare-grid"><div class="compare-card">' + buildCompareRows(sb, null, false) + '</div></div>';
+    }
+    
+    // 对比组2
+    if(mc && md) { 
+      h += '<div class="compare-block-title" style="color:#10b981;border-left-color:#10b981;"><i class="ti ti-chart-bar"></i> 对比组 2 (' + mc + ' vs ' + md + ')</div>';
+      h += '<div class="compare-grid">';
+      h += '<div class="compare-card"><div class="compare-card-title">📅 ' + mc + '</div>' + buildCompareRows(sc, null, false) + '</div>';
+      h += '<div class="compare-card"><div class="compare-card-title">📅 ' + md + '</div>' + buildCompareRows(sd, sc, true) + '</div>';
+      h += '</div>';
+    } else if(mc && !md) {
+      h += '<div class="compare-block-title" style="color:#10b981;border-left-color:#10b981;"><i class="ti ti-chart-bar"></i> 月份数据: ' + mc + '</div>';
+      h += '<div class="compare-grid"><div class="compare-card">' + buildCompareRows(sc, null, false) + '</div></div>';
+    } else if(md && !mc) {
+      h += '<div class="compare-block-title" style="color:#10b981;border-left-color:#10b981;"><i class="ti ti-chart-bar"></i> 月份数据: ' + md + '</div>';
+      h += '<div class="compare-grid"><div class="compare-card">' + buildCompareRows(sd, null, false) + '</div></div>';
+    }
+    
+    h += '</div>';
   }
+  
+  body.innerHTML = h || '<div class="empty">所选月份暂无有效数据，请先录入推广数据或播放量数据</div>'; 
+}
 
   // 事件绑定
   function bindEvents() {
