@@ -197,9 +197,9 @@ tr:hover td{background:var(--bg2)}
       <div class="period-block"><div class="section"><div class="section-header">📆 本周核心指标</div><div class="metrics-grid" id="week-metrics-grid"></div></div></div>
     </div>
     <div class="two-col">
-      <div class="section"><div class="section-header">📡 渠道消耗分布</div><div class="chart-wrap"><canvas id="chart-channels"></canvas></div></div>
-      <div class="section"><div class="section-header">🎬 内容形式消耗</div><div class="chart-wrap"><canvas id="chart-content-types"></canvas></div></div>
-    </div>
+<div class="section"><div class="section-header">📡 渠道消耗分布</div><div class="chart-wrap"><canvas id="chart-channels"></canvas></div></div>
+<div class="section"><div class="section-header">📈 每日播放量趋势</div><div class="chart-wrap"><canvas id="chart-daily-views"></canvas></div></div>
+</div>
     <div class="two-col">
       <div class="section"><div class="section-header">👥 新增用户趋势</div><div class="chart-wrap"><canvas id="chart-users"></canvas></div></div>
       <div class="section"><div class="section-header">💰 消耗趋势</div><div class="chart-wrap"><canvas id="chart-cost"></canvas></div></div>
@@ -395,20 +395,51 @@ tr:hover td{background:var(--bg2)}
   }
 
   function renderDistCharts(){
-    var base=getFilteredBase(),tc=matchMedia('(prefers-color-scheme:dark)').matches?'#909296':'#6c757d';
-    var chs=['TikTok','YouTube','Instagram'];
-    if(charts['chart-channels'])charts['chart-channels'].destroy();
-    charts['chart-channels']=new Chart(document.getElementById('chart-channels'),{type:'doughnut',data:{labels:chs,datasets:[{data:chs.map(function(c){return sum(base.filter(function(r){return r.channel===c;}),'cost');}),backgroundColor:chs.map(function(c){return CHANNEL_COLORS[c];})}]},options:{responsive:true,maintainAspectRatio:false}});
-    var ct=['video','reel','story','comment'];
-    if(charts['chart-content-types'])charts['chart-content-types'].destroy();
-    charts['chart-content-types']=new Chart(document.getElementById('chart-content-types'),{type:'bar',data:{labels:ct,datasets:[{data:ct.map(function(t){return sum(base.filter(function(r){return r.contentType===t;}),'cost');}),backgroundColor:ct.map(function(t){return CT_COLORS[t]||'#6c757d';})}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false}},y:{grid:{color:tc}}}}});
-  }
-
-  function updateWeeklyFilters(){
-    var s=new Set();records.forEach(function(r){s.add(getWeekStr(r.date));});
-    var sel=document.getElementById('weekly-filter-range');sel.innerHTML='<option value="">全部周</option>';
-    Array.from(s).sort().forEach(function(w){var o=document.createElement('option');o.value=w;o.textContent=getWeekLabel(w);sel.appendChild(o);});
-  }
+  var base=getFilteredBase(),tc=matchMedia('(prefers-color-scheme:dark)').matches?'#909296':'#6c757d';
+  var isDark=matchMedia('(prefers-color-scheme:dark)').matches;
+  var gc=isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)';
+  
+  // 渠道消耗分布（保留）
+  var chs=['TikTok','YouTube','Instagram'];
+  if(charts['chart-channels'])charts['chart-channels'].destroy();
+  charts['chart-channels']=new Chart(document.getElementById('chart-channels'),{type:'doughnut',data:{labels:chs,datasets:[{data:chs.map(function(c){return sum(base.filter(function(r){return r.channel===c;}),'cost');}),backgroundColor:chs.map(function(c){return CHANNEL_COLORS[c];})}]},options:{responsive:true,maintainAspectRatio:false}});
+  
+  // 每日播放量趋势（新增）
+  var dates=[];
+  for(var i=6;i>=0;i--){var d=new Date();d.setDate(d.getDate()-i);dates.push(d.toISOString().slice(0,10));}
+  var labels=dates.map(function(d){return d.slice(5);});
+  var viewsData=dates.map(function(d){
+    var total=0;
+    vpRecords.forEach(function(v){
+      if(currentRegion!=='all'&&v.region!==currentRegion)return;
+      if(v.mode==='single'&&v.date===d)total+=v.views;
+      if(v.mode==='range'){var p=v.date.split(' 至 ');if(d>=p[0]&&d<=p[1])total+=v.views;}
+    });
+    return total;
+  });
+  if(charts['chart-daily-views'])charts['chart-daily-views'].destroy();
+  charts['chart-daily-views']=new Chart(document.getElementById('chart-daily-views'),{
+    type:'bar',
+    data:{
+      labels:labels,
+      datasets:[{
+        label:'播放量',
+        data:viewsData,
+        backgroundColor:'#3b82f6',
+        borderRadius:6
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:tc}},
+        y:{grid:{color:gc},ticks:{color:tc}}
+      }
+    }
+  });
+}
 
   function renderWeekly(){
     var tc=matchMedia('(prefers-color-scheme:dark)').matches?'#909296':'#6c757d';
