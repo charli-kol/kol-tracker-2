@@ -207,6 +207,22 @@ tr:hover td{background:var(--bg2)}
   </div>
 
   <div id="view-weekly" class="view">
+    <div class="section"><div class="section-header">📈 周消耗走势</div><div class="chart-wrap"><canvas id="chart-weekly"></canvas></div></div>
+    <div class="section">
+      <div class="section-header">📋 周核算表</div>
+      <div style="display:flex; gap:1rem; margin-bottom:1rem;">
+        <select id="weekly-filter-region" onchange="renderWeekly()"><option value="">全部地区</option><option value="TR">土耳其</option><option value="TW">台湾</option><option value="ES">西语</option><option value="BR">巴西</option></select>
+        <select id="weekly-filter-range" onchange="renderWeekly()"><option value="">全部周</option></select>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>周范围</th><th>地区</th><th>推广条数</th><th>消耗 (USD)</th><th>新增用户</th><th>播放量</th><th>CPA</th></tr></thead><tbody id="weekly-tbody"></tbody></table></div>
+    </div>
+    <div class="section"><div class="section-header">🔄 月度对比分析</div>
+      <div style="display:flex; gap:1.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+        <div>A: <select id="compare-month-a" onchange="renderMonthlyCompare()"></select> vs B: <select id="compare-month-b" onchange="renderMonthlyCompare()"></select></div>
+        <div>C: <select id="compare-month-c" onchange="renderMonthlyCompare()"></select> vs D: <select id="compare-month-d" onchange="renderMonthlyCompare()"></select></div>
+      </div>
+      <div id="monthly-compare-body"></div>
+    </div>
     <div class="section">
   <div class="section-header">📊 周报分析</div>
   <div style="display:flex;gap:1rem;margin-bottom:1rem;align-items:center;flex-wrap:wrap;">
@@ -214,8 +230,9 @@ tr:hover td{background:var(--bg2)}
     <select id="weekly-report-region" onchange="renderWeeklyReport()"><option value="all">全部地区</option><option value="TR">土耳其</option><option value="TW">台湾</option><option value="ES">西语</option><option value="BR">巴西</option></select>
     <button class="btn btn-primary" onclick="copyWeeklyReport()">📋 复制周报</button>
   </div>
-  <div id="weekly-report-body"></div>
+  <div id="weekly-report-body" style="background:var(--bg2);border-radius:var(--radius);padding:1.5rem;line-height:1.8;font-size:14px;white-space:pre-wrap;"></div>
 </div>
+  </div>
 
   <div id="view-views_panel" class="view">
     <div class="two-col">
@@ -707,14 +724,22 @@ function updateWeeklyReportSelect(){
   if(arr.length>0)renderWeeklyReport();
 }
 
-function getWeekData(wk,rf){
+function renderWeeklyReport(){
+  var wk=document.getElementById('weekly-report-week').value;
+  var rf=document.getElementById('weekly-report-region').value;
+  var body=document.getElementById('weekly-report-body');
+  if(!wk){body.innerHTML='<span style="color:var(--text2);">请选择周</span>';return;}
+  
+  var wLabel=getWeekLabel(wk);
   var yw=wk.split('-W'),y=+yw[0],wn=+yw[1];
   var j4=new Date(y,0,4),dow=j4.getDay()||7;
   var mon=new Date(j4.getTime()-(dow-1)*86400000+(wn-1)*7*86400000);
+  var sun=new Date(mon.getTime()+6*86400000);
   var weekDates=[];
   for(var i=0;i<7;i++){var cd=new Date(mon);cd.setDate(mon.getDate()+i);weekDates.push(cd.toISOString().slice(0,10));}
   
   var regs=rf==='all'?Object.keys(REGIONS):[rf];
+  
   var totalCost=0,totalUsers=0,totalVideos=0,totalViews=0;
   var regionData={};
   
@@ -722,7 +747,8 @@ function getWeekData(wk,rf){
     var cost=0,users=0,videos=0;
     records.forEach(function(rec){
       if(rec.region!==r)return;
-      if(getWeekStr(rec.date)===wk){cost+=parseFloat(rec.cost)||0;users+=parseFloat(rec.users)||0;videos+=parseFloat(rec.count)||0;}
+      var recWeek=getWeekStr(rec.date);
+      if(recWeek===wk){cost+=parseFloat(rec.cost)||0;users+=parseFloat(rec.users)||0;videos+=parseFloat(rec.count)||0;}
     });
     var views=0;
     vpRecords.filter(function(v){return v.region===r;}).forEach(function(v){
@@ -733,132 +759,45 @@ function getWeekData(wk,rf){
     totalCost+=cost;totalUsers+=users;totalVideos+=videos;totalViews+=views;
   });
   
-  return{totalCost:totalCost,totalUsers:totalUsers,totalVideos:totalVideos,totalViews:totalViews,regionData:regionData,cpa:totalUsers>0?totalCost/totalUsers:null,cpv:totalViews>0?totalCost/totalViews*1000:null};
-}
-
-function renderWeeklyReport(){
-  var wk=document.getElementById('weekly-report-week').value;
-  var rf=document.getElementById('weekly-report-region').value;
-  var body=document.getElementById('weekly-report-body');
-  if(!wk){body.innerHTML='<div class="empty">请选择周</div>';return;}
+  var cpa=totalUsers>0?'$'+(totalCost/totalUsers).toFixed(2):'—';
+  var cpv=totalViews>0?'$'+(totalCost/totalViews*1000).toFixed(2):'—';
   
-  var wLabel=getWeekLabel(wk);
-  var curr=getWeekData(wk,rf);
+  var report='📅 周报：'+wLabel+'（'+mon.getMonth()+1+'/'+mon.getDate()+' - '+sun.getMonth()+1+'/'+sun.getDate()+'）\n';
+  report+='━━━━━━━━━━━━━━━━\n\n';
+  report+='📊 整体数据\n';
+  report+='  • 总消耗：$'+totalCost.toLocaleString()+'\n';
+  report+='  • 新增用户：'+totalUsers.toLocaleString()+' 人\n';
+  report+='  • 推广视频：'+totalVideos+' 条\n';
+  report+='  • 总播放量：'+totalViews.toLocaleString()+' 次\n';
+  report+='  • CPA：'+cpa+'\n';
+  report+='  • CPM：'+cpv+'\n\n';
   
-  // 获取上周数据
-  var yw=wk.split('-W'),y=+yw[0],wn=+yw[1];
-  var prevWk='';
-  if(wn>1)prevWk=y+'-W'+String(wn-1).padStart(2,'0');
-  else prevWk=(y-1)+'-W'+String(52).padStart(2,'0');
-  var prev=getWeekData(prevWk,rf);
+  regs.forEach(function(r){
+    var d=regionData[r];
+    if(d.cost===0&&d.users===0&&d.views===0)return;
+    report+='🌍 '+REGIONS[r].flag+' '+REGIONS[r].name+'\n';
+    report+='  • 消耗：$'+d.cost.toLocaleString()+'（'+(totalCost>0?(d.cost/totalCost*100).toFixed(1):'0')+'%）\n';
+    report+='  • 新增：'+d.users.toLocaleString()+' 人\n';
+    report+='  • 视频：'+d.videos+' 条\n';
+    report+='  • 播放：'+d.views.toLocaleString()+' 次\n';
+    report+='  • CPA：'+(d.users>0?'$'+(d.cost/d.users).toFixed(2):'—')+'\n\n';
+  });
   
-  var regs=rf==='all'?Object.keys(REGIONS):[rf];
-  
-  function arrow(a,b){
-    if(!b||b===0)return'<span style="color:var(--text2);font-size:12px;">新增</span>';
-    var pct=((a-b)/b*100).toFixed(1);
-    var cls=pct>=0?'up':'dn';
-    var icon=pct>=0?'↑':'↓';
-    return'<span class="'+cls+'" style="font-size:12px;font-weight:600;">'+icon+' '+Math.abs(pct)+'%</span>';
-  }
-  
-  function metricCard(title,currVal,prevVal,isMoney){
-    var fmt=isMoney?'$'+currVal.toLocaleString():currVal.toLocaleString();
-    return'<div class="metric-card"><div class="metric-label">'+title+'</div><div class="metric-value" style="font-size:20px;">'+fmt+'</div><div style="margin-top:4px;">'+arrow(currVal,prevVal)+'<span style="font-size:11px;color:var(--text2);margin-left:4px;">vs 上周</span></div></div>';
-  }
-  
-  var html='';
-  
-  // 整体指标卡片
-  html+='<div class="section-header" style="font-size:13px;color:var(--text2);">📅 '+wLabel+' 整体数据</div>';
-  html+='<div class="metrics-grid">';
-  html+=metricCard('总消耗',curr.totalCost,prev.totalCost,true);
-  html+=metricCard('新增用户',curr.totalUsers,prev.totalUsers,false);
-  html+=metricCard('推广视频',curr.totalVideos,prev.totalVideos,false);
-  html+=metricCard('总播放量',curr.totalViews,prev.totalViews,false);
-  html+='</div>';
-  
-  // CPA & CPM
-  html+='<div class="metrics-grid">';
-  html+=metricCard('CPA','$'+(curr.cpa?curr.cpa.toFixed(2):'—'),'$'+(prev.cpa?prev.cpa.toFixed(2):'—'),false).replace('$'+(curr.cpa?curr.cpa.toFixed(2):'—'),'$'+(curr.cpa?curr.cpa.toFixed(2):'—')).replace('>','>').replace('$'+(prev.cpa?prev.cpa.toFixed(2):'—'),'$'+(prev.cpa?prev.cpa.toFixed(2):'—'));
-  html+=metricCard('CPM','$'+(curr.cpv?curr.cpv.toFixed(2):'—'),'$'+(prev.cpv?prev.cpv.toFixed(2):'—'),false);
-  html+='</div>';
-  
-  // 重新写 CPA/CPM 卡片（因为上面可能有问题）
-  html=html.replace(/metric-card[\s\S]*?CPA[\s\S]*?metric-card/g,'');
-  html+='<div class="metrics-grid">';
-  html+='<div class="metric-card"><div class="metric-label">CPA</div><div class="metric-value" style="font-size:20px;">'+(curr.cpa?'$'+curr.cpa.toFixed(2):'—')+'</div><div style="margin-top:4px;">'+arrow(curr.cpa,prev.cpa)+'<span style="font-size:11px;color:var(--text2);margin-left:4px;">vs 上周</span></div></div>';
-  html+='<div class="metric-card"><div class="metric-label">CPM（千次播放成本）</div><div class="metric-value" style="font-size:20px;">'+(curr.cpv?'$'+curr.cpv.toFixed(2):'—')+'</div><div style="margin-top:4px;">'+arrow(curr.cpv,prev.cpv)+'<span style="font-size:11px;color:var(--text2);margin-left:4px;">vs 上周</span></div></div>';
-  html+='</div>';
-  
-  // 地区详细数据
-  if(regs.length>1||rf==='all'){
-    html+='<div class="section-header" style="font-size:13px;color:var(--text2);margin-top:1.5rem;">🌍 地区明细</div>';
-    html+='<div class="table-wrap"><table><thead><tr><th>地区</th><th>消耗</th><th>新增</th><th>视频</th><th>播放</th><th>CPA</th><th>消耗占比</th></tr></thead><tbody>';
-    regs.forEach(function(r){
-      var d=curr.regionData[r];
-      var pd=prev.regionData[r]||{};
-      var cpa=d.users>0?'$'+(d.cost/d.users).toFixed(2):'—';
-      var share=curr.totalCost>0?(d.cost/curr.totalCost*100).toFixed(1)+'%':'0%';
-      html+='<tr><td><span class="badge b-'+r+'">'+REGIONS[r].flag+' '+REGIONS[r].name+'</span></td><td>$'+d.cost.toLocaleString()+' '+arrow(d.cost,pd.cost||0)+'</td><td>'+d.users.toLocaleString()+' '+arrow(d.users,pd.users||0)+'</td><td>'+d.videos+'</td><td>'+d.views.toLocaleString()+'</td><td>'+cpa+'</td><td>'+share+'</td></tr>';
-    });
-    html+='</tbody></table></div>';
-  }
-  
-  // 小结
-  if(curr.totalUsers>0||curr.totalCost>0){
-    html+='<div class="section-header" style="font-size:13px;color:var(--text2);margin-top:1.5rem;">💡 本周小结</div>';
-    html+='<div style="background:var(--bg);border-radius:var(--radius);padding:1rem;line-height:1.8;">';
-    
+  if(totalUsers>0||totalCost>0){
+    report+='💡 本周小结\n';
     var bestRegion='',bestCpa=Infinity;
-    regs.forEach(function(r){var d=curr.regionData[r];if(d.users>0&&d.cost/d.users<bestCpa){bestCpa=d.cost/d.users;bestRegion=r;}});
-    if(bestRegion)html+='• 最佳CPA地区：<span class="badge b-'+bestRegion+'">'+REGIONS[bestRegion].flag+' '+REGIONS[bestRegion].name+'</span>（$'+bestCpa.toFixed(2)+'）<br>';
-    
-    var costChange=prev.totalCost>0?((curr.totalCost-prev.totalCost)/prev.totalCost*100).toFixed(1):null;
-    var usersChange=prev.totalUsers>0?((curr.totalUsers-prev.totalUsers)/prev.totalUsers*100).toFixed(1):null;
-    if(costChange!==null)html+='• 消耗环比：<span class="'+(costChange>=0?'up':'dn')+'">'+(costChange>=0?'↑':'↓')+Math.abs(costChange)+'%</span><br>';
-    if(usersChange!==null)html+='• 新增环比：<span class="'+(usersChange>=0?'up':'dn')+'">'+(usersChange>=0?'↑':'↓')+Math.abs(usersChange)+'%</span><br>';
-    
-    html+='</div>';
+    regs.forEach(function(r){var d=regionData[r];if(d.users>0&&d.cost/d.users<bestCpa){bestCpa=d.cost/d.users;bestRegion=r;}});
+    if(bestRegion)report+='  • 最佳CPA地区：'+REGIONS[bestRegion].flag+' '+REGIONS[bestRegion].name+'（$'+bestCpa.toFixed(2)+'）\n';
+    report+='  • 周同比：请切换至上周对比查看\n';
   }
   
-  if(curr.totalCost===0&&curr.totalUsers===0&&curr.totalViews===0){
-    html='<div class="empty">本周暂无数据</div>';
-  }
-  
-  body.innerHTML=html;
+  body.textContent=report;
 }
 
 function copyWeeklyReport(){
   var body=document.getElementById('weekly-report-body');
-  if(!body.textContent.trim()||body.textContent.indexOf('请选择周')>-1){toast('请先生成周报');return;}
-  
-  var wk=document.getElementById('weekly-report-week').value;
-  var rf=document.getElementById('weekly-report-region').value;
-  var wLabel=getWeekLabel(wk);
-  var curr=getWeekData(wk,rf);
-  var regs=rf==='all'?Object.keys(REGIONS):[rf];
-  
-  var text='📅 周报：'+wLabel+'\n━━━━━━━━━━━━━━━━\n\n';
-  text+='📊 整体数据\n';
-  text+='  总消耗：$'+curr.totalCost.toLocaleString()+'\n';
-  text+='  新增用户：'+curr.totalUsers.toLocaleString()+' 人\n';
-  text+='  推广视频：'+curr.totalVideos+' 条\n';
-  text+='  总播放量：'+curr.totalViews.toLocaleString()+' 次\n';
-  text+='  CPA：'+(curr.cpa?'$'+curr.cpa.toFixed(2):'—')+'\n';
-  text+='  CPM：'+(curr.cpv?'$'+curr.cpv.toFixed(2):'—')+'\n\n';
-  
-  regs.forEach(function(r){
-    var d=curr.regionData[r];
-    if(!d||(d.cost===0&&d.users===0&&d.views===0))return;
-    text+=REGIONS[r].flag+' '+REGIONS[r].name+'\n';
-    text+='  消耗：$'+d.cost.toLocaleString()+'（'+(curr.totalCost>0?(d.cost/curr.totalCost*100).toFixed(1):'0')+'%）\n';
-    text+='  新增：'+d.users.toLocaleString()+' 人\n';
-    text+='  视频：'+d.videos+' 条\n';
-    text+='  播放：'+d.views.toLocaleString()+' 次\n';
-    text+='  CPA：'+(d.users>0?'$'+(d.cost/d.users).toFixed(2):'—')+'\n\n';
-  });
-  
+  var text=body.textContent;
+  if(!text||text.indexOf('选择周')>-1){toast('请先生成周报');return;}
   navigator.clipboard.writeText(text).then(function(){toast('已复制周报到剪贴板');}).catch(function(){toast('复制失败，请手动复制');});
 }
   function exportCSV(){
