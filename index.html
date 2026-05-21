@@ -223,6 +223,15 @@ tr:hover td{background:var(--bg2)}
       </div>
       <div id="monthly-compare-body"></div>
     </div>
+    <div class="section">
+  <div class="section-header">📊 周报分析</div>
+  <div style="display:flex;gap:1rem;margin-bottom:1rem;align-items:center;flex-wrap:wrap;">
+    <select id="weekly-report-week" onchange="renderWeeklyReport()"><option value="">选择周</option></select>
+    <select id="weekly-report-region" onchange="renderWeeklyReport()"><option value="all">全部地区</option><option value="TR">土耳其</option><option value="TW">台湾</option><option value="ES">西语</option><option value="BR">巴西</option></select>
+    <button class="btn btn-primary" onclick="copyWeeklyReport()">📋 复制周报</button>
+  </div>
+  <div id="weekly-report-body" style="background:var(--bg2);border-radius:var(--radius);padding:1.5rem;line-height:1.8;font-size:14px;white-space:pre-wrap;"></div>
+</div>
   </div>
 
   <div id="view-views_panel" class="view">
@@ -320,7 +329,7 @@ tr:hover td{background:var(--bg2)}
     var tabs=['dashboard','weekly','views_panel','tracking','add'];
     document.querySelectorAll('.tab').forEach(function(t,i){t.classList.toggle('active',tabs[i]===v);});
     if(v==='dashboard'){updateDashboardMonthFilter();renderDashboard();}
-    if(v==='weekly'){updateWeeklyFilters();renderWeekly();updateMonthSelectors();renderMonthlyCompare();}
+    if(v==='weekly'){updateWeeklyFilters();renderWeekly();updateMonthSelectors();renderMonthlyCompare();updateWeeklyReportSelect();}
     if(v==='views_panel')renderVpView();
     if(v==='tracking'){renderTrackingView();updateTrackingMonthFilter();renderTrackingMonthly();}
     if(v==='add'){toggleDateInputMode();renderRecent();}
@@ -701,7 +710,96 @@ function renderRecent(){
       }catch(err){toast('解析错误');}
     };reader.readAsArrayBuffer(file);
   }
+function updateWeeklyReportSelect(){
+  var s=new Set();records.forEach(function(r){s.add(getWeekStr(r.date));});
+  vpRecords.forEach(function(v){
+    var d=v.mode==='single'?v.date:v.date.split(' 至 ')[0];
+    s.add(getWeekStr(d));
+  });
+  var sel=document.getElementById('weekly-report-week'),cur=sel.value;
+  sel.innerHTML='<option value="">选择周</option>';
+  var arr=Array.from(s).sort().reverse();
+  arr.forEach(function(w){var o=document.createElement('option');o.value=w;o.textContent=getWeekLabel(w);sel.appendChild(o);});
+  if(s.has(cur))sel.value=cur;else if(arr.length>0)sel.value=arr[0];
+  if(arr.length>0)renderWeeklyReport();
+}
 
+function renderWeeklyReport(){
+  var wk=document.getElementById('weekly-report-week').value;
+  var rf=document.getElementById('weekly-report-region').value;
+  var body=document.getElementById('weekly-report-body');
+  if(!wk){body.innerHTML='<span style="color:var(--text2);">请选择周</span>';return;}
+  
+  var wLabel=getWeekLabel(wk);
+  var yw=wk.split('-W'),y=+yw[0],wn=+yw[1];
+  var j4=new Date(y,0,4),dow=j4.getDay()||7;
+  var mon=new Date(j4.getTime()-(dow-1)*86400000+(wn-1)*7*86400000);
+  var sun=new Date(mon.getTime()+6*86400000);
+  var weekDates=[];
+  for(var i=0;i<7;i++){var cd=new Date(mon);cd.setDate(mon.getDate()+i);weekDates.push(cd.toISOString().slice(0,10));}
+  
+  var regs=rf==='all'?Object.keys(REGIONS):[rf];
+  
+  var totalCost=0,totalUsers=0,totalVideos=0,totalViews=0;
+  var regionData={};
+  
+  regs.forEach(function(r){
+    var cost=0,users=0,videos=0;
+    records.forEach(function(rec){
+      if(rec.region!==r)return;
+      var recWeek=getWeekStr(rec.date);
+      if(recWeek===wk){cost+=parseFloat(rec.cost)||0;users+=parseFloat(rec.users)||0;videos+=parseFloat(rec.count)||0;}
+    });
+    var views=0;
+    vpRecords.filter(function(v){return v.region===r;}).forEach(function(v){
+      if(v.mode==='single'&&weekDates.indexOf(v.date)>-1)views+=v.views;
+      if(v.mode==='range'){var p=v.date.split(' 至 ');if(weekDates.some(function(d){return d>=p[0]&&d<=p[1];}))views+=v.views;}
+    });
+    regionData[r]={cost:cost,users:users,videos:videos,views:views};
+    totalCost+=cost;totalUsers+=users;totalVideos+=videos;totalViews+=views;
+  });
+  
+  var cpa=totalUsers>0?'$'+(totalCost/totalUsers).toFixed(2):'—';
+  var cpv=totalViews>0?'$'+(totalCost/totalViews*1000).toFixed(2):'—';
+  
+  var report='📅 周报：'+wLabel+'（'+mon.getMonth()+1+'/'+mon.getDate()+' - '+sun.getMonth()+1+'/'+sun.getDate()+'）\n';
+  report+='━━━━━━━━━━━━━━━━\n\n';
+  report+='📊 整体数据\n';
+  report+='  • 总消耗：$'+totalCost.toLocaleString()+'\n';
+  report+='  • 新增用户：'+totalUsers.toLocaleString()+' 人\n';
+  report+='  • 推广视频：'+totalVideos+' 条\n';
+  report+='  • 总播放量：'+totalViews.toLocaleString()+' 次\n';
+  report+='  • CPA：'+cpa+'\n';
+  report+='  • CPM：'+cpv+'\n\n';
+  
+  regs.forEach(function(r){
+    var d=regionData[r];
+    if(d.cost===0&&d.users===0&&d.views===0)return;
+    report+='🌍 '+REGIONS[r].flag+' '+REGIONS[r].name+'\n';
+    report+='  • 消耗：$'+d.cost.toLocaleString()+'（'+(totalCost>0?(d.cost/totalCost*100).toFixed(1):'0')+'%）\n';
+    report+='  • 新增：'+d.users.toLocaleString()+' 人\n';
+    report+='  • 视频：'+d.videos+' 条\n';
+    report+='  • 播放：'+d.views.toLocaleString()+' 次\n';
+    report+='  • CPA：'+(d.users>0?'$'+(d.cost/d.users).toFixed(2):'—')+'\n\n';
+  });
+  
+  if(totalUsers>0||totalCost>0){
+    report+='💡 本周小结\n';
+    var bestRegion='',bestCpa=Infinity;
+    regs.forEach(function(r){var d=regionData[r];if(d.users>0&&d.cost/d.users<bestCpa){bestCpa=d.cost/d.users;bestRegion=r;}});
+    if(bestRegion)report+='  • 最佳CPA地区：'+REGIONS[bestRegion].flag+' '+REGIONS[bestRegion].name+'（$'+bestCpa.toFixed(2)+'）\n';
+    report+='  • 周同比：请切换至上周对比查看\n';
+  }
+  
+  body.textContent=report;
+}
+
+function copyWeeklyReport(){
+  var body=document.getElementById('weekly-report-body');
+  var text=body.textContent;
+  if(!text||text.indexOf('选择周')>-1){toast('请先生成周报');return;}
+  navigator.clipboard.writeText(text).then(function(){toast('已复制周报到剪贴板');}).catch(function(){toast('复制失败，请手动复制');});
+}
   function exportCSV(){
     var h='日期,地区,渠道,内容形式,推广数量,消耗(USD),新增用户,备注';
     var rows=records.map(function(r){return r.date+','+r.region+','+r.channel+','+r.contentType+','+r.count+','+r.cost+','+r.users+',"'+r.note+'"';});
