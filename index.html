@@ -440,7 +440,11 @@ tr:hover td{background:var(--bg2)}
     }
   });
 }
-
+function updateWeeklyFilters(){
+  var s=new Set();records.forEach(function(r){s.add(getWeekStr(r.date));});
+  var sel=document.getElementById('weekly-filter-range');sel.innerHTML='<option value="">全部周</option>';
+  Array.from(s).sort().forEach(function(w){var o=document.createElement('option');o.value=w;o.textContent=getWeekLabel(w);sel.appendChild(o);});
+}
   function renderWeekly(){
     var tc=matchMedia('(prefers-color-scheme:dark)').matches?'#909296':'#6c757d';
     var wf=document.getElementById('weekly-filter-range').value,rf=document.getElementById('weekly-filter-region').value;
