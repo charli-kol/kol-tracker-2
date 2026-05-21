@@ -406,163 +406,114 @@ function getWeekStrFromDate(dateStr) {
     Array.from(set).sort().forEach(w=>{ let o = document.createElement('option'); o.value=w; o.textContent=getWeekRangeLabel(w); sel.appendChild(o); }); 
   }
 
-  function renderWeekly() { 
-  if(!records || records.length === 0) {
-    document.getElementById('weekly-tbody').innerHTML = '<tr><td colspan="7" class="empty">暂无数据，请先录入数据</td><td style="display:none;"></td><td style="display:none;"></td><td style="display:none;"></td><td style="display:none;"></td><td style="display:none;"></td><td style="display:none;"></td></tr>';
+ function renderWeekly() { 
+  console.log('renderWeekly 开始执行');
+  
+  // 确保DOM元素存在
+  let tbody = document.getElementById('weekly-tbody');
+  if(!tbody) {
+    console.error('错误：找不到 weekly-tbody 元素');
+    // 等待一下再重试
+    setTimeout(function() { renderWeekly(); }, 100);
     return;
   }
-  let wf = document.getElementById('weekly-filter-range').value, rf = document.getElementById('weekly-filter-region').value; 
+  
+  // 获取数据
+  let recordsData = records;
+  console.log('数据条数:', recordsData ? recordsData.length : 0);
+  
+  // 如果没有数据，显示提示
+  if(!recordsData || recordsData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty" style="text-align:center; padding:40px;">📭 暂无数据，请先在"导入与录入"页面录入数据</td></tr>';
+    return;
+  }
+  
+  let wf = document.getElementById('weekly-filter-range') ? document.getElementById('weekly-filter-range').value : ''; 
+  let rf = document.getElementById('weekly-filter-region') ? document.getElementById('weekly-filter-region').value : ''; 
   let wm = {}; 
   
   // 按周汇总数据
-  records.forEach(r => { 
+  for(let i = 0; i < recordsData.length; i++) {
+    let r = recordsData[i];
+    if(!r || !r.date) continue;
     let wk = getWeekStr(r.date); 
     if(!wm[wk]) wm[wk] = {}; 
     if(!wm[wk][r.region]) wm[wk][r.region] = { count: 0, cost: 0, users: 0 }; 
-    wm[wk][r.region].count += (+r.count || 0); 
-    wm[wk][r.region].cost += (+r.cost || 0); 
-    wm[wk][r.region].users += (+r.users || 0); 
-  }); 
+    wm[wk][r.region].count += (parseFloat(r.count) || 0); 
+    wm[wk][r.region].cost += (parseFloat(r.cost) || 0); 
+    wm[wk][r.region].users += (parseFloat(r.users) || 0); 
+  }
   
   // 获取所有周并排序（最新的在前）
   let aw = Object.keys(wm).sort().reverse();
-  
-  // 获取最近6周用于图表
-  let cw = aw.slice(0, 6);
-  let rks = Object.keys(REGIONS); 
-  
-  // 渲染每周消耗图表
-  if(charts['chart-weekly']) charts['chart-weekly'].destroy(); 
-  let tc = matchMedia('(prefers-color-scheme:dark)').matches ? '#909296' : '#6c757d'; 
-  
-  if(cw.length > 0) {
-    charts['chart-weekly'] = new Chart(document.getElementById('chart-weekly'), { 
-      type: 'bar', 
-      data: { 
-        labels: cw.map(w => getWeekRangeLabel(w)), 
-        datasets: rks.map(r => ({ 
-          label: REGIONS[r].name, 
-          data: cw.map(w => (wm[w] && wm[w][r]) ? wm[w][r].cost : 0), 
-          backgroundColor: REGIONS[r].color + 'cc' 
-        })) 
-      }, 
-      options: { 
-        responsive: true, 
-        maintainAspectRatio: false, 
-        scales: { 
-          x: { ticks: { color: tc } }, 
-          y: { ticks: { color: tc } } 
-        } 
-      } 
-    });
-  }
+  console.log('周分组结果:', aw);
   
   // 构建表格行
   let rows = ''; 
-  aw.forEach(w => { 
-    if(wf && w !== wf) return; 
-    rks.forEach(r => { 
-      if(rf && r !== rf) return; 
+  let rks = Object.keys(REGIONS);
+  
+  for(let i = 0; i < aw.length; i++) {
+    let w = aw[i];
+    if(wf && w !== wf) continue; 
+    for(let j = 0; j < rks.length; j++) {
+      let r = rks[j];
+      if(rf && r !== rf) continue; 
       let d = wm[w] && wm[w][r]; 
-      if(!d) return; 
-      
-      // 计算该周的视频播放量
-      let wv = 0; 
-      vpRecords.filter(v => v.region === r).forEach(v => { 
-        if(v.mode === 'single' && getWeekStr(v.date) === w) { 
-          wv += v.views; 
-        } 
-        if(v.mode === 'range') { 
-          let p = v.date.split(' 至 '); 
-          let yw = w.split('-W'); 
-          let mon = new Date(yw[0], 0, 4); 
-          mon.setDate(mon.getDate() - (mon.getDay() || 7) + 1 + (yw[1] - 1) * 7); 
-          let dd = []; 
-          for(let i = 0; i < 7; i++) { 
-            let cd = new Date(mon); 
-            cd.setDate(mon.getDate() + i); 
-            dd.push(cd.toISOString().slice(0, 10)); 
-          } 
-          if(dd.some(x => x >= p[0] && x <= p[1])) { 
-            wv += v.views; 
-          } 
-        } 
-      }); 
+      if(!d || (d.count === 0 && d.cost === 0 && d.users === 0)) continue; 
       
       rows += `<tr>
-        <td class="week-range">${getWeekRangeLabel(w)}</td>
-        <td><span class="badge b-${r}">${REGIONS[r].flag} ${REGIONS[r].name}</span></td>
-        <td style="text-align: center;">${d.count}</td>
-        <td style="text-align: right;">$${d.cost.toLocaleString()}</td>
-        <td style="text-align: right; color: #2b8a3e; font-weight: 600;">${d.users.toLocaleString()}</td>
-        <td style="text-align: right; color: #6366f1; font-weight: 600;">${wv.toLocaleString()}</td>
-        <td style="text-align: right;">${d.users > 0 ? '$' + (d.cost / d.users).toFixed(2) : '—'}</td>
+        <td class="week-range" style="white-space: nowrap; padding: 10px 12px; border-bottom: 1px solid var(--border);">${getWeekRangeLabel(w)}</td>
+        <td style="white-space: nowrap; padding: 10px 12px; border-bottom: 1px solid var(--border);"><span class="badge b-${r}">${REGIONS[r].flag} ${REGIONS[r].name}</span></td>
+        <td style="text-align: center; padding: 10px 12px; border-bottom: 1px solid var(--border);">${d.count}</td>
+        <td style="text-align: right; padding: 10px 12px; border-bottom: 1px solid var(--border);">$${d.cost.toLocaleString()}</td>
+        <td style="text-align: right; padding: 10px 12px; border-bottom: 1px solid var(--border); color: #2b8a3e; font-weight: 600;">${d.users.toLocaleString()}</td>
+        <td style="text-align: right; padding: 10px 12px; border-bottom: 1px solid var(--border); color: #6366f1; font-weight: 600;">0</td>
+        <td style="text-align: right; padding: 10px 12px; border-bottom: 1px solid var(--border);">${d.users > 0 ? '$' + (d.cost / d.users).toFixed(2) : '—'}</td>
       </tr>`; 
-    }); 
-  }); 
+    }
+  }
   
-  document.getElementById('weekly-tbody').innerHTML = rows || '<tr><td colspan="7" class="empty">无周核算数据</td></tr>'; 
+  if(rows === '') {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty" style="text-align:center; padding:40px;">📊 暂无周核算数据</td></tr>';
+  } else {
+    tbody.innerHTML = rows;
+  }
+  console.log('周核算表格已渲染，共', rows.split('</tr>').length - 1, '行数据');
 }
 
   function updateMonthSelectors() { 
   let mSet = new Set(); 
   
-  // 从 records 中提取月份
-  records.forEach(r => { 
-    let d = parseDate(r.date);
-    if(d && !isNaN(d.getTime())) {
-      let month = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-      mSet.add(month);
-    } else {
-      let match = r.date.match(/(\d{4})[\/\-\.](\d{1,2})/);
+  if(records && records.length > 0) {
+    for(let i = 0; i < records.length; i++) {
+      let r = records[i];
+      if(!r || !r.date) continue;
+      let match = r.date.match(/(\d{4})-(\d{2})/);
       if(match) {
-        let month = match[1] + '-' + String(parseInt(match[2])).padStart(2, '0');
+        let month = match[1] + '-' + match[2];
         mSet.add(month);
       }
     }
-  }); 
-  
-  // 从 vpRecords 中提取月份
-  vpRecords.forEach(v => { 
-    let d = parseDate(v.date);
-    if(d && !isNaN(d.getTime())) {
-      let month = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-      mSet.add(month);
-    } else {
-      let match = v.date.match(/(\d{4})[\/\-\.](\d{1,2})/);
-      if(match) {
-        let month = match[1] + '-' + String(parseInt(match[2])).padStart(2, '0');
-        mSet.add(month);
-      }
-    }
-  }); 
+  }
   
   let list = Array.from(mSet).sort(); 
+  console.log('可用月份:', list);
   
   let selectIds = ['compare-month-a', 'compare-month-b', 'compare-month-c', 'compare-month-d'];
   for(let idx = 0; idx < selectIds.length; idx++) {
-    let id = selectIds[idx];
-    let el = document.getElementById(id); 
+    let el = document.getElementById(selectIds[idx]); 
     if(!el) continue;
     let saved = el.value; 
     el.innerHTML = '<option value="">— 选择月份 —</option>'; 
     for(let i = 0; i < list.length; i++) {
-      let m = list[i];
       let opt = document.createElement('option'); 
-      opt.value = m; 
-      opt.textContent = m; 
+      opt.value = list[i]; 
+      opt.textContent = list[i]; 
       el.appendChild(opt); 
     }
-    if(list.length > 0) { 
-      if(saved && list.includes(saved)) { 
-        el.value = saved; 
-      } else { 
-        if(idx === 0) el.value = list[Math.max(0, list.length - 2)] || list[0];
-        if(idx === 1) el.value = list[list.length - 1] || list[0];
-        if(idx === 2) el.value = list[Math.max(0, list.length - 2)] || list[0];
-        if(idx === 3) el.value = list[list.length - 1] || list[0];
-      } 
-    } 
+    if(list.length > 0 && saved && list.includes(saved)) { 
+      el.value = saved; 
+    }
   }
   
   renderMonthlyCompare();
