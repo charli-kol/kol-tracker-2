@@ -201,7 +201,13 @@
   <div id="view-add" class="view">
     <div class="section"><div class="section-header"><span class="section-title"><i class="ti ti-upload"></i>表格智能适配上传</span></div><div class="upload-box" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault()" ondrop="handleDrop(event)"><i class="ti ti-copy-check"></i><p>将表格文件拖拽到此处，或点击浏览上传</p><input type="file" id="file-input" accept=".csv, .xlsx, .xls" onchange="handleFileSelect(event)"></div></div>
     <div class="section"><div class="section-header"><span class="section-title" id="form-title"><i class="ti ti-ballpen"></i>单条数据录入</span><span id="edit-indicator" style="display:none;" class="badge b-TW">编辑模式</span></div><input type="hidden" id="f-id"><div class="form-grid"><div class="form-group"><label>日期模式切换器 *</label><select id="f-date-mode" onchange="toggleDateInputMode()"><option value="single">单日模式</option><option value="range">周期范围模式</option></select></div><div class="form-group" id="date-input-wrapper"><label>日期 *</label><input type="date" id="f-date"></div><div class="form-group"><label>地区 *</label><select id="f-region"><option value="TR">🇹🇷 土耳其</option><option value="TW">🔷 台湾</option><option value="ES">🌎 西语</option><option value="BR">🇧🇷 巴西</option></select></div><div class="form-group"><label>渠道</label><select id="f-channel"><option value="TikTok">TikTok</option><option value="YouTube">YouTube</option><option value="Instagram">Instagram</option></select></div><div class="form-group"><label>内容形式</label><select id="f-content-type"><option value="video">video</option><option value="reel">reel</option><option value="story">story</option><option value="comment">comment</option></select></div><div class="form-group"><label>推广数量</label><input type="number" id="f-count" placeholder="1" min="0"></div><div class="form-group"><label>消耗（USD）</label><input type="number" id="f-cost" placeholder="0.00" min="0" step="0.01"></div><div class="form-group"><label>新增用户量</label><input type="number" id="f-users" placeholder="0" min="0"></div><div class="form-group"><label>备注/说明</label><input type="text" id="f-note" placeholder="选填"></div>
-<div class="form-group" style="align-self:flex-end;"><button class="btn btn-primary" onclick="quickSaveUsersOnly()" style="width:100%;height:38px;font-size:12px;background:#10b981;border-color:#10b981;"><i class="ti ti-user-plus"></i> 仅录入用户新增</button></div></div><div style="display:flex;gap:10px;margin-top:0.5rem;"><button class="btn btn-primary" onclick="saveRecord()"><i class="ti ti-device-floppy"></i>保存表单</button><button class="btn" onclick="clearForm()"><i class="ti ti-refresh"></i>重置</button></div></div>
+</div><div style="display:flex;gap:10px;margin-top:0.5rem;flex-wrap:wrap;">
+  <button class="btn btn-primary" onclick="saveRecord()"><i class="ti ti-device-floppy"></i>完整录入</button>
+  <button class="btn" style="background:#10b981;color:#fff;border-color:#10b981;" onclick="quickSaveUsersOnly()"><i class="ti ti-user-plus"></i>仅录入用户新增</button>
+  <button class="btn" style="background:#f59e0b;color:#fff;border-color:#f59e0b;" onclick="quickSaveCostOnly()"><i class="ti ti-coin"></i>仅录入消耗</button>
+  <button class="btn" style="background:#8b5cf6;color:#fff;border-color:#8b5cf6;" onclick="quickSaveCountOnly()"><i class="ti ti-file"></i>仅录入推广数量</button>
+  <button class="btn" onclick="clearForm()"><i class="ti ti-refresh"></i>重置</button>
+</div></div>
     <div class="section"><div class="section-header"><span class="section-title"><i class="ti ti-history-toggle"></i>最新归档流水明细 (前10条)</span><button class="btn btn-danger" style="padding:4px 12px;font-size:12px;" onclick="if(confirm('确定清空全部流转数据？')){records=[];persistRecords();renderRecent();updateMonthSelectors();toast('已清空');}"><i class="ti ti-trash"></i>清空全部常规流水</button></div><div class="table-wrap"><table><thead><tr><th>日期/周期</th><th>地区</th><th>渠道</th><th>内容形式</th><th>推广数</th><th>消耗</th><th>新增用户</th><th>操作</th></tr></thead><tbody id="recent-tbody"></tbody></table></div></div>
   </div>
 </div>
@@ -750,8 +756,11 @@
     
     // 按开始日期排序（从早到晚）
     list.sort(function (a, b) {
-      var aStart = a.range.split(' 至 ')[0] || a.range;
-      var bStart = b.range.split(' 至 ')[0] || b.range;
+      var aStart = a.range.split(' 至 ')[0].trim();
+      var bStart = b.range.split(' 至 ')[0].trim();
+      // 统一转换为可比较的格式
+      aStart = aStart.replace(/\//g, '-').replace(/\./g, '-');
+      bStart = bStart.replace(/\//g, '-').replace(/\./g, '-');
       return aStart.localeCompare(bStart);
     });
     
@@ -823,28 +832,80 @@
 
   function updateTrackingMonthFilter() {
     var months = new Set();
-    trackingRecords.forEach(function (r) { var m = r.range.match(/(\d{4})[\/-](\d{2})/); if (m) months.add(m[1] + '-' + m[2]); });
-    var sel = document.getElementById('tracking-month-filter'), cur = sel.value;
+    trackingRecords.forEach(function (r) {
+      // 支持多种日期格式：2026-05-05 至 2026-05-11 或 2026/05/05 至 2026/05/11 或 2026.5.5-2026.5.11
+      var range = r.range.replace(/\//g, '-').replace(/\./g, '-');
+      var parts = range.split(' 至 ');
+      if (parts.length === 2) {
+        var m1 = parts[0].match(/(\d{4})-(\d{1,2})/);
+        var m2 = parts[1].match(/(\d{4})-(\d{1,2})/);
+        if (m1) months.add(m1[1] + '-' + String(parseInt(m1[2])).padStart(2, '0'));
+        if (m2) months.add(m2[1] + '-' + String(parseInt(m2[2])).padStart(2, '0'));
+      } else {
+        var m = range.match(/(\d{4})-(\d{1,2})/);
+        if (m) months.add(m[1] + '-' + String(parseInt(m[2])).padStart(2, '0'));
+      }
+    });
+    var sel = document.getElementById('tracking-month-filter');
+    var cur = sel.value;
     sel.innerHTML = '<option value="">全部月份</option>';
-    Array.from(months).sort().forEach(function (m) { var o = document.createElement('option'); o.value = m; o.textContent = m; sel.appendChild(o); });
+    Array.from(months).sort().forEach(function (m) {
+      var opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = m;
+      sel.appendChild(opt);
+    });
     if (months.has(cur)) sel.value = cur;
-  }
+}
   function renderTrackingMonthly() {
     var fm = document.getElementById('tracking-month-filter').value;
-    var data = fm ? trackingRecords.filter(function (r) { return r.range.includes(fm); }) : trackingRecords;
+    var data = fm ? trackingRecords.filter(function (r) {
+      // 检查该记录是否包含筛选月份
+      var range = r.range.replace(/\//g, '-').replace(/\./g, '-');
+      var parts = range.split(' 至 ');
+      if (parts.length === 2) {
+        var m1 = parts[0].match(/(\d{4})-(\d{1,2})/);
+        var m2 = parts[1].match(/(\d{4})-(\d{1,2})/);
+        var checkMonth = fm;
+        if (m1 && m1[1] + '-' + String(parseInt(m1[2])).padStart(2, '0') === checkMonth) return true;
+        if (m2 && m2[1] + '-' + String(parseInt(m2[2])).padStart(2, '0') === checkMonth) return true;
+        return false;
+      }
+      return r.range.replace(/\//g, '-').replace(/\./g, '-').includes(fm);
+    }) : trackingRecords;
+    
     var monthly = {};
     data.forEach(function (r) {
-      var m = r.range.match(/(\d{4})[\/-](\d{2})/); if (!m) return;
-      var key = m[1] + '-' + m[2] + '_' + r.region;
-      if (!monthly[key]) monthly[key] = { month: m[1] + '-' + m[2], region: r.region, spkU: 0, totU: 0, spkC: 0, totC: 0 };
-      monthly[key].spkU += r.spkUsers; monthly[key].totU += r.totalUsers; monthly[key].spkC += r.spkCost; monthly[key].totC += r.totalCost;
+      var range = r.range.replace(/\//g, '-').replace(/\./g, '-');
+      var parts = range.split(' 至 ');
+      var monthKey = '';
+      if (parts.length === 2) {
+        var m = parts[0].match(/(\d{4})-(\d{1,2})/);
+        if (m) monthKey = m[1] + '-' + String(parseInt(m[2])).padStart(2, '0');
+      } else {
+        var m2 = range.match(/(\d{4})-(\d{1,2})/);
+        if (m2) monthKey = m2[1] + '-' + String(parseInt(m2[2])).padStart(2, '0');
+      }
+      if (!monthKey) return;
+      
+      var key = monthKey + '_' + r.region;
+      if (!monthly[key]) monthly[key] = { month: monthKey, region: r.region, spkU: 0, totU: 0, spkC: 0, totC: 0 };
+      monthly[key].spkU += r.spkUsers;
+      monthly[key].totU += r.totalUsers;
+      monthly[key].spkC += r.spkCost;
+      monthly[key].totC += r.totalCost;
     });
+    
     var rows = Object.values(monthly).sort(function (a, b) { return a.month.localeCompare(b.month); });
     document.getElementById('tracking-monthly-tbody').innerHTML = rows.length === 0 ? '<tr><td colspan="10" class="empty">暂无数据</td></tr>' : rows.map(function (m) {
-      return '<tr><td>' + m.month + '</td><td><span class="badge b-' + m.region + '">' + (REGIONS[m.region] ? REGIONS[m.region].name : m.region) + '</span></td><td>' + m.spkU + '</td><td>' + m.totU + '</td><td>$' + m.spkC.toLocaleString() + '</td><td>$' + m.totC.toLocaleString() + '</td><td>' + (m.totU > 0 ? (m.spkU / m.totU * 100).toFixed(1) + '%' : '—') + '</td><td>' + (m.totC > 0 ? (m.spkC / m.totC * 100).toFixed(1) + '%' : '—') + '</td><td>' + (m.spkU > 0 ? '$' + (m.spkC / m.spkU).toFixed(2) : '—') + '</td><td>' + (m.totU > 0 ? '$' + (m.totC / m.totU).toFixed(2) : '—') + '</td></tr>';
+      var spkUserRatio = m.totU > 0 ? (m.spkU / m.totU * 100).toFixed(1) + '%' : '—';
+      var spkCostRatio = m.totC > 0 ? (m.spkC / m.totC * 100).toFixed(1) + '%' : '—';
+      var spkCpr = m.spkU > 0 ? '$' + (m.spkC / m.spkU).toFixed(2) : '—';
+      var totalCpr = m.totU > 0 ? '$' + (m.totC / m.totU).toFixed(2) : '—';
+      return '<tr><td>' + m.month + '</td><td><span class="badge b-' + m.region + '">' + (REGIONS[m.region] ? REGIONS[m.region].name : m.region) + '</span></td><td>' + m.spkU.toLocaleString() + '</td><td>' + m.totU.toLocaleString() + '</td><td>$' + m.spkC.toLocaleString() + '</td><td>$' + m.totC.toLocaleString() + '</td><td>' + spkUserRatio + '</td><td>' + spkCostRatio + '</td><td>' + spkCpr + '</td><td>' + totalCpr + '</td></tr>';
     }).join('');
-  }
-  function quickSaveUsersOnly() {
+}
+  function quickSaveCostOnly() {
     var mode = document.getElementById('f-date-mode').value;
     var dateLabel = '';
     
@@ -857,6 +918,135 @@
       if (!ds || !de) { toast('请选择日期范围'); return; } 
       dateLabel = ds + ' 至 ' + de; 
     }
+    
+    var region = document.getElementById('f-region').value;
+    var channel = document.getElementById('f-channel').value;
+    var contentType = document.getElementById('f-content-type').value;
+    var cost = parseFloat(document.getElementById('f-cost').value) || 0;
+    var note = document.getElementById('f-note').value.trim();
+    
+    if (cost <= 0) { toast('请输入消耗金额'); return; }
+    
+    var exist = records.find(function (r) {
+      return r.date === dateLabel && r.region === region && r.channel === channel && r.contentType === contentType;
+    });
+    
+    if (exist) {
+      exist.cost = cost;
+      if (note) exist.note = note;
+      toast('已更新该线路消耗数据');
+    } else {
+      records.push({
+        id: 'r_' + Date.now(),
+        date: dateLabel,
+        region: region,
+        channel: channel,
+        contentType: contentType,
+        count: 0,
+        cost: cost,
+        users: 0,
+        note: note || '仅消耗录入'
+      });
+      toast('消耗数据已保存');
+    }
+    
+    persistRecords();
+    document.getElementById('f-cost').value = '';
+    document.getElementById('f-note').value = '';
+    renderRecent();
+    updateMonthSelectors();
+    updateDashboardMonthFilter();
+}
+
+function quickSaveCountOnly() {
+    var mode = document.getElementById('f-date-mode').value;
+    var dateLabel = '';
+    
+    if (mode === 'single') { 
+      dateLabel = document.getElementById('f-date').value; 
+      if (!dateLabel) { toast('请选择日期'); return; } 
+    } else { 
+      var ds = document.getElementById('f-date-start').value; 
+      var de = document.getElementById('f-date-end').value; 
+      if (!ds || !de) { toast('请选择日期范围'); return; } 
+      dateLabel = ds + ' 至 ' + de; 
+    }
+    
+    var region = document.getElementById('f-region').value;
+    var channel = document.getElementById('f-channel').value;
+    var contentType = document.getElementById('f-content-type').value;
+    var count = parseFloat(document.getElementById('f-count').value) || 0;
+    var note = document.getElementById('f-note').value.trim();
+    
+    if (count <= 0) { toast('请输入推广数量'); return; }
+    
+    var exist = records.find(function (r) {
+      return r.date === dateLabel && r.region === region && r.channel === channel && r.contentType === contentType;
+    });
+    
+    if (exist) {
+      exist.count = count;
+      if (note) exist.note = note;
+      toast('已更新该线路推广数量');
+    } else {
+      records.push({
+        id: 'r_' + Date.now(),
+        date: dateLabel,
+        region: region,
+        channel: channel,
+        contentType: contentType,
+        count: count,
+        cost: 0,
+        users: 0,
+        note: note || '仅推广数量录入'
+      });
+      toast('推广数量已保存');
+    }
+    
+    persistRecords();
+    document.getElementById('f-count').value = '';
+    document.getElementById('f-note').value = '';
+    renderRecent();
+    updateMonthSelectors();
+    updateDashboardMonthFilter();
+}
+    
+    var region = document.getElementById('f-region').value;
+    var users = parseFloat(document.getElementById('f-users').value) || 0;
+    var note = document.getElementById('f-note').value.trim();
+    
+    if (users <= 0) { toast('请输入新增用户量'); return; }
+    
+    var exist = records.find(function (r) {
+      return r.date === dateLabel && r.region === region && r.channel === '大盘渠道' && r.contentType === '大盘转化';
+    });
+    
+    if (exist) {
+      exist.users = Math.max(exist.users, users);
+      if (note) exist.note = note;
+      toast('已更新该日期用户新增数据（取最大值）');
+    } else {
+      records.push({
+        id: 'r_' + Date.now(),
+        date: dateLabel,
+        region: region,
+        channel: '大盘渠道',
+        contentType: '大盘转化',
+        count: 0,
+        cost: 0,
+        users: users,
+        note: note || '纯用户新增录入'
+      });
+      toast('用户新增数据已保存');
+    }
+    
+    persistRecords();
+    document.getElementById('f-users').value = '';
+    document.getElementById('f-note').value = '';
+    renderRecent();
+    updateMonthSelectors();
+    updateDashboardMonthFilter();
+}
     
     var region = document.getElementById('f-region').value;
     var users = parseFloat(document.getElementById('f-users').value) || 0;
