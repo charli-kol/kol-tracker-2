@@ -261,7 +261,7 @@ tr:hover td{background:var(--bg2)}
     </div>
   </div>
 
-  <div id="view-add" class="view">
+ <div id="view-add" class="view">
 <div class="section"><div class="section-header">📂 表格上传</div><div class="upload-box" onclick="document.getElementById('file-input').click()"><p>拖拽或点击上传CSV/Excel</p><input type="file" id="file-input" accept=".csv,.xlsx,.xls" onchange="handleFileSelect(event)"></div></div>
 
 <div class="section"><div class="section-header">📝 推广数据录入 (数量+消耗)</div>
@@ -292,7 +292,7 @@ tr:hover td{background:var(--bg2)}
 
 <div class="section"><div class="section-header">📋 最近录入记录</div><div class="table-wrap"><table><thead><tr><th>日期</th><th>地区</th><th>渠道</th><th>形式</th><th>数量</th><th>消耗</th><th>新增</th><th>备注</th><th>操作</th></tr></thead><tbody id="recent-tbody"></tbody></table></div></div>
 </div>
-
+<div class="toast" id="toast"></div>
 <script>
   var REGIONS={TR:{name:'土耳其',flag:'🇹🇷',color:'#0ca678',keywords:['土耳其','TR','TURKEY']},TW:{name:'台湾',flag:'🔷',color:'#f76707',keywords:['台湾','TW','TAIWAN']},ES:{name:'西语',flag:'🌎',color:'#4c6ef5',keywords:['西语','ES','SPANISH']},BR:{name:'巴西',flag:'🇧🇷',color:'#d6336c',keywords:['巴西','BR','BRAZIL']}};
   var CHANNEL_COLORS={TikTok:'#1e293b',YouTube:'#3b82f6',Instagram:'#8b5cf6'};
