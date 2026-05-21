@@ -290,6 +290,7 @@
   }
 
   function getWeekStr(ds) { 
+    if(!ds) return '未知周';
     let dateStr = ds.includes(' 至 ') ? ds.split(' 至 ')[0] : ds;
     let d = new Date(dateStr);
     if(isNaN(d.getTime())) return '未知周';
@@ -315,11 +316,13 @@
   function sum(arr,key) { return arr.reduce((s,r)=> s + (parseFloat(r[key])||0),0); }
   function fmtDiff(a,b) { if(b===undefined || b===null) return ''; let d = b===0?0:Math.round((a-b)/b*100); return '<span class="diff-badge '+(d>=0?'up':'dn')+'">'+(d>=0?'↑':'↓')+Math.abs(d)+'%</span>'; }
 
+  // ========== 数据总览相关函数 ==========
   function updateDashboardMonthFilter() { 
     let months = new Set(); 
     records.forEach(r=>{ let m = r.date.match(/(\d{4})-(\d{2})/); if(m) months.add(m[1]+'-'+m[2]); }); 
     vpRecords.forEach(v=>{ let m = v.date.match(/(\d{4})-(\d{2})/); if(m) months.add(m[1]+'-'+m[2]); }); 
     let sel = document.getElementById('dashboard-month-filter'); 
+    if(!sel) return;
     let cur = sel.value; 
     sel.innerHTML = '<option value="">全部月份</option>'; 
     Array.from(months).sort().forEach(m=>{ let opt = document.createElement('option'); opt.value=m; opt.textContent=m; sel.appendChild(opt); }); 
@@ -393,95 +396,71 @@
     charts['chart-content-types'] = new Chart(document.getElementById('chart-content-types'),{ type:'bar', data:{ labels:ct, datasets:[{ label:'消耗 (USD)', data:ct.map(t=>sum(base.filter(r=>r.contentType===t),'cost')), backgroundColor:ct.map(t=>CT_COLORS[t]||'#6c757d'), borderRadius:4 }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false} }, scales:{ x:{ ticks:{color:tc}, grid:{display:false} }, y:{ ticks:{color:tc}, grid:{color:matchMedia('(prefers-color-scheme:dark)').matches?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)'} } } } }); 
   }
 
+  // ========== 周/月度核算相关函数 ==========
   function updateWeeklyFilters() { 
     let set = new Set(); records.forEach(r=>set.add(getWeekStr(r.date))); 
     let sel = document.getElementById('weekly-filter-range'); 
+    if(!sel) return;
     sel.innerHTML = '<option value="">全部周次</option>'; 
     Array.from(set).sort().reverse().forEach(w=>{ let o = document.createElement('option'); o.value=w; o.textContent=getWeekRangeLabel(w); sel.appendChild(o); }); 
   }
 
   function renderWeekly() { 
-  let tbody = document.getElementById('weekly-tbody');
-  if(!tbody) { console.error('找不到 weekly-tbody'); return; }
-  if(!records || records.length === 0) { 
-    tbody.innerHTML = '<table><td colspan="7" class="empty">暂无数据，请先录入数据</td</table>'; 
-    if(charts['chart-weekly']) charts['chart-weekly'].destroy();
-    return; 
-  }
-  
-  let wf = document.getElementById('weekly-filter-range').value; 
-  let rf = document.getElementById('weekly-filter-region').value; 
-  let wm = {}; 
-  
-  for(let i = 0; i < records.length; i++) {
-    let r = records[i];
-    if(!r || !r.date) continue;
-    let wk = getWeekStr(r.date); 
-    if(!wm[wk]) wm[wk] = {}; 
-    if(!wm[wk][r.region]) wm[wk][r.region] = { count: 0, cost: 0, users: 0 }; 
-    wm[wk][r.region].count += (parseFloat(r.count) || 0); 
-    wm[wk][r.region].cost += (parseFloat(r.cost) || 0); 
-    wm[wk][r.region].users += (parseFloat(r.users) || 0); 
-  }
-  
-  let aw = Object.keys(wm).sort().reverse();
-  let cw = aw.slice(0, 6);
-  let rks = Object.keys(REGIONS);
-  
-  // 渲染图表
-  let chartCanvas = document.getElementById('chart-weekly');
-  if(chartCanvas) {
-    if(charts['chart-weekly']) charts['chart-weekly'].destroy();
-    let tc = matchMedia('(prefers-color-scheme:dark)').matches ? '#909296' : '#6c757d';
-    let datasets = [];
-    for(let j = 0; j < rks.length; j++) {
-      let r = rks[j];
-      let data = [];
-      for(let i = 0; i < cw.length; i++) {
-        let w = cw[i];
-        let val = (wm[w] && wm[w][r]) ? wm[w][r].cost : 0;
-        data.push(val);
+    let tbody = document.getElementById('weekly-tbody');
+    if(!tbody) { console.error('找不到 weekly-tbody'); return; }
+    if(!records || records.length === 0) { 
+      tbody.innerHTML = '<tr><td colspan="7" class="empty" style="text-align:center; padding:40px;">暂无数据，请先录入数据</td</tr>'; 
+      return; 
+    }
+    
+    let wf = document.getElementById('weekly-filter-range') ? document.getElementById('weekly-filter-range').value : ''; 
+    let rf = document.getElementById('weekly-filter-region') ? document.getElementById('weekly-filter-region').value : ''; 
+    let wm = {}; 
+    
+    for(let i = 0; i < records.length; i++) {
+      let r = records[i];
+      if(!r || !r.date) continue;
+      let wk = getWeekStr(r.date); 
+      if(!wm[wk]) wm[wk] = {}; 
+      if(!wm[wk][r.region]) wm[wk][r.region] = { count: 0, cost: 0, users: 0, views: 0 }; 
+      wm[wk][r.region].count += (parseFloat(r.count) || 0); 
+      wm[wk][r.region].cost += (parseFloat(r.cost) || 0); 
+      wm[wk][r.region].users += (parseFloat(r.users) || 0); 
+    }
+    
+    for(let i = 0; i < vpRecords.length; i++) {
+      let v = vpRecords[i];
+      if(!v || !v.date) continue;
+      let wk = getWeekStr(v.date);
+      if(!wm[wk]) wm[wk] = {};
+      if(!wm[wk][v.region]) wm[wk][v.region] = { count: 0, cost: 0, users: 0, views: 0 };
+      wm[wk][v.region].views += (parseFloat(v.views) || 0);
+    }
+    
+    let aw = Object.keys(wm).sort().reverse();
+    let rks = Object.keys(REGIONS);
+    let rows = ''; 
+    for(let i = 0; i < aw.length; i++) {
+      let w = aw[i];
+      if(wf && w !== wf) continue; 
+      for(let j = 0; j < rks.length; j++) {
+        let r = rks[j];
+        if(rf && r !== rf) continue; 
+        let d = wm[w] && wm[w][r]; 
+        if(!d) continue; 
+        rows += `<tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 12px; white-space: nowrap;">${getWeekRangeLabel(w)}</td>
+          <td style="padding: 12px; white-space: nowrap;"><span class="badge b-${r}">${REGIONS[r].flag} ${REGIONS[r].name}</span></td>
+          <td style="padding: 12px; text-align: center;">${d.count}</td>
+          <td style="padding: 12px; text-align: right;">$${d.cost.toLocaleString()}</td>
+          <td style="padding: 12px; text-align: right; color: #2b8a3e; font-weight: 600;">${d.users.toLocaleString()}</td>
+          <td style="padding: 12px; text-align: right; color: #6366f1; font-weight: 600;">${d.views.toLocaleString()}</td>
+          <td style="padding: 12px; text-align: right;">${d.users > 0 ? '$' + (d.cost / d.users).toFixed(2) : '—'}</td>
+        </tr>`;
       }
-      datasets.push({
-        label: REGIONS[r].name,
-        data: data,
-        backgroundColor: REGIONS[r].color + 'cc',
-        borderColor: REGIONS[r].color,
-        borderWidth: 1
-      });
     }
-    charts['chart-weekly'] = new Chart(chartCanvas, { 
-      type: 'bar', 
-      data: { 
-        labels: cw.map(w => getWeekRangeLabel(w)), 
-        datasets: datasets
-      }, 
-      options: { 
-        responsive: true, 
-        maintainAspectRatio: false, 
-        scales: { 
-          x: { ticks: { color: tc } }, 
-          y: { ticks: { color: tc } } 
-        } 
-      } 
-    });
+    tbody.innerHTML = rows || '<tr><td colspan="7" class="empty" style="text-align:center; padding:40px;">无周核算数据</td</tr>';
   }
-  
-  // 构建表格行
-  let rows = ''; 
-  for(let i = 0; i < aw.length; i++) {
-    let w = aw[i];
-    if(wf && w !== wf) continue; 
-    for(let j = 0; j < rks.length; j++) {
-      let r = rks[j];
-      if(rf && r !== rf) continue; 
-      let d = wm[w] && wm[w][r]; 
-      if(!d || (d.count === 0 && d.cost === 0 && d.users === 0)) continue; 
-      rows += `<tr><td style="padding:10px;">${getWeekRangeLabel(w)}</td><td><span class="badge b-${r}">${REGIONS[r].flag} ${REGIONS[r].name}</span></td><td style="text-align:center;">${d.count}</td><td style="text-align:right;">$${d.cost.toLocaleString()}</td><td style="text-align:right;color:#2b8a3e;">${d.users.toLocaleString()}</td><td style="text-align:right;color:#6366f1;">0</td><td style="text-align:right;">${d.users > 0 ? '$' + (d.cost / d.users).toFixed(2) : '—'}</td></tr>`;
-    }
-  }
-  tbody.innerHTML = rows || '<tr><td colspan="7" class="empty">无周核算数据</td</tr>';
-}
 
   function updateMonthSelectors() { 
     let mSet = new Set(); 
@@ -589,6 +568,253 @@
     body.innerHTML = h || '<div class="empty">所选月份暂无有效数据</div>'; 
   }
 
+  // ========== 总播放量独立分析相关函数 ==========
+  function saveVpRecord() { 
+    let mode = document.getElementById('vp-mode').value, region = document.getElementById('vp-region').value, views = parseFloat(document.getElementById('vp-count').value)||0; 
+    let date = document.getElementById('vp-date').value; 
+    if(!date) { toast('请选择日期'); return; } 
+    if(views <= 0) { toast('播放量不合法'); return; } 
+    let exist = vpRecords.find(v=>v.mode===mode && v.date===date && v.region===region); 
+    if(exist) { exist.views = views; toast('已覆盖更新'); } 
+    else { vpRecords.push({ id:'vp_'+Date.now(), mode, date, region, views }); toast('录入成功'); } 
+    persistVp(); renderVpView(); 
+  }
+
+  function deleteVpRecord(id) { if(confirm('确定删除？')) { vpRecords = vpRecords.filter(v=>v.id!==id); persistVp(); renderVpView(); toast('已删除'); } }
+  function clearVpForm() { document.getElementById('vp-count').value = ''; document.getElementById('vp-date').value = new Date().toISOString().slice(0,10); }
+
+  function renderVpView() { 
+    let summaryHtml = '';
+    let regionKeys = Object.keys(REGIONS);
+    for(let i = 0; i < regionKeys.length; i++) {
+      let r = regionKeys[i];
+      let sub = vpRecords.filter(v => v.region === r);
+      let singleCount = sub.filter(v => v.mode === 'single').length;
+      let rangeCount = sub.filter(v => v.mode === 'range').length;
+      let totalViews = 0;
+      for(let j = 0; j < sub.length; j++) totalViews += (sub[j].views || 0);
+      summaryHtml += `<tr>
+        <td style="padding: 12px;"><span class="badge b-${r}">${REGIONS[r].flag} ${REGIONS[r].name}</span></td>
+        <td style="padding: 12px; text-align: center;">${singleCount} 次</td>
+        <td style="padding: 12px; text-align: center;">${rangeCount} 次</td>
+        <td style="padding: 12px; text-align: right; color: #3b82f6; font-weight: 700;">${totalViews.toLocaleString()} 次</td>
+      </tr>`;
+    }
+    document.getElementById('vp-summary-tbody').innerHTML = summaryHtml || '<tr><td colspan="4" class="empty">暂无数据</td></tr>';
+    
+    let total = vpRecords.length;
+    let totalPages = Math.max(1, Math.ceil(total / VP_PAGE_SIZE));
+    if(vpCurrentPage > totalPages) vpCurrentPage = totalPages;
+    let start = (vpCurrentPage - 1) * VP_PAGE_SIZE;
+    let paged = vpRecords.slice().reverse().slice(start, start + VP_PAGE_SIZE);
+    
+    let tableHtml = '';
+    for(let i = 0; i < paged.length; i++) {
+      let v = paged[i];
+      let regionName = REGIONS[v.region] ? REGIONS[v.region].flag + ' ' + REGIONS[v.region].name : v.region;
+      tableHtml += `<tr>
+        <td style="padding: 12px;"><span class="badge b-c">${v.mode === 'single' ? '📅 单日' : '📆 周期'}</span></td>
+        <td style="padding: 12px; white-space: nowrap;"><strong>${v.date}</strong></td>
+        <td style="padding: 12px;"><span class="badge b-${v.region}">${regionName}</span></td>
+        <td style="padding: 12px; text-align: right; color: #6366f1; font-weight: 700;">${(v.views || 0).toLocaleString()} 次</td>
+        <td style="padding: 12px; text-align: center;"><button class="action-btn del" onclick="deleteVpRecord('${v.id}')"><i class="ti ti-trash"></i></button></td>
+      </tr>`;
+    }
+    document.getElementById('vp-tbody').innerHTML = tableHtml || '<tr><td colspan="5" class="empty">暂无数据</td></tr>';
+    
+    let pagHtml = '';
+    if(totalPages > 1) {
+      pagHtml += `<button class="page-btn" onclick="vpCurrentPage=1;renderVpView();" ${vpCurrentPage === 1 ? 'disabled' : ''}>«</button>`;
+      for(let i = Math.max(1, vpCurrentPage - 2); i <= Math.min(totalPages, vpCurrentPage + 2); i++) {
+        pagHtml += `<button class="page-btn ${i === vpCurrentPage ? 'active' : ''}" onclick="vpCurrentPage=${i};renderVpView();">${i}</button>`;
+      }
+      pagHtml += `<button class="page-btn" onclick="vpCurrentPage=${totalPages};renderVpView();" ${vpCurrentPage === totalPages ? 'disabled' : ''}>»</button>`;
+    }
+    document.getElementById('vp-pagination').innerHTML = pagHtml;
+    
+    let clearBtns = `<button class="btn btn-danger" onclick="if(confirm('清空全部播放量？')){vpRecords=[];vpCurrentPage=1;persistVp();renderVpView();toast('已清空');}"><i class="ti ti-trash"></i>清空全部</button>`;
+    document.getElementById('vp-clear-btns').innerHTML = clearBtns;
+  }
+
+  function handleVpDrop(e) { e.preventDefault(); if(e.dataTransfer.files.length) processVpFile(e.dataTransfer.files[0]); }
+  function handleVpFileSelect(e) { if(e.target.files.length) processVpFile(e.target.files[0]); }
+
+  function processVpFile(file) { 
+    let reader = new FileReader(); 
+    let ext = file.name.split('.').pop().toLowerCase(); 
+    reader.onload = function(e) { 
+      try { 
+        let rows = []; 
+        if(ext === 'csv') { 
+          let text = new TextDecoder('utf-8').decode(e.target.result); 
+          rows = text.split('\n').map(l => l.split(',').map(c => c.trim().replace(/^"|"$/g, ''))); 
+        } else { 
+          let wb = XLSX.read(e.target.result, { type: 'array' }); 
+          rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }); 
+        } 
+        if(rows.length < 2) { toast('表格无数据'); return; } 
+        
+        let headers = rows[0].map(h => String(h || '').trim().toUpperCase()); 
+        let iDate = headers.findIndex(h => h.includes('日期') || h.includes('DATE')); 
+        let iViews = headers.findIndex(h => h.includes('播放') || h.includes('VIEWS')); 
+        let iReg = headers.findIndex(h => h.includes('国家') || h.includes('地区') || h.includes('REGION')); 
+        
+        if(iDate === -1 || iViews === -1) { toast('表头需含日期/播放量'); return; } 
+        
+        let added = 0, updated = 0; 
+        for(let i = 1; i < rows.length; i++) { 
+          let row = rows[i]; 
+          if(!row || row[iDate] == null) continue; 
+          
+          let dateStr = (() => { 
+            let v = row[iDate]; 
+            if(typeof v === 'number') { 
+              let d = new Date((v - 25569) * 86400000); 
+              if(!isNaN(d)) return d.toISOString().slice(0, 10); 
+            } 
+            let s = String(v).trim(); 
+            let m = s.match(/(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})/); 
+            if(m) return m[1] + '-' + String(+m[2]).padStart(2, '0') + '-' + String(+m[3]).padStart(2, '0'); 
+            return null; 
+          })(); 
+          if(!dateStr) continue; 
+          
+          let viewsVal = parseFloat(row[iViews]) || 0; 
+          let rawReg = iReg > -1 ? String(row[iReg]).trim().toUpperCase() : 'BR'; 
+          let matched = 'BR'; 
+          for(let k in REGIONS) { 
+            if(REGIONS[k].keywords.some(kw => rawReg.includes(kw))) { 
+              matched = k; 
+              break; 
+            } 
+          } 
+          if(viewsVal <= 0) continue; 
+          
+          let exist = vpRecords.find(v => v.mode === 'single' && v.date === dateStr && v.region === matched); 
+          if(exist) { 
+            exist.views = viewsVal; 
+            updated++; 
+          } else { 
+            vpRecords.push({ id: 'vp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8), mode: 'single', date: dateStr, region: matched, views: viewsVal }); 
+            added++; 
+          } 
+        } 
+        vpCurrentPage = 1; 
+        persistVp(); 
+        renderVpView(); 
+        toast(`导入完成！新增${added}条，更新${updated}条`); 
+      } catch(err) { 
+        console.error(err); 
+        toast('解析错误'); 
+      } 
+    }; 
+    reader.readAsArrayBuffer(file); 
+  }
+
+  // ========== TW/TR 素材追踪相关函数 ==========
+  function saveTrackingRecord() { 
+    let region = document.getElementById('t-region').value;
+    let startDate = document.getElementById('t-range-start').value;
+    let endDate = document.getElementById('t-range-end').value;
+    let spkU = parseFloat(document.getElementById('t-tt-spk-users').value) || 0;
+    let totU = parseFloat(document.getElementById('t-tt-total-users').value) || 0;
+    let spkC = parseFloat(document.getElementById('t-tt-spk-cost').value) || 0;
+    let totC = parseFloat(document.getElementById('t-tt-total-cost').value) || 0;
+    
+    if(!startDate || !endDate) { toast('请选择投放开始和结束日期'); return; }
+    if(startDate > endDate) { toast('开始日期不能晚于结束日期'); return; }
+    
+    let range = startDate + ' 至 ' + endDate;
+    let existIdx = trackingRecords.findIndex(r => r.region === region && r.range === range);
+    
+    if(existIdx > -1) {
+      trackingRecords[existIdx] = { ...trackingRecords[existIdx], spkUsers: spkU, totalUsers: totU, spkCost: spkC, totalCost: totC };
+      toast('已更新该时间段的追踪数据');
+    } else {
+      trackingRecords.push({ id: 't_' + Date.now(), region, range, spkUsers: spkU, totalUsers: totU, spkCost: spkC, totalCost: totC });
+      toast('保存成功');
+    }
+    persistTrackingRecords();
+    renderTrackingView();
+    
+    document.getElementById('t-range-start').value = '';
+    document.getElementById('t-range-end').value = '';
+    document.getElementById('t-tt-spk-users').value = '';
+    document.getElementById('t-tt-total-users').value = '';
+    document.getElementById('t-tt-spk-cost').value = '';
+    document.getElementById('t-tt-total-cost').value = '';
+  }
+
+  function deleteTrackingRecord(id) {
+    if(confirm('确定删除这条追踪数据吗？')) {
+      trackingRecords = trackingRecords.filter(x => x.id !== id);
+      persistTrackingRecords();
+      renderTrackingView();
+      toast('已删除');
+    }
+  }
+
+  function renderTrackingView() { 
+    // 渲染台湾数据
+    let twList = trackingRecords.filter(r => r.region === 'TW');
+    let twHtml = '<div class="section"><div class="section-header"><span class="section-title"><i class="ti ti-calculator"></i>🔷 台湾 素材追踪汇总</span></div>';
+    if(twList.length === 0) {
+      twHtml += '<div class="empty" style="text-align:center; padding:40px;">📭 暂无台湾追踪数据，请在上方录入</div>';
+    } else {
+      twHtml += '<div class="table-wrap"><table style="width:100%; border-collapse: collapse;"><thead><tr style="background: var(--bg2);"><th style="padding: 12px;">投放时间段</th><th style="padding: 12px;">SPK新增</th><th style="padding: 12px;">总新增</th><th style="padding: 12px;">SPK消耗</th><th style="padding: 12px;">总消耗</th><th style="padding: 12px;">操作</th></tr></thead><tbody>';
+      for(let i = 0; i < twList.length; i++) {
+        let r = twList[i];
+        twHtml += `<tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 12px; white-space: nowrap;">${r.range}</td>
+          <td style="padding: 12px; text-align: right;">${r.spkUsers.toLocaleString()}</td>
+          <td style="padding: 12px; text-align: right;">${r.totalUsers.toLocaleString()}</td>
+          <td style="padding: 12px; text-align: right;">$${r.spkCost.toLocaleString()}</td>
+          <td style="padding: 12px; text-align: right;">$${r.totalCost.toLocaleString()}</td>
+          <td style="padding: 12px; text-align: center;"><button class="action-btn del" onclick="deleteTrackingRecord('${r.id}')"><i class="ti ti-trash"></i></button></td>
+        </tr>`;
+      }
+      twHtml += '</tbody></table></div>';
+    }
+    twHtml += '</div>';
+    document.getElementById('tracking-tw-block').innerHTML = twHtml;
+    
+    // 渲染土耳其数据
+    let trList = trackingRecords.filter(r => r.region === 'TR');
+    let trHtml = '<div class="section"><div class="section-header"><span class="section-title"><i class="ti ti-calculator"></i>🇹🇷 土耳其 素材追踪汇总</span></div>';
+    if(trList.length === 0) {
+      trHtml += '<div class="empty" style="text-align:center; padding:40px;">📭 暂无土耳其追踪数据，请在上方录入</div>';
+    } else {
+      trHtml += '<div class="table-wrap"><table style="width:100%; border-collapse: collapse;"><thead><tr style="background: var(--bg2);"><th style="padding: 12px;">投放时间段</th><th style="padding: 12px;">SPK新增</th><th style="padding: 12px;">总新增</th><th style="padding: 12px;">SPK消耗</th><th style="padding: 12px;">总消耗</th><th style="padding: 12px;">操作</th></tr></thead><tbody>';
+      for(let i = 0; i < trList.length; i++) {
+        let r = trList[i];
+        trHtml += `<tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 12px; white-space: nowrap;">${r.range}</td>
+          <td style="padding: 12px; text-align: right;">${r.spkUsers.toLocaleString()}</td>
+          <td style="padding: 12px; text-align: right;">${r.totalUsers.toLocaleString()}</td>
+          <td style="padding: 12px; text-align: right;">$${r.spkCost.toLocaleString()}</td>
+          <td style="padding: 12px; text-align: right;">$${r.totalCost.toLocaleString()}</td>
+          <td style="padding: 12px; text-align: center;"><button class="action-btn del" onclick="deleteTrackingRecord('${r.id}')"><i class="ti ti-trash"></i></button></td>
+        </tr>`;
+      }
+      trHtml += '</tbody></table></div>';
+    }
+    trHtml += '</div>';
+    document.getElementById('tracking-tr-block').innerHTML = trHtml;
+  }
+
+  function updateTrackingMonthFilter() { 
+    let sel = document.getElementById('tracking-month-filter');
+    if(!sel) return;
+    sel.innerHTML = '<option value="">全部月份</option>';
+  }
+
+  function renderTrackingMonthly() { 
+    let tbody = document.getElementById('tracking-monthly-tbody');
+    if(!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="10" class="empty" style="text-align:center; padding:40px;">暂无月度汇总数据</td</tr>';
+  }
+
+  // ========== 导入与录入相关函数 ==========
   function saveRecord() { 
     let id = document.getElementById('f-id').value; 
     let mode = document.getElementById('f-date-mode').value; 
@@ -633,11 +859,14 @@
     if(r.date.includes(' 至 ')) { 
       document.getElementById('f-date-mode').value = 'range'; 
       let parts = r.date.split(' 至 '); 
-      document.getElementById('f-date-start').value = parts[0]; 
-      document.getElementById('f-date-end').value = parts[1]; 
+      let inp1 = document.getElementById('f-date-start');
+      let inp2 = document.getElementById('f-date-end');
+      if(inp1) inp1.value = parts[0];
+      if(inp2) inp2.value = parts[1];
     } else { 
       document.getElementById('f-date-mode').value = 'single'; 
-      document.getElementById('f-date').value = r.date; 
+      let inp = document.getElementById('f-date');
+      if(inp) inp.value = r.date;
     } 
     document.getElementById('f-region').value = r.region; 
     document.getElementById('f-channel').value = r.channel; 
@@ -655,7 +884,8 @@
     document.getElementById('f-cost').value = ''; 
     document.getElementById('f-note').value = ''; 
     document.getElementById('f-date-mode').value = 'single'; 
-    document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
+    let inp = document.getElementById('f-date');
+    if(inp) inp.value = new Date().toISOString().slice(0,10);
     document.getElementById('form-title').innerHTML = '<i class="ti ti-ballpen"></i> 单条数据录入'; 
     document.getElementById('edit-indicator').style.display = 'none'; 
   }
@@ -664,7 +894,7 @@
 
   function renderRecent() { 
     if(!records || records.length === 0) { 
-      document.getElementById('recent-tbody').innerHTML = '<tr><td colspan="8" class="empty">暂无数据</td</tr>'; 
+      document.getElementById('recent-tbody').innerHTML = '<tr><td colspan="8" class="empty" style="text-align:center; padding:40px;">暂无数据，请先录入</td</tr>'; 
       return; 
     } 
     let list = records.slice().sort((a,b)=>b.date.localeCompare(a.date)); 
@@ -672,7 +902,19 @@
     for(let i = 0; i < Math.min(list.length, 20); i++) { 
       let r = list[i]; 
       let regionName = REGIONS[r.region] ? REGIONS[r.region].name : r.region; 
-      html += `<tr><td style="white-space:nowrap;">${r.date}</td><td><span class="badge b-${r.region}">${regionName}</span></td><td>${r.channel || '-'}</td><td>${r.contentType || '-'}</td><td style="text-align:center;">${r.count || 0}</td><td style="text-align:right;">$${(r.cost || 0).toLocaleString()}</td><td style="text-align:right;">${(r.users || 0).toLocaleString()}</td><td><button class="action-btn edit" onclick="editRecord('${r.id}')"><i class="ti ti-edit"></i></button><button class="action-btn del" onclick="deleteRecord('${r.id}')"><i class="ti ti-trash"></i></button></td>`; 
+      html += `<tr style="border-bottom: 1px solid var(--border);">
+        <td style="padding: 12px; white-space: nowrap;">${r.date}</td>
+        <td style="padding: 12px;"><span class="badge b-${r.region}">${regionName}</span></td>
+        <td style="padding: 12px;">${r.channel || '-'}</td>
+        <td style="padding: 12px;">${r.contentType || '-'}</td>
+        <td style="padding: 12px; text-align: center;">${r.count || 0}</td>
+        <td style="padding: 12px; text-align: right;">$${(r.cost || 0).toLocaleString()}</td>
+        <td style="padding: 12px; text-align: right;">${(r.users || 0).toLocaleString()}</td>
+        <td style="padding: 12px; text-align: center;">
+          <button class="action-btn edit" onclick="editRecord('${r.id}')"><i class="ti ti-edit"></i></button>
+          <button class="action-btn del" onclick="deleteRecord('${r.id}')"><i class="ti ti-trash"></i></button>
+        </td>
+      </tr>`;
     } 
     document.getElementById('recent-tbody').innerHTML = html; 
   }
@@ -694,6 +936,91 @@
     renderWeekly();
   }
 
+  function clearUserForm() { document.getElementById('f-user-count').value = ''; document.getElementById('f-user-note').value = ''; }
+
+  function handleDrop(e) { e.preventDefault(); if(e.dataTransfer.files.length) processFile(e.dataTransfer.files[0]); }
+  function handleFileSelect(e) { if(e.target.files.length) processFile(e.target.files[0]); }
+
+  function processFile(file) { 
+    let reader = new FileReader(); 
+    let ext = file.name.split('.').pop().toLowerCase(); 
+    reader.onload = function(e) { 
+      try { 
+        let rows = []; 
+        if(ext === 'csv') { 
+          let text = new TextDecoder('utf-8').decode(e.target.result); 
+          rows = text.split('\n').map(l => l.split(',').map(c => c.trim().replace(/^"|"$/g, ''))); 
+        } else { 
+          let wb = XLSX.read(e.target.result, { type: 'array' }); 
+          rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }); 
+        } 
+        if(rows.length < 2) { toast('无数据'); return; } 
+        
+        let headers = rows[0].map(h => String(h || '').trim().toUpperCase()); 
+        let iDate = headers.findIndex(h => h.includes('日期') || h.includes('DATE')); 
+        let iReg = headers.findIndex(h => h.includes('国家') || h.includes('地区') || h.includes('REGION')); 
+        let iCost = headers.findIndex(h => h.includes('消耗') || h.includes('COST')); 
+        let iUser = headers.findIndex(h => h.includes('新增') || h.includes('用户') || h.includes('USERS')); 
+        let iChan = headers.findIndex(h => h.includes('渠道') || h.includes('CHANNEL')); 
+        let iType = headers.findIndex(h => h.includes('类型') || h.includes('形式') || h.includes('TYPE')); 
+        
+        if(iDate === -1) { toast('未找到日期列'); return; } 
+        
+        let added = 0, merged = 0; 
+        for(let i = 1; i < rows.length; i++) { 
+          let row = rows[i]; 
+          if(!row || !row[iDate]) continue; 
+          
+          let rawDate = String(row[iDate]).trim().split('(')[0].split(' ')[0].replace(/\//g, '-'); 
+          let rawReg = iReg > -1 ? String(row[iReg]).trim().toUpperCase() : 'BR'; 
+          let matched = 'BR'; 
+          for(let k in REGIONS) { 
+            if(REGIONS[k].keywords.some(kw => rawReg.includes(kw))) { 
+              matched = k; 
+              break; 
+            } 
+          } 
+          
+          let costV = iCost > -1 ? (parseFloat(row[iCost]) || 0) : 0; 
+          let userV = iUser > -1 ? (parseFloat(row[iUser]) || 0) : 0; 
+          let chanV = iChan > -1 ? String(row[iChan]).trim() : 'TikTok'; 
+          let typeV = iType > -1 ? String(row[iType]).trim() : 'video'; 
+          
+          if(iCost === -1 && iUser > -1) { 
+            let exist = records.find(x => x.date === rawDate && x.region === matched && x.channel === '大盘渠道' && x.contentType === '大盘转化'); 
+            if(exist) { 
+              exist.users = Math.max(exist.users || 0, userV); 
+              merged++; 
+            } else { 
+              records.push({ id: 'imp_' + Date.now() + '_' + i, date: rawDate, region: matched, channel: '大盘渠道', contentType: '大盘转化', count: 0, cost: 0, users: userV, note: '外部导入' }); 
+              added++; 
+            } 
+          } else { 
+            let exist2 = records.find(x => x.date === rawDate && x.region === matched && x.channel === chanV && x.contentType === typeV); 
+            if(exist2) { 
+              exist2.cost = Math.max(exist2.cost || 0, costV); 
+              exist2.users = Math.max(exist2.users || 0, userV); 
+              merged++; 
+            } else { 
+              records.push({ id: 'imp_' + Date.now() + '_' + i, date: rawDate, region: matched, channel: chanV, contentType: typeV, count: 1, cost: costV, users: userV, note: '' }); 
+              added++; 
+            } 
+          } 
+        } 
+        persistRecords(); 
+        renderRecent(); 
+        updateMonthSelectors(); 
+        updateDashboardMonthFilter(); 
+        renderWeekly();
+        toast(`导入完成！新增${added}条，合并${merged}条`); 
+      } catch(err) { 
+        console.error(err); 
+        toast('解析错误：' + err.message); 
+      } 
+    }; 
+    reader.readAsArrayBuffer(file); 
+  }
+
   function exportCSV() { 
     let h = '日期,地区,渠道,内容形式,推广数量,消耗(USD),新增用户,备注'; 
     let rows = records.map(r=>`${r.date},${r.region},${r.channel},${r.contentType},${r.count},${r.cost},${r.users||0},"${r.note||''}"`); 
@@ -703,6 +1030,7 @@
     a.click(); 
   }
 
+  // ========== 视图切换和事件绑定 ==========
   function showView(v) { 
     document.querySelectorAll('.view').forEach(el=>el.classList.remove('active')); 
     let target = document.getElementById('view-'+v); 
@@ -711,7 +1039,9 @@
     document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',tabs[i]===v)); 
     if(v==='dashboard') { updateDashboardMonthFilter(); renderDashboard(); } 
     if(v==='weekly') { updateWeeklyFilters(); renderWeekly(); updateMonthSelectors(); renderMonthlyCompare(); } 
-    if(v==='add') { renderRecent(); } 
+    if(v==='views_panel') { renderVpView(); }
+    if(v==='tracking') { renderTrackingView(); updateTrackingMonthFilter(); renderTrackingMonthly(); }
+    if(v==='add') { renderRecent(); toggleDateInputMode(); toggleUserDateMode(); }
   }
 
   function setRegion(r) { 
@@ -727,12 +1057,15 @@
     let wrap = document.getElementById('date-input-wrapper'); 
     if(mode === 'single') { 
       wrap.innerHTML = '<label>日期 *</label><input type="date" id="f-date">'; 
-      document.getElementById('f-date').value = new Date().toISOString().slice(0,10); 
+      let inp = document.getElementById('f-date');
+      if(inp) inp.value = new Date().toISOString().slice(0,10); 
     } else { 
       wrap.innerHTML = '<label>周期范围 *</label><div class="date-range-container"><input type="date" id="f-date-start"><input type="date" id="f-date-end"></div>'; 
       let today = new Date().toISOString().slice(0,10); 
-      document.getElementById('f-date-start').value = today; 
-      document.getElementById('f-date-end').value = today; 
+      let inp1 = document.getElementById('f-date-start');
+      let inp2 = document.getElementById('f-date-end');
+      if(inp1) inp1.value = today;
+      if(inp2) inp2.value = today;
     } 
   }
 
@@ -741,402 +1074,17 @@
     let wrap = document.getElementById('user-date-wrapper'); 
     if(mode === 'single') { 
       wrap.innerHTML = '<label>日期 *</label><input type="date" id="f-user-date">'; 
-      document.getElementById('f-user-date').value = new Date().toISOString().slice(0,10); 
+      let inp = document.getElementById('f-user-date');
+      if(inp) inp.value = new Date().toISOString().slice(0,10); 
     } else { 
       wrap.innerHTML = '<label>周期范围 *</label><div class="date-range-container"><input type="date" id="f-user-date-start"><input type="date" id="f-user-date-end"></div>'; 
       let today = new Date().toISOString().slice(0,10); 
-      document.getElementById('f-user-date-start').value = today; 
-      document.getElementById('f-user-date-end').value = today; 
+      let inp1 = document.getElementById('f-user-date-start');
+      let inp2 = document.getElementById('f-user-date-end');
+      if(inp1) inp1.value = today;
+      if(inp2) inp2.value = today;
     } 
   }
-
-  // 播放量相关简化函数
-  function renderVpView() { 
-  let summaryHtml = '';
-  let regionKeys = Object.keys(REGIONS);
-  for(let i = 0; i < regionKeys.length; i++) {
-    let r = regionKeys[i];
-    let sub = vpRecords.filter(v => v.region === r);
-    let singleCount = sub.filter(v => v.mode === 'single').length;
-    let rangeCount = sub.filter(v => v.mode === 'range').length;
-    let totalViews = 0;
-    for(let j = 0; j < sub.length; j++) totalViews += (sub[j].views || 0);
-    summaryHtml += `<td><td class="badge b-${r}">${REGIONS[r].flag} ${REGIONS[r].name}</td><td style="text-align:center;">${singleCount} 次</td><td style="text-align:center;">${rangeCount} 次</td><td style="color:#3b82f6;font-weight:700;text-align:right;">${totalViews.toLocaleString()} 次</td></tr>`;
-  }
-  document.getElementById('vp-summary-tbody').innerHTML = summaryHtml || '<tr><td colspan="4" class="empty">暂无数据</td</tr>';
-  
-  let total = vpRecords.length;
-  let totalPages = Math.max(1, Math.ceil(total / VP_PAGE_SIZE));
-  if(vpCurrentPage > totalPages) vpCurrentPage = totalPages;
-  let start = (vpCurrentPage - 1) * VP_PAGE_SIZE;
-  let paged = vpRecords.slice().reverse().slice(start, start + VP_PAGE_SIZE);
-  
-  let tableHtml = '';
-  for(let i = 0; i < paged.length; i++) {
-    let v = paged[i];
-    let regionName = REGIONS[v.region] ? REGIONS[v.region].flag + ' ' + REGIONS[v.region].name : v.region;
-    tableHtml += `<tr><td><span class="badge b-c">${v.mode === 'single' ? '📅 单日' : '📆 周期'}</span></td><td><strong>${v.date}</strong></td><td><span class="badge b-${v.region}">${regionName}</span></td><td style="color:#6366f1;font-weight:700;text-align:right;">${(v.views || 0).toLocaleString()} 次</td><td style="text-align:center;"><button class="action-btn del" onclick="deleteVpRecord('${v.id}')"><i class="ti ti-trash"></i></button></td></tr>`;
-  }
-  document.getElementById('vp-tbody').innerHTML = tableHtml || '<tr><td colspan="5" class="empty">暂无数据</td</tr>';
-  
-  let pagHtml = '';
-  if(totalPages > 1) {
-    pagHtml += `<button class="page-btn" onclick="vpCurrentPage=1;renderVpView();" ${vpCurrentPage === 1 ? 'disabled' : ''}>«</button>`;
-    for(let i = Math.max(1, vpCurrentPage - 2); i <= Math.min(totalPages, vpCurrentPage + 2); i++) {
-      pagHtml += `<button class="page-btn ${i === vpCurrentPage ? 'active' : ''}" onclick="vpCurrentPage=${i};renderVpView();">${i}</button>`;
-    }
-    pagHtml += `<button class="page-btn" onclick="vpCurrentPage=${totalPages};renderVpView();" ${vpCurrentPage === totalPages ? 'disabled' : ''}>»</button>`;
-  }
-  document.getElementById('vp-pagination').innerHTML = pagHtml;
-  
-  let clearBtns = `<button class="btn btn-danger" onclick="if(confirm('清空全部播放量？')){vpRecords=[];vpCurrentPage=1;persistVp();renderVpView();toast('已清空');}"><i class="ti ti-trash"></i>清空全部</button>`;
-  document.getElementById('vp-clear-btns').innerHTML = clearBtns;
-}
-
-  function deleteVpRecord(id) { if(confirm('确定删除？')) { vpRecords = vpRecords.filter(v=>v.id!==id); persistVp(); renderVpView(); toast('已删除'); } }
-  function saveVpRecord() { 
-    let mode = document.getElementById('vp-mode').value, region = document.getElementById('vp-region').value, views = parseFloat(document.getElementById('vp-count').value)||0; 
-    let date = document.getElementById('vp-date').value; 
-    if(!date) { toast('请选择日期'); return; } 
-    if(views <= 0) { toast('播放量不合法'); return; } 
-    let exist = vpRecords.find(v=>v.mode===mode && v.date===date && v.region===region); 
-    if(exist) { exist.views = views; toast('已覆盖更新'); } 
-    else { vpRecords.push({ id:'vp_'+Date.now(), mode, date, region, views }); toast('录入成功'); } 
-    persistVp(); renderVpView(); 
-  }
-  function clearVpForm() { document.getElementById('vp-count').value = ''; document.getElementById('vp-date').value = new Date().toISOString().slice(0,10); }
-  function handleVpDrop(e) { e.preventDefault(); if(e.dataTransfer.files.length) processVpFile(e.dataTransfer.files[0]); }
-  function handleVpFileSelect(e) { if(e.target.files.length) processVpFile(e.target.files[0]); }
-  function processVpFile(file) { 
-  let reader = new FileReader(); 
-  let ext = file.name.split('.').pop().toLowerCase(); 
-  reader.onload = function(e) { 
-    try { 
-      let rows = []; 
-      if(ext === 'csv') { 
-        let text = new TextDecoder('utf-8').decode(e.target.result); 
-        rows = text.split('\n').map(l => l.split(',').map(c => c.trim().replace(/^"|"$/g, ''))); 
-      } else { 
-        let wb = XLSX.read(e.target.result, { type: 'array' }); 
-        rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }); 
-      } 
-      if(rows.length < 2) { toast('表格无数据'); return; } 
-      
-      let headers = rows[0].map(h => String(h || '').trim().toUpperCase()); 
-      let iDate = headers.findIndex(h => h.includes('日期') || h.includes('DATE')); 
-      let iViews = headers.findIndex(h => h.includes('播放') || h.includes('VIEWS')); 
-      let iReg = headers.findIndex(h => h.includes('国家') || h.includes('地区') || h.includes('REGION')); 
-      
-      if(iDate === -1 || iViews === -1) { toast('表头需含日期/播放量'); return; } 
-      
-      let added = 0, updated = 0; 
-      for(let i = 1; i < rows.length; i++) { 
-        let row = rows[i]; 
-        if(!row || row[iDate] == null) continue; 
-        
-        let dateStr = (() => { 
-          let v = row[iDate]; 
-          if(typeof v === 'number') { 
-            let d = new Date((v - 25569) * 86400000); 
-            if(!isNaN(d)) return d.toISOString().slice(0, 10); 
-          } 
-          let s = String(v).trim(); 
-          let m = s.match(/(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})/); 
-          if(m) return m[1] + '-' + String(+m[2]).padStart(2, '0') + '-' + String(+m[3]).padStart(2, '0'); 
-          return null; 
-        })(); 
-        if(!dateStr) continue; 
-        
-        let viewsVal = parseFloat(row[iViews]) || 0; 
-        let rawReg = iReg > -1 ? String(row[iReg]).trim().toUpperCase() : 'BR'; 
-        let matched = 'BR'; 
-        for(let k in REGIONS) { 
-          if(REGIONS[k].keywords.some(kw => rawReg.includes(kw))) { 
-            matched = k; 
-            break; 
-          } 
-        } 
-        if(viewsVal <= 0) continue; 
-        
-        let exist = vpRecords.find(v => v.mode === 'single' && v.date === dateStr && v.region === matched); 
-        if(exist) { 
-          exist.views = viewsVal; 
-          updated++; 
-        } else { 
-          vpRecords.push({ id: 'vp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8), mode: 'single', date: dateStr, region: matched, views: viewsVal }); 
-          added++; 
-        } 
-      } 
-      vpCurrentPage = 1; 
-      persistVp(); 
-      renderVpView(); 
-      updateMonthSelectors(); 
-      updateDashboardMonthFilter(); 
-      toast(`导入完成！新增${added}条，更新${updated}条`); 
-    } catch(err) { 
-      console.error(err); 
-      toast('解析错误'); 
-    } 
-  }; 
-  reader.readAsArrayBuffer(file); 
-}
-
-  // 追踪数据简化函数
-  function saveTrackingRecord() { 
-  let region = document.getElementById('t-region').value;
-  let startDate = document.getElementById('t-range-start').value;
-  let endDate = document.getElementById('t-range-end').value;
-  let spkU = parseFloat(document.getElementById('t-tt-spk-users').value) || 0;
-  let totU = parseFloat(document.getElementById('t-tt-total-users').value) || 0;
-  let spkC = parseFloat(document.getElementById('t-tt-spk-cost').value) || 0;
-  let totC = parseFloat(document.getElementById('t-tt-total-cost').value) || 0;
-  
-  if(!startDate || !endDate) { toast('请选择投放开始和结束日期'); return; }
-  if(startDate > endDate) { toast('开始日期不能晚于结束日期'); return; }
-  
-  let range = startDate + ' 至 ' + endDate;
-  let existIdx = trackingRecords.findIndex(r => r.region === region && r.range === range);
-  
-  if(existIdx > -1) {
-    trackingRecords[existIdx] = { ...trackingRecords[existIdx], spkUsers: spkU, totalUsers: totU, spkCost: spkC, totalCost: totC };
-    toast('已更新该时间段的追踪数据');
-  } else {
-    trackingRecords.push({ id: 't_' + Date.now(), region, range, spkUsers: spkU, totalUsers: totU, spkCost: spkC, totalCost: totC });
-    toast('保存成功');
-  }
-  persistTrackingRecords();
-  renderTrackingView();
-  
-  // 清空表单
-  document.getElementById('t-range-start').value = '';
-  document.getElementById('t-range-end').value = '';
-  document.getElementById('t-tt-spk-users').value = '';
-  document.getElementById('t-tt-total-users').value = '';
-  document.getElementById('t-tt-spk-cost').value = '';
-  document.getElementById('t-tt-total-cost').value = '';
-}
-  function renderTrackingView() { 
-  // 渲染台湾数据
-  let twList = trackingRecords.filter(r => r.region === 'TW');
-  let twHtml = '<div class="section"><div class="section-header"><span class="section-title"><i class="ti ti-calculator"></i>🔷 台湾 素材追踪汇总</span></div>';
-  if(twList.length === 0) {
-    twHtml += '<div class="empty">暂无台湾追踪数据，请在上方录入</div>';
-  } else {
-    twHtml += '<div class="table-wrap"><table style="width:100%"><thead><tr><th>投放时间段</th><th>SPK新增</th><th>总新增</th><th>SPK消耗</th><th>总消耗</th><th>操作</th></tr></thead><tbody>';
-    for(let i = 0; i < twList.length; i++) {
-      let r = twList[i];
-      twHtml += `<tr><td>${r.range}</td><td>${r.spkUsers.toLocaleString()}</td><td>${r.totalUsers.toLocaleString()}</td><td>$${r.spkCost.toLocaleString()}</td><td>$${r.totalCost.toLocaleString()}</td><td><button class="action-btn del" onclick="deleteTrackingRecord('${r.id}')"><i class="ti ti-trash"></i></button></td></tr>`;
-    }
-    twHtml += '</tbody></table></div>';
-  }
-  twHtml += '</div>';
-  document.getElementById('tracking-tw-block').innerHTML = twHtml;
-  
-  // 渲染土耳其数据
-  let trList = trackingRecords.filter(r => r.region === 'TR');
-  let trHtml = '<div class="section"><div class="section-header"><span class="section-title"><i class="ti ti-calculator"></i>🇹🇷 土耳其 素材追踪汇总</span></div>';
-  if(trList.length === 0) {
-    trHtml += '<div class="empty">暂无土耳其追踪数据，请在上方录入</div>';
-  } else {
-    trHtml += '<div class="table-wrap"><table style="width:100%"><thead><tr><th>投放时间段</th><th>SPK新增</th><th>总新增</th><th>SPK消耗</th><th>总消耗</th><th>操作</th></tr></thead><tbody>';
-    for(let i = 0; i < trList.length; i++) {
-      let r = trList[i];
-      trHtml += `<tr><td>${r.range}</td><td>${r.spkUsers.toLocaleString()}</td><td>${r.totalUsers.toLocaleString()}</td><td>$${r.spkCost.toLocaleString()}</td><td>$${r.totalCost.toLocaleString()}</td><td><button class="action-btn del" onclick="deleteTrackingRecord('${r.id}')"><i class="ti ti-trash"></i></button></td></tr>`;
-    }
-    trHtml += '</tbody></table></div>';
-  }
-  trHtml += '</div>';
-  document.getElementById('tracking-tr-block').innerHTML = trHtml;
-}
-  function deleteTrackingRecord(id) {
-  if(confirm('确定删除？')) {
-    trackingRecords = trackingRecords.filter(x => x.id !== id);
-    persistTrackingRecords();
-    renderTrackingView();
-    toast('已删除');
-  }
-}
-  function updateTrackingMonthFilter() { 
-  let sel = document.getElementById('tracking-month-filter');
-  if(!sel) return;
-  sel.innerHTML = '<option value="">全部月份</option>';
-}
-  function renderTrackingMonthly() { 
-  let tbody = document.getElementById('tracking-monthly-tbody');
-  if(!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="10" class="empty">暂无月度汇总数据</td</tr>';
-}
-
-  function handleDrop(e) { 
-  e.preventDefault(); 
-  if(e.dataTransfer.files.length) processFile(e.dataTransfer.files[0]); 
-}
-
-function handleFileSelect(e) { 
-  if(e.target.files.length) processFile(e.target.files[0]); 
-}
-
-function processFile(file) { 
-  let reader = new FileReader(); 
-  let ext = file.name.split('.').pop().toLowerCase(); 
-  reader.onload = function(e) { 
-    try { 
-      let rows = []; 
-      if(ext === 'csv') { 
-        let text = new TextDecoder('utf-8').decode(e.target.result); 
-        rows = text.split('\n').map(l => l.split(',').map(c => c.trim().replace(/^"|"$/g, ''))); 
-      } else { 
-        let wb = XLSX.read(e.target.result, { type: 'array' }); 
-        rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }); 
-      } 
-      if(rows.length < 2) { toast('无数据'); return; } 
-      
-      let headers = rows[0].map(h => String(h || '').trim().toUpperCase()); 
-      let iDate = headers.findIndex(h => h.includes('日期') || h.includes('DATE')); 
-      let iReg = headers.findIndex(h => h.includes('国家') || h.includes('地区') || h.includes('REGION')); 
-      let iCost = headers.findIndex(h => h.includes('消耗') || h.includes('COST')); 
-      let iUser = headers.findIndex(h => h.includes('新增') || h.includes('用户') || h.includes('USERS')); 
-      let iChan = headers.findIndex(h => h.includes('渠道') || h.includes('CHANNEL')); 
-      let iType = headers.findIndex(h => h.includes('类型') || h.includes('形式') || h.includes('TYPE')); 
-      
-      if(iDate === -1) { toast('未找到日期列'); return; } 
-      
-      let added = 0, merged = 0; 
-      for(let i = 1; i < rows.length; i++) { 
-        let row = rows[i]; 
-        if(!row || !row[iDate]) continue; 
-        
-        let rawDate = String(row[iDate]).trim().split('(')[0].split(' ')[0].replace(/\//g, '-'); 
-        let rawReg = iReg > -1 ? String(row[iReg]).trim().toUpperCase() : 'BR'; 
-        let matched = 'BR'; 
-        for(let k in REGIONS) { 
-          if(REGIONS[k].keywords.some(kw => rawReg.includes(kw))) { 
-            matched = k; 
-            break; 
-          } 
-        } 
-        
-        let costV = iCost > -1 ? (parseFloat(row[iCost]) || 0) : 0; 
-        let userV = iUser > -1 ? (parseFloat(row[iUser]) || 0) : 0; 
-        let chanV = iChan > -1 ? String(row[iChan]).trim() : 'TikTok'; 
-        let typeV = iType > -1 ? String(row[iType]).trim() : 'video'; 
-        
-        if(iCost === -1 && iUser > -1) { 
-          let exist = records.find(x => x.date === rawDate && x.region === matched && x.channel === '大盘渠道' && x.contentType === '大盘转化'); 
-          if(exist) { 
-            exist.users = Math.max(exist.users || 0, userV); 
-            merged++; 
-          } else { 
-            records.push({ id: 'imp_' + Date.now() + '_' + i, date: rawDate, region: matched, channel: '大盘渠道', contentType: '大盘转化', count: 0, cost: 0, users: userV, note: '外部导入' }); 
-            added++; 
-          } 
-        } else { 
-          let exist2 = records.find(x => x.date === rawDate && x.region === matched && x.channel === chanV && x.contentType === typeV); 
-          if(exist2) { 
-            exist2.cost = Math.max(exist2.cost || 0, costV); 
-            exist2.users = Math.max(exist2.users || 0, userV); 
-            merged++; 
-          } else { 
-            records.push({ id: 'imp_' + Date.now() + '_' + i, date: rawDate, region: matched, channel: chanV, contentType: typeV, count: 1, cost: costV, users: userV, note: '' }); 
-            added++; 
-          } 
-        } 
-      } 
-      persistRecords(); 
-      renderRecent(); 
-      updateMonthSelectors(); 
-      updateDashboardMonthFilter(); 
-      renderWeekly();
-      toast(`导入完成！新增${added}条，合并${merged}条`); 
-    } catch(err) { 
-      console.error(err); 
-      toast('解析错误：' + err.message); 
-    } 
-  }; 
-  reader.readAsArrayBuffer(file); 
-}
-  function handleFileSelect(e) { 
-  if(e.target.files.length) processFile(e.target.files[0]); 
-}
-  function processFile(file) { 
-  let reader = new FileReader(); 
-  let ext = file.name.split('.').pop().toLowerCase(); 
-  reader.onload = function(e) { 
-    try { 
-      let rows = []; 
-      if(ext === 'csv') { 
-        let text = new TextDecoder('utf-8').decode(e.target.result); 
-        rows = text.split('\n').map(l => l.split(',').map(c => c.trim().replace(/^"|"$/g, ''))); 
-      } else { 
-        let wb = XLSX.read(e.target.result, { type: 'array' }); 
-        rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }); 
-      } 
-      if(rows.length < 2) { toast('无数据'); return; } 
-      
-      let headers = rows[0].map(h => String(h || '').trim().toUpperCase()); 
-      let iDate = headers.findIndex(h => h.includes('日期') || h.includes('DATE')); 
-      let iReg = headers.findIndex(h => h.includes('国家') || h.includes('地区') || h.includes('REGION')); 
-      let iCost = headers.findIndex(h => h.includes('消耗') || h.includes('COST')); 
-      let iUser = headers.findIndex(h => h.includes('新增') || h.includes('用户') || h.includes('USERS')); 
-      let iChan = headers.findIndex(h => h.includes('渠道') || h.includes('CHANNEL')); 
-      let iType = headers.findIndex(h => h.includes('类型') || h.includes('形式') || h.includes('TYPE')); 
-      
-      if(iDate === -1) { toast('未找到日期列'); return; } 
-      
-      let added = 0, merged = 0; 
-      for(let i = 1; i < rows.length; i++) { 
-        let row = rows[i]; 
-        if(!row || !row[iDate]) continue; 
-        
-        let rawDate = String(row[iDate]).trim().split('(')[0].split(' ')[0].replace(/\//g, '-'); 
-        let rawReg = iReg > -1 ? String(row[iReg]).trim().toUpperCase() : 'BR'; 
-        let matched = 'BR'; 
-        for(let k in REGIONS) { 
-          if(REGIONS[k].keywords.some(kw => rawReg.includes(kw))) { 
-            matched = k; 
-            break; 
-          } 
-        } 
-        
-        let costV = iCost > -1 ? (parseFloat(row[iCost]) || 0) : 0; 
-        let userV = iUser > -1 ? (parseFloat(row[iUser]) || 0) : 0; 
-        let chanV = iChan > -1 ? String(row[iChan]).trim() : 'TikTok'; 
-        let typeV = iType > -1 ? String(row[iType]).trim() : 'video'; 
-        
-        if(iCost === -1 && iUser > -1) { 
-          let exist = records.find(x => x.date === rawDate && x.region === matched && x.channel === '大盘渠道' && x.contentType === '大盘转化'); 
-          if(exist) { 
-            exist.users = Math.max(exist.users || 0, userV); 
-            merged++; 
-          } else { 
-            records.push({ id: 'imp_' + Date.now() + '_' + i, date: rawDate, region: matched, channel: '大盘渠道', contentType: '大盘转化', count: 0, cost: 0, users: userV, note: '外部导入' }); 
-            added++; 
-          } 
-        } else { 
-          let exist2 = records.find(x => x.date === rawDate && x.region === matched && x.channel === chanV && x.contentType === typeV); 
-          if(exist2) { 
-            exist2.cost = Math.max(exist2.cost || 0, costV); 
-            exist2.users = Math.max(exist2.users || 0, userV); 
-            merged++; 
-          } else { 
-            records.push({ id: 'imp_' + Date.now() + '_' + i, date: rawDate, region: matched, channel: chanV, contentType: typeV, count: 1, cost: costV, users: userV, note: '' }); 
-            added++; 
-          } 
-        } 
-      } 
-      persistRecords(); 
-      renderRecent(); 
-      updateMonthSelectors(); 
-      updateDashboardMonthFilter(); 
-      renderWeekly();
-      toast(`导入完成！新增${added}条，合并${merged}条`); 
-    } catch(err) { 
-      console.error(err); 
-      toast('解析错误：' + err.message); 
-    } 
-  }; 
-  reader.readAsArrayBuffer(file); 
-}
 
   function initEventListeners() {
     document.getElementById('exportBtn').onclick = () => exportCSV();
@@ -1146,14 +1094,17 @@ function processFile(file) {
     document.getElementById('tabViewsPanel').onclick = () => showView('views_panel');
     document.getElementById('tabTracking').onclick = () => showView('tracking');
     document.getElementById('tabAdd').onclick = () => showView('add');
+    
     document.getElementById('saveRecordBtn').onclick = () => saveRecord();
     document.getElementById('clearFormBtn').onclick = () => clearForm();
     document.getElementById('saveUsersBtn').onclick = () => saveUsersOnly();
-    document.getElementById('clearUserFormBtn').onclick = () => { document.getElementById('f-user-count').value = ''; };
+    document.getElementById('clearUserFormBtn').onclick = () => clearUserForm();
     document.getElementById('clearAllBtn').onclick = () => { if(confirm('清空所有数据？')){ records=[]; persistRecords(); renderRecent(); updateMonthSelectors(); renderWeekly(); toast('已清空'); } };
+    
     document.getElementById('saveVpBtn').onclick = () => saveVpRecord();
     document.getElementById('clearVpBtn').onclick = () => clearVpForm();
     document.getElementById('saveTrackingBtn').onclick = () => saveTrackingRecord();
+    
     document.getElementById('weekly-filter-region').onchange = () => renderWeekly();
     document.getElementById('weekly-filter-range').onchange = () => renderWeekly();
     document.getElementById('compare-month-a').onchange = () => renderMonthlyCompare();
@@ -1161,12 +1112,39 @@ function processFile(file) {
     document.getElementById('compare-month-c').onchange = () => renderMonthlyCompare();
     document.getElementById('compare-month-d').onchange = () => renderMonthlyCompare();
     document.getElementById('dashboard-month-filter').onchange = () => renderDashboard();
+    
     document.querySelectorAll('.rtab').forEach(btn => { btn.onclick = () => setRegion(btn.getAttribute('data-region')); });
+    
     document.getElementById('f-date-mode').onchange = () => toggleDateInputMode();
     document.getElementById('f-user-date-mode').onchange = () => toggleUserDateMode();
-    document.getElementById('vp-mode').onchange = () => { document.getElementById('vp-date-wrapper').innerHTML = '<label>选择目标日期 *</label><input type="date" id="vp-date">'; };
+    document.getElementById('vp-mode').onchange = () => { 
+      let mode = document.getElementById('vp-mode').value;
+      let wrap = document.getElementById('vp-date-wrapper');
+      if(mode === 'single') {
+        wrap.innerHTML = '<label>选择目标日期 *</label><input type="date" id="vp-date">';
+      } else {
+        wrap.innerHTML = '<label>周期范围 *</label><div class="date-range-container"><input type="date" id="vp-start"><input type="date" id="vp-end"></div>';
+      }
+    };
+    
+    let vpUploadBox = document.getElementById('vpUploadBox');
+    if(vpUploadBox) {
+      vpUploadBox.onclick = () => document.getElementById('vp-file-input').click();
+      vpUploadBox.ondragover = (e) => e.preventDefault();
+      vpUploadBox.ondrop = (e) => handleVpDrop(e);
+    }
+    document.getElementById('vp-file-input').onchange = (e) => handleVpFileSelect(e);
+    
+    let fileUploadBox = document.getElementById('fileUploadBox');
+    if(fileUploadBox) {
+      fileUploadBox.onclick = () => document.getElementById('file-input').click();
+      fileUploadBox.ondragover = (e) => e.preventDefault();
+      fileUploadBox.ondrop = (e) => handleDrop(e);
+    }
+    document.getElementById('file-input').onchange = (e) => handleFileSelect(e);
   }
 
+  // 初始化
   loadRecords();
   initEventListeners();
   toggleDateInputMode();
@@ -1177,13 +1155,16 @@ function processFile(file) {
   renderWeekly();
   updateMonthSelectors();
   renderMonthlyCompare();
-  renderRecent();
   renderVpView();
   renderTrackingView();
+  updateTrackingMonthFilter();
+  renderTrackingMonthly();
+  renderRecent();
   
-  window.deleteVpRecord = deleteVpRecord;
   window.editRecord = editRecord;
   window.deleteRecord = deleteRecord;
+  window.deleteVpRecord = deleteVpRecord;
+  window.deleteTrackingRecord = deleteTrackingRecord;
 })();
 </script>
 </body>
