@@ -87,11 +87,12 @@
   margin-bottom: 1rem;
 }
 .table-wrap table {
-  min-width: 600px;
+  min-width: 800px;
 }
 .table-wrap td,
 .table-wrap th {
   white-space: nowrap;
+  padding: 10px 12px;
 }
     .action-btn { background: none; border: none; cursor: pointer; color: var(--text2); font-size: 14px; padding: 4px 8px; border-radius: 4px; transition: all 0.15s; font-family: inherit; }
     .action-btn:hover { background: var(--bg3); }
@@ -323,18 +324,239 @@
   function renderTrackingView() { renderTrackingRegionBlock('TW'); renderTrackingRegionBlock('TR'); }
   function updateTrackingMonthFilter() { let months = new Set(); trackingRecords.forEach(r=>{ let parts = r.range.split(' 至 '); if(parts.length===2){ let m1 = parts[0].match(/(\d{4})-(\d{1,2})/); if(m1) months.add(m1[1]+'-'+String(parseInt(m1[2])).padStart(2,'0')); let m2 = parts[1].match(/(\d{4})-(\d{1,2})/); if(m2) months.add(m2[1]+'-'+String(parseInt(m2[2])).padStart(2,'0')); } else { let m = r.range.match(/(\d{4})-(\d{1,2})/); if(m) months.add(m[1]+'-'+String(parseInt(m[2])).padStart(2,'0')); } }); let sel = document.getElementById('tracking-month-filter'); let cur = sel.value; sel.innerHTML = '<option value="">全部月份</option>'; Array.from(months).sort().forEach(m=>{ let opt = document.createElement('option'); opt.value=m; opt.textContent=m; sel.appendChild(opt); }); if(months.has(cur)) sel.value = cur; }
   function renderTrackingMonthly() { let fm = document.getElementById('tracking-month-filter').value; let data = fm ? trackingRecords.filter(r=>{ let parts = r.range.split(' 至 '); if(parts.length===2){ let sm = parts[0].match(/(\d{4})-(\d{1,2})/); let em = parts[1].match(/(\d{4})-(\d{1,2})/); let fmCheck = fm; if(sm && (sm[1]+'-'+String(parseInt(sm[2])).padStart(2,'0'))===fmCheck) return true; if(em && (em[1]+'-'+String(parseInt(em[2])).padStart(2,'0'))===fmCheck) return true; return false; } else { let m = r.range.match(/(\d{4})-(\d{1,2})/); if(m) return (m[1]+'-'+String(parseInt(m[2])).padStart(2,'0'))===fm; return false; } }) : trackingRecords; let monthly = {}; data.forEach(r=>{ let parts = r.range.split(' 至 '); let monthKey = ''; if(parts.length===2){ let m = parts[0].match(/(\d{4})-(\d{1,2})/); if(m) monthKey = m[1]+'-'+String(parseInt(m[2])).padStart(2,'0'); } else { let m2 = r.range.match(/(\d{4})-(\d{1,2})/); if(m2) monthKey = m2[1]+'-'+String(parseInt(m2[2])).padStart(2,'0'); } if(!monthKey) return; let key = monthKey+'_'+r.region; if(!monthly[key]) monthly[key] = { month:monthKey, region:r.region, spkU:0, totU:0, spkC:0, totC:0 }; monthly[key].spkU += r.spkUsers||0; monthly[key].totU += r.totalUsers||0; monthly[key].spkC += r.spkCost||0; monthly[key].totC += r.totalCost||0; }); let rows = Object.values(monthly).sort((a,b)=>a.month.localeCompare(b.month)); document.getElementById('tracking-monthly-tbody').innerHTML = rows.length===0 ? '<tr><td colspan="10" class="empty">暂无月度汇总数据</td></tr>' : rows.map(m=>{ let spkUserRatio = m.totU>0?((m.spkU/m.totU)*100).toFixed(1)+'%':'—'; let spkCostRatio = m.totC>0?((m.spkC/m.totC)*100).toFixed(1)+'%':'—'; let spkCpr = m.spkU>0?'$'+(m.spkC/m.spkU).toFixed(2):'—'; let totalCpr = m.totU>0?'$'+(m.totC/m.totU).toFixed(2):'—'; return `<tr><td>${m.month}</td><td class="badge b-${m.region}">${REGIONS[m.region]?REGIONS[m.region].name:m.region}</td><td>${m.spkU.toLocaleString()}</td><td>${m.totU.toLocaleString()}</td><td>$${m.spkC.toLocaleString()}</td><td>$${m.totC.toLocaleString()}</td><td>${spkUserRatio}</td><td>${spkCostRatio}</td><td>${spkCpr}</td><td>${totalCpr}</td>`; }).join(''); }
-  function saveRecord() { let id = document.getElementById('f-id').value, mode = document.getElementById('f-date-mode').value; let dateLabel = ''; if(mode==='single') { dateLabel = document.getElementById('f-date').value; if(!dateLabel) { toast('日期不能为空'); return; } } else { let ds = document.getElementById('f-date-start').value, de = document.getElementById('f-date-end').value; if(!ds||!de) { toast('范围有误'); return; } dateLabel = ds+' 至 '+de; } let region = document.getElementById('f-region').value, channel = document.getElementById('f-channel').value, contentType = document.getElementById('f-content-type').value, count = parseFloat(document.getElementById('f-count').value)||1, cost = parseFloat(document.getElementById('f-cost').value)||0, note = document.getElementById('f-note').value.trim(); let dup = records.findIndex(r=>r.date===dateLabel && r.region===region && r.channel===channel && r.contentType===contentType && r.id!==id); if(dup > -1) { records[dup].count = count; records[dup].cost = cost; if(records[dup].users === undefined) records[dup].users = 0; records[dup].note = note; toast('已合并去重'); } else { let payload = { id: id||'r_'+Date.now(), date:dateLabel, region, channel, contentType, count, cost, users:0, note }; if(id) { let idx = records.findIndex(r=>r.id===id); if(idx>-1) records[idx] = payload; else records.push(payload); } else records.push(payload); toast('保存成功'); } persistRecords(); clearForm(); renderRecent(); updateMonthSelectors(); updateDashboardMonthFilter(); }
+  function saveRecord() {
+  var id = document.getElementById('f-id').value;
+  var mode = document.getElementById('f-date-mode').value;
+  var dateLabel = '';
+  
+  // 获取日期
+  if (mode === 'single') {
+    dateLabel = document.getElementById('f-date').value;
+    if (!dateLabel) { toast('日期不能为空'); return; }
+  } else {
+    var ds = document.getElementById('f-date-start').value;
+    var de = document.getElementById('f-date-end').value;
+    if (!ds || !de) { toast('范围有误'); return; }
+    dateLabel = ds + ' 至 ' + de;
+  }
+  
+  // 获取表单数据
+  var region = document.getElementById('f-region').value;
+  var channel = document.getElementById('f-channel').value;
+  var contentType = document.getElementById('f-content-type').value;
+  var count = parseFloat(document.getElementById('f-count').value) || 1;
+  var cost = parseFloat(document.getElementById('f-cost').value) || 0;
+  var note = document.getElementById('f-note').value.trim();
+  
+  // 查找是否存在相同维度的记录（排除当前编辑的记录）
+  var dupIndex = records.findIndex(function (r) {
+    return r.date === dateLabel && 
+           r.region === region && 
+           r.channel === channel && 
+           r.contentType === contentType && 
+           r.id !== id;
+  });
+  
+  if (dupIndex > -1) {
+    // 【修改点】直接覆盖该条记录，保留原有的 id，不叠加
+    var existingRecord = records[dupIndex];
+    existingRecord.count = count;
+    existingRecord.cost = cost;
+    // 注意：users 保持不变（因为推广数据录入不修改新增用户）
+    existingRecord.note = note;
+    toast('已覆盖更新');
+  } else {
+    // 没有重复记录，新增
+    var newRecord = {
+      id: id || 'r_' + Date.now(),
+      date: dateLabel,
+      region: region,
+      channel: channel,
+      contentType: contentType,
+      count: count,
+      cost: cost,
+      users: 0,  // 默认新增用户为0
+      note: note
+    };
+    
+    if (id) {
+      // 编辑模式：更新现有记录
+      var editIndex = records.findIndex(function (r) { return r.id === id; });
+      if (editIndex > -1) {
+        records[editIndex] = newRecord;
+      } else {
+        records.push(newRecord);
+      }
+    } else {
+      // 新增模式
+      records.push(newRecord);
+    }
+    toast('保存成功');
+  }
+  
+  // 保存并刷新
+  persistRecords();
+  clearForm();
+  renderRecent();
+  updateMonthSelectors();
+  updateDashboardMonthFilter();
+}
   function editRecord(id) { let r = records.find(x=>x.id===id); if(!r) return; showView('add'); document.getElementById('f-id').value = r.id; if(r.date.includes(' 至 ')) { document.getElementById('f-date-mode').value = 'range'; toggleDateInputMode(); let parts = r.date.split(' 至 '); document.getElementById('f-date-start').value = parts[0]; document.getElementById('f-date-end').value = parts[1]; } else { document.getElementById('f-date-mode').value = 'single'; toggleDateInputMode(); document.getElementById('f-date').value = r.date; } document.getElementById('f-region').value = r.region; document.getElementById('f-channel').value = r.channel; document.getElementById('f-content-type').value = r.contentType; document.getElementById('f-count').value = r.count; document.getElementById('f-cost').value = r.cost; document.getElementById('f-note').value = r.note||''; document.getElementById('form-title').innerHTML = '<i class="ti ti-edit"></i> 修改流水'; document.getElementById('edit-indicator').style.display = 'inline-block'; }
   function clearForm() { document.getElementById('f-id').value = ''; ['f-count','f-cost','f-note'].forEach(id=>{ if(document.getElementById(id)) document.getElementById(id).value = ''; }); document.getElementById('f-date-mode').value = 'single'; toggleDateInputMode(); document.getElementById('form-title').innerHTML = '<i class="ti ti-ballpen"></i> 单条数据录入'; document.getElementById('edit-indicator').style.display = 'none'; }
   function deleteRecord(id) { if(confirm('确定删除？')) { records = records.filter(r=>r.id!==id); persistRecords(); renderRecent(); updateMonthSelectors(); updateDashboardMonthFilter(); toast('已删除'); } }
-  function renderRecent() { let list = records.slice().sort((a,b)=>b.date.localeCompare(a.date)); document.getElementById('recent-tbody').innerHTML = list.slice(0,10).map(r=>`<tr><td>${r.date}</td><td class="badge b-${r.region}">${REGIONS[r.region]?REGIONS[r.region].name:r.region}</td><td>${r.channel}</td><td>${r.contentType}</td><td>${r.count}</td><td>$${r.cost}</td><td>${r.users||0}</td><td><button class="action-btn edit" onclick="editRecord('${r.id}')"><i class="ti ti-edit"></i></button><button class="action-btn del" onclick="deleteRecord('${r.id}')"><i class="ti ti-trash"></i></button></td>`).join(''); }
-  function saveUsersOnly() { let mode = document.getElementById('f-user-date-mode').value, dateLabel = ''; if(mode==='single') { dateLabel = document.getElementById('f-user-date').value; if(!dateLabel) { toast('请选择日期'); return; } } else { let ds = document.getElementById('f-user-date-start').value, de = document.getElementById('f-user-date-end').value; if(!ds||!de) { toast('请选择日期范围'); return; } dateLabel = ds+' 至 '+de; } let region = document.getElementById('f-user-region').value, users = parseFloat(document.getElementById('f-user-count').value)||0, note = document.getElementById('f-user-note').value.trim(); if(users<=0) { toast('请输入新增用户量'); return; } let exist = records.find(r=>r.date===dateLabel && r.region===region && r.channel==='大盘渠道' && r.contentType==='大盘转化'); if(exist) { exist.users = Math.max(exist.users||0, users); if(note) exist.note = note; toast('已更新用户新增数据'); } else { records.push({ id:'r_'+Date.now(), date:dateLabel, region, channel:'大盘渠道', contentType:'大盘转化', count:0, cost:0, users:users, note:note||'纯用户新增' }); toast('用户新增数据已保存'); } persistRecords(); clearUserForm(); renderRecent(); updateMonthSelectors(); updateDashboardMonthFilter(); }
+  function renderRecent() { 
+  let list = records.slice().sort((a,b)=>b.date.localeCompare(a.date)); 
+  document.getElementById('recent-tbody').innerHTML = list.slice(0,10).map(r=>`
+    <tr>
+      <td style="white-space: nowrap;">${r.date}</td>
+      <td style="white-space: nowrap;"><span class="badge b-${r.region}">${REGIONS[r.region]?REGIONS[r.region].name:r.region}</span></td>
+      <td style="white-space: nowrap;">${r.channel}</td>
+      <td style="white-space: nowrap;">${r.contentType}</td>
+      <td style="white-space: nowrap; text-align: center;">${r.count}</td>
+      <td style="white-space: nowrap;">$${r.cost}</td>
+      <td style="white-space: nowrap; text-align: center;">${r.users||0}</td>
+      <td style="white-space: nowrap;"><button class="action-btn edit" onclick="editRecord('${r.id}')"><i class="ti ti-edit"></i></button><button class="action-btn del" onclick="deleteRecord('${r.id}')"><i class="ti ti-trash"></i></button></td>
+    </tr>
+  `).join(''); 
+}
+  let exist = records.find(r=>r.date===dateLabel && r.region===region && r.channel==='大盘渠道' && r.contentType==='大盘转化');
+if(exist) {
+  // 直接覆盖，不叠加，不取最大值
+  exist.users = users;
+  exist.note = note || exist.note;
+  toast('已覆盖更新用户新增数据');
+} else { records.push({ id:'r_'+Date.now(), date:dateLabel, region, channel:'大盘渠道', contentType:'大盘转化', count:0, cost:0, users:users, note:note||'纯用户新增' }); toast('用户新增数据已保存'); } persistRecords(); clearUserForm(); renderRecent(); updateMonthSelectors(); updateDashboardMonthFilter(); }
   function saveCostOnly() { let mode = document.getElementById('f-cost-date-mode').value, dateLabel = ''; if(mode==='single') { dateLabel = document.getElementById('f-cost-date').value; if(!dateLabel) { toast('请选择日期'); return; } } else { let ds = document.getElementById('f-cost-date-start').value, de = document.getElementById('f-cost-date-end').value; if(!ds||!de) { toast('请选择日期范围'); return; } dateLabel = ds+' 至 '+de; } let region = document.getElementById('f-cost-region').value, channel = document.getElementById('f-cost-channel').value, contentType = document.getElementById('f-cost-content-type').value, cost = parseFloat(document.getElementById('f-cost-only').value)||0, note = document.getElementById('f-cost-note').value.trim(); if(cost<=0) { toast('请输入消耗金额'); return; } let exist = records.find(r=>r.date===dateLabel && r.region===region && r.channel===channel && r.contentType===contentType); if(exist) { exist.cost = cost; if(note) exist.note = note; toast('已更新消耗数据'); } else { records.push({ id:'r_'+Date.now(), date:dateLabel, region, channel, contentType, count:0, cost:cost, users:0, note:note||'纯消耗录入' }); toast('消耗数据已保存'); } persistRecords(); clearCostForm(); renderRecent(); updateMonthSelectors(); updateDashboardMonthFilter(); }
   function clearUserForm() { document.getElementById('f-user-count').value = ''; document.getElementById('f-user-note').value = ''; }
   function clearCostForm() { document.getElementById('f-cost-only').value = ''; document.getElementById('f-cost-note').value = ''; }
   function handleDrop(e) { e.preventDefault(); if(e.dataTransfer.files.length) processFile(e.dataTransfer.files[0]); }
   function handleFileSelect(e) { if(e.target.files.length) processFile(e.target.files[0]); }
-  function processFile(file) { let reader = new FileReader(), ext = file.name.split('.').pop().toLowerCase(); reader.onload = function(e) { try { let rows = []; if(ext === 'csv') { let text = new TextDecoder('utf-8').decode(e.target.result); rows = text.split('\n').map(l=>l.split(',').map(c=>c.trim().replace(/^"|"$/g,''))); } else { let wb = XLSX.read(e.target.result, { type:'array' }); rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header:1 }); } if(rows.length<2) { toast('无数据'); return; } let headers = rows[0].map(h=>String(h||'').trim().toUpperCase()); let iDate = headers.findIndex(h=>h.includes('日期')||h.includes('DATE')); let iReg = headers.findIndex(h=>h.includes('国家')||h.includes('地区')||h.includes('REGION')); let iCost = headers.findIndex(h=>h.includes('消耗')||h.includes('COST')); let iUser = headers.findIndex(h=>h.includes('新增')||h.includes('用户')||h.includes('USERS')); let iChan = headers.findIndex(h=>h.includes('渠道')||h.includes('CHANNEL')); let iType = headers.findIndex(h=>h.includes('类型')||h.includes('形式')||h.includes('TYPE')); if(iDate===-1) { toast('未找到日期列'); return; } let added=0,merged=0; for(let i=1;i<rows.length;i++){ let row = rows[i]; if(!row || !row[iDate]) continue; let rawDate = String(row[iDate]).trim().split('(')[0].split(' ')[0].replace(/\//g,'-'); let rawReg = iReg>-1?String(row[iReg]).trim().toUpperCase():'BR'; let matched = 'BR'; for(let k in REGIONS) if(REGIONS[k].keywords.some(kw=>rawReg.includes(kw))) { matched=k; break; } let costV = iCost>-1?parseFloat(row[iCost])||0:0, userV = iUser>-1?parseFloat(row[iUser])||0:0; let chanV = iChan>-1?String(row[iChan]).trim():'TikTok', typeV = iType>-1?String(row[iType]).trim():'video'; if(iCost===-1 && iUser>-1){ let exist = records.find(x=>x.date===rawDate && x.region===matched && x.channel==='大盘渠道'); if(exist) { exist.users = Math.max(exist.users||0, userV); merged++; } else { records.push({ id:'imp_'+Date.now(), date:rawDate, region:matched, channel:'大盘渠道', contentType:'大盘转化', count:0, cost:0, users:userV, note:'外部导入' }); added++; } } else { let exist2 = records.find(x=>x.date===rawDate && x.region===matched && x.channel===chanV && x.contentType===typeV); if(exist2) { exist2.cost = Math.max(exist2.cost||0, costV); exist2.users = Math.max(exist2.users||0, userV); merged++; } else { records.push({ id:'imp_'+Date.now(), date:rawDate, region:matched, channel:chanV, contentType:typeV, count:1, cost:costV, users:userV, note:'' }); added++; } } } persistRecords(); renderRecent(); updateMonthSelectors(); updateDashboardMonthFilter(); toast(`导入完成！新增${added}条，合并${merged}条`); } catch(err) { console.error(err); toast('解析错误'); } }; reader.readAsArrayBuffer(file); }
+  function processFile(file) {
+  let reader = new FileReader();
+  let ext = file.name.split('.').pop().toLowerCase();
+  
+  reader.onload = function(e) {
+    try {
+      let rows = [];
+      if (ext === 'csv') {
+        let text = new TextDecoder('utf-8').decode(e.target.result);
+        rows = text.split('\n').map(l => l.split(',').map(c => c.trim().replace(/^"|"$/g, '')));
+      } else {
+        let wb = XLSX.read(e.target.result, { type: 'array' });
+        rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
+      }
+      
+      if (rows.length < 2) {
+        toast('无数据');
+        return;
+      }
+      
+      let headers = rows[0].map(h => String(h || '').trim().toUpperCase());
+      let iDate = headers.findIndex(h => h.includes('日期') || h.includes('DATE'));
+      let iReg = headers.findIndex(h => h.includes('国家') || h.includes('地区') || h.includes('REGION'));
+      let iCost = headers.findIndex(h => h.includes('消耗') || h.includes('COST'));
+      let iUser = headers.findIndex(h => h.includes('新增') || h.includes('用户') || h.includes('USERS'));
+      let iChan = headers.findIndex(h => h.includes('渠道') || h.includes('CHANNEL'));
+      let iType = headers.findIndex(h => h.includes('类型') || h.includes('形式') || h.includes('TYPE'));
+      
+      if (iDate === -1) {
+        toast('未找到日期列');
+        return;
+      }
+      
+      let added = 0, merged = 0;
+      
+      for (let i = 1; i < rows.length; i++) {
+        let row = rows[i];
+        if (!row || !row[iDate]) continue;
+        
+        // 解析日期
+        let rawDate = String(row[iDate]).trim().split('(')[0].split(' ')[0].replace(/\//g, '-');
+        
+        // 解析地区
+        let rawReg = iReg > -1 ? String(row[iReg]).trim().toUpperCase() : 'BR';
+        let matched = 'BR';
+        for (let k in REGIONS) {
+          if (REGIONS[k].keywords.some(kw => rawReg.includes(kw))) {
+            matched = k;
+            break;
+          }
+        }
+        
+        // 解析数值
+        let costV = iCost > -1 ? (parseFloat(row[iCost]) || 0) : 0;
+        let userV = iUser > -1 ? (parseFloat(row[iUser]) || 0) : 0;
+        let chanV = iChan > -1 ? String(row[iChan]).trim() : 'TikTok';
+        let typeV = iType > -1 ? String(row[iType]).trim() : 'video';
+        
+        // 情况1：只有用户新增列，没有消耗列（纯用户导入）
+        if (iCost === -1 && iUser > -1) {
+          let exist = records.find(x => x.date === rawDate && x.region === matched && x.channel === '大盘渠道' && x.contentType === '大盘转化');
+          if (exist) {
+            // 直接覆盖
+            exist.users = userV;
+            exist.note = '外部导入覆盖';
+            merged++;
+          } else {
+            records.push({
+              id: 'imp_' + Date.now() + '_' + i,
+              date: rawDate,
+              region: matched,
+              channel: '大盘渠道',
+              contentType: '大盘转化',
+              count: 0,
+              cost: 0,
+              users: userV,
+              note: '外部导入'
+            });
+            added++;
+          }
+        } 
+        // 情况2：有消耗数据
+        else {
+          let exist2 = records.find(x => 
+            x.date === rawDate && 
+            x.region === matched && 
+            x.channel === chanV && 
+            x.contentType === typeV
+          );
+          if (exist2) {
+            // 直接覆盖
+            exist2.cost = costV;
+            exist2.users = userV;
+            exist2.note = '外部导入覆盖';
+            merged++;
+          } else {
+            records.push({
+              id: 'imp_' + Date.now() + '_' + i,
+              date: rawDate,
+              region: matched,
+              channel: chanV,
+              contentType: typeV,
+              count: 1,
+              cost: costV,
+              users: userV,
+              note: ''
+            });
+            added++;
+          }
+        }
+      }
+      
+      persistRecords();
+      renderRecent();
+      updateMonthSelectors();
+      updateDashboardMonthFilter();
+      toast(`导入完成！新增${added}条，覆盖更新${merged}条`);
+      
+    } catch (err) {
+      console.error(err);
+      toast('解析错误：' + err.message);
+    }
+  };
+  
+  reader.readAsArrayBuffer(file);
+}
   function exportCSV() { let h = '日期,地区,渠道,内容形式,推广数量,消耗(USD),新增用户,备注'; let rows = records.map(r=>`${r.date},${r.region},${r.channel},${r.contentType},${r.count},${r.cost},${r.users||0},"${r.note||''}"`); let a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\uFEFF'+h+'\n'+rows.join('\n')], {type:'text/csv;charset=utf-8'})); a.download = 'KOL_Export.csv'; a.click(); }
   loadRecords(); window.onload = () => { updateDashboardMonthFilter(); renderDashboard(); updateTrackingMonthFilter(); renderTrackingView(); updateWeeklyFilters(); renderWeekly(); updateMonthSelectors(); renderMonthlyCompare(); toggleDateInputMode(); toggleUserDateMode(); toggleCostDateMode(); renderRecent(); };
 </script>
