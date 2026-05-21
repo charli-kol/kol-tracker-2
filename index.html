@@ -582,7 +582,7 @@
 <button class="btn btn-primary" onclick="saveRecord()">保存推广数据</button>
 </div>
 
-<div class="section"><div class="section-header">👤 每日新增用户录入</div>
+<div class="section"><div class="section-header">👤 新增用户录入</div>
 <div class="form-grid">
 <div class="form-group"><label>日期模式</label><select id="f-user-date-mode" onchange="toggleUserDateMode()"><option value="single">单日</option><option value="range">周期</option></select></div>
 <div class="form-group" id="user-date-wrapper"><label>日期</label><input type="date" id="f-user-date"></div>
@@ -593,37 +593,8 @@
 <button class="btn btn-primary" style="background:#10b981;border-color:#10b981;" onclick="saveUsersOnly()">保存新增用户</button>
 </div>
 
-<div class="section"><div class="section-header">📋 最近流水 (前10条)</div><div class="table-wrap"><table><thead><tr><th>日期</th><th>地区</th><th>渠道</th><th>形式</th><th>数量</th><th>消耗</th><th>新增</th><th>操作</th></tr></thead><tbody id="recent-tbody"></tbody></table></div></div>
+<div class="section"><div class="section-header">📋 最近录入记录</div><div class="table-wrap"><table><thead><tr><th>日期</th><th>地区</th><th>渠道</th><th>形式</th><th>数量</th><th>消耗</th><th>新增</th><th>备注</th><th>操作</th></tr></thead><tbody id="recent-tbody"></tbody></table></div></div>
 </div>
-
-    <div class="section"><div class="section-header">👤 每日新增用户录入</div>
-      <div class="form-grid">
-        <div class="form-group"><label>日期模式</label><select id="f-user-date-mode" onchange="toggleUserDateMode()"><option value="single">单日</option><option value="range">周期</option></select></div>
-        <div class="form-group" id="user-date-wrapper"><label>日期</label><input type="date" id="f-user-date"></div>
-        <div class="form-group"><label>地区</label><select id="f-user-region"><option value="TR">土耳其</option><option value="TW">台湾</option><option value="ES">西语</option><option value="BR">巴西</option></select></div>
-        <div class="form-group"><label>新增用户量</label><input type="number" id="f-user-count" placeholder="0"></div>
-        <div class="form-group"><label>备注</label><input type="text" id="f-user-note"></div>
-      </div>
-      <button class="btn btn-primary" style="background:#10b981;border-color:#10b981;" onclick="saveUsersOnly()">保存新增用户</button>
-    </div>
-
-    <div class="section"><div class="section-header">💵 每日消耗录入</div>
-      <div class="form-grid">
-        <div class="form-group"><label>日期模式</label><select id="f-cost-date-mode" onchange="toggleCostDateMode()"><option value="single">单日</option><option value="range">周期</option></select></div>
-        <div class="form-group" id="cost-date-wrapper"><label>日期</label><input type="date" id="f-cost-date"></div>
-        <div class="form-group"><label>地区</label><select id="f-cost-region"><option value="TR">土耳其</option><option value="TW">台湾</option><option value="ES">西语</option><option value="BR">巴西</option></select></div>
-        <div class="form-group"><label>渠道</label><select id="f-cost-channel"><option value="TikTok">TikTok</option><option value="YouTube">YouTube</option><option value="Instagram">Instagram</option></select></div>
-        <div class="form-group"><label>内容形式</label><select id="f-cost-content-type"><option value="video">video</option><option value="reel">reel</option><option value="story">story</option><option value="comment">comment</option></select></div>
-        <div class="form-group"><label>消耗(USD)</label><input type="number" id="f-cost-only" placeholder="0" step="0.01"></div>
-        <div class="form-group"><label>备注</label><input type="text" id="f-cost-note"></div>
-      </div>
-      <button class="btn btn-primary" style="background:#f59e0b;border-color:#f59e0b;" onclick="saveCostOnly()">保存消耗</button>
-    </div>
-
-    <div class="section"><div class="section-header">📋 最近流水 (前10条)</div><div class="table-wrap"><table><thead><tr><th>日期</th><th>地区</th><th>渠道</th><th>形式</th><th>数量</th><th>消耗</th><th>新增</th><th>操作</th></tr></thead><tbody id="recent-tbody"></tbody></table></div></div>
-  </div>
-</div>
-<div class="toast" id="toast"></div>
 
 <script>
   var REGIONS={TR:{name:'土耳其',flag:'🇹🇷',color:'#0ca678',keywords:['土耳其','TR','TURKEY']},TW:{name:'台湾',flag:'🔷',color:'#f76707',keywords:['台湾','TW','TAIWAN']},ES:{name:'西语',flag:'🌎',color:'#4c6ef5',keywords:['西语','ES','SPANISH']},BR:{name:'巴西',flag:'🇧🇷',color:'#d6336c',keywords:['巴西','BR','BRAZIL']}};
@@ -941,22 +912,12 @@
   if(mode==='single'){dl=document.getElementById('f-user-date').value;if(!dl){toast('请选择日期');return;}}
   else{var ds=document.getElementById('f-user-date-start').value,de=document.getElementById('f-user-date-end').value;if(!ds||!de){toast('周期不完整');return;}dl=ds+' 至 '+de;}
   var reg=document.getElementById('f-user-region').value,users=parseFloat(document.getElementById('f-user-count').value)||0;
+  var note=document.getElementById('f-user-note').value.trim()||'纯用户新增';
   if(users<=0){toast('请输入新增用户量');return;}
-  // 自动覆盖：如果存在相同日期+地区+大盘渠道的记录，直接覆盖
   var ex=records.find(function(r){return r.date===dl&&r.region===reg&&r.channel==='大盘渠道'&&r.contentType==='大盘转化';});
-  if(ex){
-    ex.users=users;
-    toast('已覆盖旧记录');
-  } else {
-    records.push({id:'r_'+Date.now(),date:dl,region:reg,channel:'大盘渠道',contentType:'大盘转化',count:0,cost:0,users:users,note:document.getElementById('f-user-note').value.trim()||'纯用户新增'});
-    toast('保存成功');
-  }
-  persistRecords();
-  document.getElementById('f-user-count').value='';
-  document.getElementById('f-user-note').value='';
-  renderRecent();
-  updateMonthSelectors();
-  updateDashboardMonthFilter();
+  if(ex){ex.users=users;ex.note=note;toast('已覆盖');}
+  else{records.push({id:'r_'+Date.now(),date:dl,region:reg,channel:'大盘渠道',contentType:'大盘转化',count:0,cost:0,users:users,note:note});toast('保存成功');}
+  persistRecords();document.getElementById('f-user-count').value='';document.getElementById('f-user-note').value='';renderRecent();updateMonthSelectors();updateDashboardMonthFilter();
 }
 
   function saveRecord(){
@@ -981,7 +942,13 @@
     document.getElementById('f-content-type').value=r.contentType;document.getElementById('f-count').value=r.count;
     document.getElementById('f-cost').value=r.cost;document.getElementById('f-note').value=r.note||'';
   }
-
+function renderRecent(){
+  var list=records.slice().sort(function(a,b){return b.id.localeCompare(a.id);});
+  var html=list.slice(0,10).map(function(r){
+    return'<tr><td>'+r.date+'</td><td><span class="badge b-'+r.region+'">'+(REGIONS[r.region]?REGIONS[r.region].name:r.region)+'</span></td><td>'+r.channel+'</td><td>'+r.contentType+'</td><td>'+r.count+'</td><td>$'+r.cost.toFixed(2)+'</td><td>'+r.users+'</td><td>'+(r.note||'')+'</td><td><button class="action-btn edit" onclick="editRecord(\''+r.id+'\')">✎</button><button class="action-btn del" onclick="if(confirm(\'删除？\')){records=records.filter(function(x){return x.id!==\''+r.id+'\';});persistRecords();renderRecent();updateMonthSelectors();updateDashboardMonthFilter();}">✕</button></td></tr>';
+  }).join('');
+  document.getElementById('recent-tbody').innerHTML=html||'<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text2);">暂无数据，请先录入</td></tr>';
+}
   function handleFileSelect(e){if(e.target.files.length)processFile(e.target.files[0]);}
   function processFile(file){
     var reader=new FileReader();reader.onload=function(e){
