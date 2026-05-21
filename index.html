@@ -503,28 +503,98 @@
     var tc = sum(sub, 'cost'), tu = sum(sub, 'users');
     return { count: sum(sub, 'count'), cost: tc, users: tu, views: vw, cpa: tu > 0 ? tc / tu : null };
   }
-  function renderMonthlyCompare() {
-    var ma = document.getElementById('compare-month-a').value, mb = document.getElementById('compare-month-b').value;
-    var mc = document.getElementById('compare-month-c').value, md = document.getElementById('compare-month-d').value;
-    var body = document.getElementById('monthly-compare-body');
-    if (!ma && !mb && !mc && !md) { body.innerHTML = '<div class="empty">请选择对比月份</div>'; return; }
-    var h = '';
-    Object.keys(REGIONS).forEach(function (r) {
-      var sa = getMonthStats(ma, r), sb = getMonthStats(mb, r), sc = getMonthStats(mc, r), sd = getMonthStats(md, r);
-      if (sa.cost === 0 && sb.cost === 0 && sc.cost === 0 && sd.cost === 0 && sa.views === 0) return;
-      h += '<div class="monthly-section"><div class="monthly-region-header"><span class="monthly-region-title">' + REGIONS[r].flag + ' ' + REGIONS[r].name + '</span></div>';
-      function cr(s, p) {
-        return '<div class="compare-grid"><div class="compare-card"><div class="compare-card-title">' + (p ? '对比月' : '基准月') + '</div>' + ['总消耗(USD)', '转化新增用户', '独立大盘播放总量', '核算 CPA'].map(function (l, i) {
-          var vals = [s.cost, s.users, s.views, s.cpa ? '$' + s.cpa.toFixed(2) : '—'];
-          return '<div class="compare-row"><span class="label">' + l + '</span><span class="value">' + (typeof vals[i] === 'number' ? vals[i].toLocaleString() : vals[i]) + ' ' + (p ? fmtDiff(vals[i], [p.cost, p.users, p.views, p.cpa ? p.cpa : null][i]) : '') + '</span></div>';
-        }).join('') + '</div></div>';
+  function buildCompareRows(s, p, showDiff) {
+    var rows = [
+      { label: '总消耗 (USD)', value: '$' + s.cost.toLocaleString(), current: s.cost, previous: p ? p.cost : null },
+      { label: '转化新增用户', value: s.users.toLocaleString() + ' 人', current: s.users, previous: p ? p.users : null },
+      { label: '独立大盘播放总量', value: s.views.toLocaleString() + ' 次', current: s.views, previous: p ? p.views : null },
+      { label: '核算 CPA', value: s.cpa ? '$' + s.cpa.toFixed(2) : '—', current: s.cpa, previous: p && p.cpa ? p.cpa : null }
+    ];
+    
+    var html = '';
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      var diffHtml = '';
+      if (showDiff && p && row.previous !== null && row.current !== null && row.previous !== 0) {
+        var change = ((row.current - row.previous) / row.previous * 100);
+        var cls = change >= 0 ? 'up' : 'dn';
+        var arrow = change >= 0 ? '↑' : '↓';
+        diffHtml = ' <span class="diff-badge ' + cls + '">' + arrow + Math.abs(change).toFixed(1) + '%</span>';
       }
-      if (ma && mb) { h += '<div class="compare-block-title">对比组1 (' + ma + ' vs ' + mb + ')</div>' + cr(sb, sa); }
-      if (mc && md) { h += '<div class="compare-block-title" style="color:#10b981;border-left-color:#10b981;">对比组2 (' + mc + ' vs ' + md + ')</div>' + cr(sd, sc); }
+      html += '<div class="compare-row"><span class="label">' + row.label + '</span><span class="value">' + row.value + diffHtml + '</span></div>';
+    }
+    return html;
+}
+
+  function renderMonthlyCompare() {
+    var ma = document.getElementById('compare-month-a').value;
+    var mb = document.getElementById('compare-month-b').value;
+    var mc = document.getElementById('compare-month-c').value;
+    var md = document.getElementById('compare-month-d').value;
+    var body = document.getElementById('monthly-compare-body');
+    
+    if (!ma && !mb && !mc && !md) { 
+      body.innerHTML = '<div class="empty">请自由定制并选取对比组月份</div>'; 
+      return; 
+    }
+    
+    var h = '';
+    
+    Object.keys(REGIONS).forEach(function (r) {
+      var sa = getMonthStats(ma, r);
+      var sb = getMonthStats(mb, r);
+      var sc = getMonthStats(mc, r);
+      var sd = getMonthStats(md, r);
+      
+      var hasData = false;
+      if (ma && (sa.cost > 0 || sa.users > 0 || sa.views > 0)) hasData = true;
+      if (mb && (sb.cost > 0 || sb.users > 0 || sb.views > 0)) hasData = true;
+      if (mc && (sc.cost > 0 || sc.users > 0 || sc.views > 0)) hasData = true;
+      if (md && (sd.cost > 0 || sd.users > 0 || sd.views > 0)) hasData = true;
+      
+      if (!hasData) return;
+      
+      h += '<div class="monthly-section">';
+      h += '<div class="monthly-region-header"><span class="monthly-region-title"><span>' + REGIONS[r].flag + '</span><span>' + REGIONS[r].name + '</span></span></div>';
+      
+      if (ma && mb) {
+        h += '<div class="compare-block-title"><i class="ti ti-chart-bar"></i> 对比组 1 (' + ma + ' vs ' + mb + ')</div>';
+        h += '<div class="compare-grid">';
+        h += '<div class="compare-card"><div class="compare-card-title">基准月: ' + ma + '</div>' + buildCompareRows(sa, null, false) + '</div>';
+        h += '<div class="compare-card"><div class="compare-card-title">对比月: ' + mb + '</div>' + buildCompareRows(sb, sa, true) + '</div>';
+        h += '</div>';
+      }
+      
+      if (mc && md) {
+        h += '<div class="compare-block-title" style="color:#10b981;border-left-color:#10b981;"><i class="ti ti-chart-bar"></i> 对比组 2 (' + mc + ' vs ' + md + ')</div>';
+        h += '<div class="compare-grid">';
+        h += '<div class="compare-card"><div class="compare-card-title">基准月: ' + mc + '</div>' + buildCompareRows(sc, null, false) + '</div>';
+        h += '<div class="compare-card"><div class="compare-card-title">对比月: ' + md + '</div>' + buildCompareRows(sd, sc, true) + '</div>';
+        h += '</div>';
+      }
+      
+      if (ma && !mb) {
+        h += '<div class="compare-block-title"><i class="ti ti-chart-bar"></i> 月份数据: ' + ma + '</div>';
+        h += '<div class="compare-grid"><div class="compare-card"><div class="compare-card-title">' + ma + '</div>' + buildCompareRows(sa, null, false) + '</div></div>';
+      }
+      if (mb && !ma) {
+        h += '<div class="compare-block-title"><i class="ti ti-chart-bar"></i> 月份数据: ' + mb + '</div>';
+        h += '<div class="compare-grid"><div class="compare-card"><div class="compare-card-title">' + mb + '</div>' + buildCompareRows(sb, null, false) + '</div></div>';
+      }
+      if (mc && !md) {
+        h += '<div class="compare-block-title" style="color:#10b981;border-left-color:#10b981;"><i class="ti ti-chart-bar"></i> 月份数据: ' + mc + '</div>';
+        h += '<div class="compare-grid"><div class="compare-card"><div class="compare-card-title">' + mc + '</div>' + buildCompareRows(sc, null, false) + '</div></div>';
+      }
+      if (md && !mc) {
+        h += '<div class="compare-block-title" style="color:#10b981;border-left-color:#10b981;"><i class="ti ti-chart-bar"></i> 月份数据: ' + md + '</div>';
+        h += '<div class="compare-grid"><div class="compare-card"><div class="compare-card-title">' + md + '</div>' + buildCompareRows(sd, null, false) + '</div></div>';
+      }
+      
       h += '</div>';
     });
-    body.innerHTML = h || '<div class="empty">无有效数据</div>';
-  }
+    
+    body.innerHTML = h || '<div class="empty">所选月份当前无有效归档台账</div>';
+}
 
   function saveVpRecord() {
     var mode = document.getElementById('vp-mode').value, region = document.getElementById('vp-region').value;
