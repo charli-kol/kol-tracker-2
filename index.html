@@ -244,7 +244,61 @@
   let charts = {};
   let vpCurrentPage = 1;
   const VP_PAGE_SIZE = 10;
+// ========== 通用日期解析函数（支持多种格式）==========
+function parseDate(dateStr) {
+  if(!dateStr) return null;
+  
+  // 已经是 YYYY-MM-DD 格式
+  if(/^\d{4}-\d{1,2}-\d{1,2}$/.test(dateStr)) {
+    let d = new Date(dateStr);
+    if(!isNaN(d.getTime())) return d;
+  }
+  
+  // 处理 YYYY/MM/DD 或 YYYY.MM.DD
+  let match1 = dateStr.match(/(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})/);
+  if(match1) {
+    let year = parseInt(match1[1]);
+    let month = parseInt(match1[2]) - 1;
+    let day = parseInt(match1[3]);
+    let d = new Date(year, month, day);
+    if(!isNaN(d.getTime())) return d;
+  }
+  
+  // 处理 DD/MM/YYYY 或 DD.MM.YYYY (日/月/年)
+  let match2 = dateStr.match(/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})/);
+  if(match2) {
+    let day = parseInt(match2[1]);
+    let month = parseInt(match2[2]) - 1;
+    let year = parseInt(match2[3]);
+    let d = new Date(year, month, day);
+    if(!isNaN(d.getTime())) return d;
+  }
+  
+  // 最后尝试原生解析
+  let d = new Date(dateStr);
+  if(!isNaN(d.getTime())) return d;
+  
+  return null;
+}
 
+function toStandardDate(dateStr) {
+  if(!dateStr) return dateStr;
+  let d = parseDate(dateStr);
+  if(!d) return dateStr;
+  let year = d.getFullYear();
+  let month = String(d.getMonth() + 1).padStart(2, '0');
+  let day = String(d.getDate()).padStart(2, '0');
+  return year + '-' + month + '-' + day;
+}
+
+function getWeekStrFromDate(dateStr) {
+  let d = parseDate(dateStr);
+  if(!d || isNaN(d.getTime())) return '未知周';
+  let jan1 = new Date(d.getFullYear(), 0, 1);
+  let weekNum = Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
+  return d.getFullYear() + '-W' + String(weekNum).padStart(2, '0');
+}
+// ========== 日期函数结束 ==========
   function toast(msg) { let el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show'); clearTimeout(window._toastTimer); window._toastTimer = setTimeout(() => el.classList.remove('show'), 3000); }
   function persistRecords() { localStorage.setItem('kol_records_v10', JSON.stringify(records)); }
   function persistTrackingRecords() { localStorage.setItem('kol_tracking_v10', JSON.stringify(trackingRecords)); }
@@ -258,7 +312,10 @@
     } catch(e) { records = []; trackingRecords = []; vpRecords = []; }
   }
 
-  function getWeekStr(ds) { let d = new Date(ds.includes(' 至 ') ? ds.split(' 至 ')[0] : ds); if(isNaN(d)) return '未知周'; let jan1 = new Date(d.getFullYear(),0,1); return d.getFullYear() + '-W' + String(Math.ceil(((d - jan1)/86400000 + jan1.getDay() + 1)/7)).padStart(2,'0'); }
+  function getWeekStr(ds) { 
+  let dateStr = ds.includes(' 至 ') ? ds.split(' 至 ')[0] : ds;
+  return getWeekStrFromDate(dateStr);
+}
   function getWeekRangeLabel(weekStr) { try { let [y,w] = weekStr.split('-W').map(Number); let jan4 = new Date(y,0,4); let dow = jan4.getDay()||7; let mon = new Date(jan4 - (dow-1)*86400000 + (w-1)*7*86400000); let sun = new Date(mon.getTime()+6*86400000); return `${String(mon.getMonth()+1).padStart(2,'0')}/${String(mon.getDate()).padStart(2,'0')}-${String(sun.getMonth()+1).padStart(2,'0')}/${String(sun.getDate()).padStart(2,'0')}`; } catch(e) { return weekStr; } }
   function sum(arr,key) { return arr.reduce((s,r)=> s + (parseFloat(r[key])||0),0); }
   function fmtDiff(a,b) { if(b===undefined || b===null) return ''; let d = b===0?0:Math.round((a-b)/b*100); return '<span class="diff-badge '+(d>=0?'up':'dn')+'">'+(d>=0?'↑':'↓')+Math.abs(d)+'%</span>'; }
@@ -350,8 +407,11 @@
   }
 
   function renderWeekly() { 
-  let wf = document.getElementById('weekly-filter-range').value; 
-  let rf = document.getElementById('weekly-filter-region').value; 
+  if(!records || records.length === 0) {
+    document.getElementById('weekly-tbody').innerHTML = '<tr><td colspan="7" class="empty">暂无数据，请先录入数据</td><td style="display:none;"></td><td style="display:none;"></td><td style="display:none;"></td><td style="display:none;"></td><td style="display:none;"></td><td style="display:none;"></td></tr>';
+    return;
+  }
+  let wf = document.getElementById('weekly-filter-range').value, rf = document.getElementById('weekly-filter-region').value; 
   let wm = {}; 
   
   // 按周汇总数据
@@ -449,33 +509,36 @@
   
   // 从 records 中提取月份
   records.forEach(r => { 
-    // 处理单日格式 YYYY-MM-DD
-    let singleMatch = r.date.match(/^(\d{4})-(\d{2})/);
-    if(singleMatch) {
-      mSet.add(singleMatch[1] + '-' + singleMatch[2]);
-    }
-    // 处理周期格式 YYYY-MM-DD 至 YYYY-MM-DD
-    let rangeMatch = r.date.match(/(\d{4})-(\d{2})/);
-    if(rangeMatch) {
-      mSet.add(rangeMatch[1] + '-' + rangeMatch[2]);
+    let d = parseDate(r.date);
+    if(d && !isNaN(d.getTime())) {
+      let month = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+      mSet.add(month);
+    } else {
+      let match = r.date.match(/(\d{4})[\/\-\.](\d{1,2})/);
+      if(match) {
+        let month = match[1] + '-' + String(parseInt(match[2])).padStart(2, '0');
+        mSet.add(month);
+      }
     }
   }); 
   
   // 从 vpRecords 中提取月份
   vpRecords.forEach(v => { 
-    let singleMatch = v.date.match(/^(\d{4})-(\d{2})/);
-    if(singleMatch) {
-      mSet.add(singleMatch[1] + '-' + singleMatch[2]);
-    }
-    let rangeMatch = v.date.match(/(\d{4})-(\d{2})/);
-    if(rangeMatch) {
-      mSet.add(rangeMatch[1] + '-' + rangeMatch[2]);
+    let d = parseDate(v.date);
+    if(d && !isNaN(d.getTime())) {
+      let month = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+      mSet.add(month);
+    } else {
+      let match = v.date.match(/(\d{4})[\/\-\.](\d{1,2})/);
+      if(match) {
+        let month = match[1] + '-' + String(parseInt(match[2])).padStart(2, '0');
+        mSet.add(month);
+      }
     }
   }); 
   
   let list = Array.from(mSet).sort(); 
   
-  // 更新四个月份选择器
   let selectIds = ['compare-month-a', 'compare-month-b', 'compare-month-c', 'compare-month-d'];
   for(let idx = 0; idx < selectIds.length; idx++) {
     let id = selectIds[idx];
@@ -491,29 +554,39 @@
       el.appendChild(opt); 
     }
     if(list.length > 0) { 
-      if(list.includes(saved)) { 
+      if(saved && list.includes(saved)) { 
         el.value = saved; 
       } else { 
-        if(idx === 0 || idx === 2) {
-          el.value = list[Math.max(0, list.length - 2)] || list[0];
-        }
-        if(idx === 1 || idx === 3) {
-          el.value = list[list.length - 1] || list[0];
-        }
+        if(idx === 0) el.value = list[Math.max(0, list.length - 2)] || list[0];
+        if(idx === 1) el.value = list[list.length - 1] || list[0];
+        if(idx === 2) el.value = list[Math.max(0, list.length - 2)] || list[0];
+        if(idx === 3) el.value = list[list.length - 1] || list[0];
       } 
     } 
   }
+  
+  renderMonthlyCompare();
 }
 
   function getMonthStats(m, reg) { 
   if(!m) return { count: 0, cost: 0, users: 0, views: 0, cpa: null }; 
   
-  // 筛选该月份的所有记录
-  let sub = records.filter(r => r.region === reg && r.date.includes(m)); 
+  let sub = records.filter(r => {
+    if(r.region !== reg) return false;
+    let d = parseDate(r.date);
+    if(!d || isNaN(d.getTime())) return false;
+    let recordMonth = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    return recordMonth === m;
+  }); 
   
-  // 计算播放量
   let vw = 0; 
-  vpRecords.filter(v => v.region === reg && v.date.includes(m)).forEach(v => { 
+  vpRecords.filter(v => {
+    if(v.region !== reg) return false;
+    let d = parseDate(v.date);
+    if(!d || isNaN(d.getTime())) return false;
+    let vpMonth = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    return vpMonth === m;
+  }).forEach(v => { 
     vw += v.views; 
   }); 
   
@@ -833,8 +906,16 @@
   // 记录管理函数
   function saveRecord() { 
     let id = document.getElementById('f-id').value; let mode = document.getElementById('f-date-mode').value; let dateLabel = ''; 
-    if(mode === 'single') { dateLabel = document.getElementById('f-date').value; if(!dateLabel) { toast('日期不能为空'); return; } } 
-    else { let ds = document.getElementById('f-date-start').value; let de = document.getElementById('f-date-end').value; if(!ds || !de) { toast('范围有误'); return; } dateLabel = ds + ' 至 ' + de; } 
+  if(mode === 'single') { 
+  dateLabel = document.getElementById('f-date').value; 
+  if(!dateLabel) { toast('日期不能为空'); return; } 
+  dateLabel = toStandardDate(dateLabel);  // 添加这行：标准化日期
+} else { 
+  let ds = document.getElementById('f-date-start').value; 
+  let de = document.getElementById('f-date-end').value; 
+  if(!ds || !de) { toast('范围有误'); return; } 
+  dateLabel = toStandardDate(ds) + ' 至 ' + toStandardDate(de);  // 修改这行：标准化日期
+}
     let region = document.getElementById('f-region').value; let channel = document.getElementById('f-channel').value; let contentType = document.getElementById('f-content-type').value; let count = parseFloat(document.getElementById('f-count').value) || 1; let cost = parseFloat(document.getElementById('f-cost').value) || 0; let note = document.getElementById('f-note').value.trim(); 
     let dupIndex = records.findIndex(function(r) { return r.date === dateLabel && r.region === region && r.channel === channel && r.contentType === contentType && r.id !== id; }); 
     if(dupIndex > -1) { let existingRecord = records[dupIndex]; existingRecord.count = count; existingRecord.cost = cost; existingRecord.note = note; toast('已覆盖更新'); } 
@@ -864,8 +945,16 @@
 
   function saveUsersOnly() { 
     let mode = document.getElementById('f-user-date-mode').value, dateLabel = ''; 
-    if(mode==='single') { dateLabel = document.getElementById('f-user-date').value; if(!dateLabel) { toast('请选择日期'); return; } } 
-    else { let ds = document.getElementById('f-user-date-start').value, de = document.getElementById('f-user-date-end').value; if(!ds||!de) { toast('请选择日期范围'); return; } dateLabel = ds+' 至 '+de; } 
+    if(mode==='single') { 
+  dateLabel = document.getElementById('f-user-date').value; 
+  if(!dateLabel) { toast('请选择日期'); return; } 
+  dateLabel = toStandardDate(dateLabel);  // 添加这行
+} else { 
+  let ds = document.getElementById('f-user-date-start').value; 
+  let de = document.getElementById('f-user-date-end').value; 
+  if(!ds||!de) { toast('请选择日期范围'); return; } 
+  dateLabel = toStandardDate(ds) + ' 至 ' + toStandardDate(de);  // 修改这行
+} 
     let region = document.getElementById('f-user-region').value, users = parseFloat(document.getElementById('f-user-count').value)||0, note = document.getElementById('f-user-note').value.trim(); 
     if(users<=0) { toast('请输入新增用户量'); return; } 
     let exist = records.find(r=>r.date===dateLabel && r.region===region && r.channel==='大盘渠道' && r.contentType==='大盘转化'); 
