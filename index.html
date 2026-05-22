@@ -655,7 +655,7 @@ function updateWeeklyFilters(){
   var reg=document.getElementById('f-user-region').value,users=parseFloat(document.getElementById('f-user-count').value)||0;
   var note=document.getElementById('f-user-note').value.trim()||'纯用户新增';
   if(users<=0){toast('请输入新增用户量');return;}
-  var ex=records.find(function(r){return r.date===dl&&r.region===reg&&r.channel==='大盘渠道'&&r.contentType==='大盘转化';});
+  var ex=records.find(function(r){return r.date===dl&&r.region===reg&&r.channel==='大盘渠道';});
   if(ex){ex.users=users;ex.note=note;toast('已覆盖');}
   else{records.push({id:'r_'+Date.now(),date:dl,region:reg,channel:'大盘渠道',contentType:'大盘转化',count:0,cost:0,users:users,note:note});toast('保存成功');}
   persistRecords();document.getElementById('f-user-count').value='';document.getElementById('f-user-note').value='';renderRecent();updateMonthSelectors();updateDashboardMonthFilter();
