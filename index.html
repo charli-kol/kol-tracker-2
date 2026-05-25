@@ -175,12 +175,12 @@ function showRegion(r){
     // 看板
     document.getElementById('sub-'+r+'-dashboard').innerHTML='<div class="metrics-grid" id="m-'+r+'"></div><div class="two-col"><div class="section"><div class="section-header">📈 消耗趋势</div><div class="chart-wrap"><canvas id="ch-cost-'+r+'"></canvas></div></div><div class="section"><div class="section-header">👥 新增用户趋势</div><div class="chart-wrap"><canvas id="ch-users-'+r+'"></canvas></div></div></div><div class="two-col"><div class="section"><div class="section-header">📡 渠道消耗分布</div><div class="chart-wrap"><canvas id="ch-channel-'+r+'"></canvas></div></div><div class="section"><div class="section-header">📈 每日播放量</div><div class="chart-wrap"><canvas id="ch-views-'+r+'"></canvas></div></div></div>';
     // 数据筛选
-    document.getElementById('sub-'+r+'-data').innerHTML='<div class="section"><div class="section-header">📋 推广详情</div><div class="filter-row"><button class="btn btn-sm sub-tab active" onclick="quickFilter(\''+r+'\',\'week\',this)">本周</button><button class="btn btn-sm" onclick="quickFilter(\''+r+'\',\'lastweek\',this)">上周</button><button class="btn btn-sm" onclick="quickFilter(\''+r+'\',\'month\',this)">本月</button><label style="margin-left:12px;">开始</label><input type="date" id="df-'+r+'-s"><label>结束</label><input type="date" id="df-'+r+'-e"><button class="btn btn-primary btn-sm" onclick="filterData(\''+r+'\')">查询</button><button class="btn btn-sm" onclick="resetFilter(\''+r+'\')">重置</button></div><div class="metrics-grid" id="fm-'+r+'"></div><div class="table-wrap"><table><thead><tr><th>日期</th><th>消耗</th><th>新增用户</th><th>渠道明细</th></tr></thead><tbody id="ft-'+r+'"></tbody></table></div></div>';
+    document.getElementById('sub-'+r+'-data').innerHTML='<div class="section"><div class="section-header">📋 推广详情</div><div class="filter-row"><button class="btn btn-sm sub-tab active" onclick="quickFilter(\''+r+'\',\'week\',this)">本周</button><button class="btn btn-sm" onclick="quickFilter(\''+r+'\',\'lastweek\',this)">上周</button><button class="btn btn-sm" onclick="quickFilter(\''+r+'\',\'month\',this)">本月</button><label style="margin-left:12px;">开始</label><input type="date" id="df-'+r+'-s"><label>结束</label><input type="date" id="df-'+r+'-e"><button class="btn btn-primary btn-sm" onclick="filterData(\''+r+'\')">查询</button><button class="btn btn-sm" onclick="resetFilter(\''+r+'\')">重置</button></div><div class="metrics-grid" id="fm-'+r+'"></div><div class="table-wrap"><table><thead><tr><th>日期</th><th>消耗</th><th>新增用户</th><th>播放量</th><th>渠道明细</th></tr></thead><tbody id="ft-'+r+'"></tbody></table></div></div>';
     // 录入
     var chOpts=ALL_CHANNELS[r].map(function(c){return'<option value="'+c+'">'+c+'</option>';}).join('');
     document.getElementById('sub-'+r+'-input').innerHTML='<div class="section"><div class="section-header">📂 批量上传</div><div class="upload-box" onclick="document.getElementById(\'fupload-'+r+'\').click()"><p>点击上传CSV/Excel</p><input type="file" id="fupload-'+r+'" accept=".csv,.xlsx,.xls" onchange="handleFileUpload(event,\''+r+'\')"></div></div><div class="section"><div class="section-header">📝 推广数据录入</div><div class="form-grid"><div class="form-group"><label>日期模式</label><select onchange="toggleDateMode(this.value,\''+r+'\')"><option value="single">单日</option><option value="range">周期</option></select></div><div class="form-group" id="dw-'+r+'"><label>日期</label><input type="date" id="fd-'+r+'"></div><div class="form-group"><label>渠道</label><select id="fch-'+r+'" onchange="updateContentTypes(\''+r+'\')">'+chOpts+'</select></div><div class="form-group"><label>内容形式</label><select id="fct-'+r+'"></select></div><div class="form-group"><label>推广数量</label><input type="number" id="fc-'+r+'" placeholder="1"></div><div class="form-group"><label>消耗(USD)</label><input type="number" id="fco-'+r+'" placeholder="0" step="0.01"></div><div class="form-group"><label>备注</label><input type="text" id="fn-'+r+'"></div></div><button class="btn btn-primary" onclick="saveRecord(\''+r+'\')">保存</button></div><div class="section"><div class="section-header">👤 新增用户录入</div><div class="form-grid"><div class="form-group"><label>日期</label><input type="date" id="fu-'+r+'"></div><div class="form-group"><label>新增用户</label><input type="number" id="fuc-'+r+'" placeholder="0"></div><div class="form-group"><label>备注</label><input type="text" id="fun-'+r+'"></div></div><button class="btn btn-primary" style="background:#10b981;border-color:#10b981;" onclick="saveUsers(\''+r+'\')">保存新增用户</button></div><div class="section"><div class="section-header">🎬 播放量录入</div><div class="form-grid"><div class="form-group"><label>日期模式</label><select onchange="toggleVpDateMode(this.value,\''+r+'\')"><option value="single">单日</option><option value="range">周期</option></select></div><div class="form-group" id="vpw-'+r+'"><label>日期</label><input type="date" id="vp-'+r+'"></div><div class="form-group"><label>播放量</label><input type="number" id="vpc-'+r+'" placeholder="0"></div></div><button class="btn btn-primary" style="background:#f59e0b;border-color:#f59e0b;" onclick="saveViews(\''+r+'\')">保存播放量</button></div>';
     if(hasTracking){
-      document.getElementById('sub-'+r+'-tracking').innerHTML='<div class="section"><div class="section-header">🎯 素材追踪录入</div><div class="form-grid"><div class="form-group"><label>开始日期</label><input type="date" id="tts-'+r+'"></div><div class="form-group"><label>结束日期</label><input type="date" id="tte-'+r+'"></div><div class="form-group"><label>SPK新增</label><input type="number" id="ttsu-'+r+'" placeholder="0"></div><div class="form-group"><label>总新增</label><input type="number" id="tttu-'+r+'" placeholder="0"></div><div class="form-group"><label>SPK消耗</label><input type="number" id="ttsc-'+r+'" placeholder="0" step="0.01"></div><div class="form-group"><label>总消耗</label><input type="number" id="tttc-'+r+'" placeholder="0" step="0.01"></div></div><button class="btn btn-primary" onclick="saveTracking(\''+r+'\')">保存追踪记录</button><div class="table-wrap" style="margin-top:1rem;"><table><thead><tr><th>时间段</th><th>SPK新增</th><th>总新增</th><th>SPK消耗</th><th>总消耗</th><th>操作</th></tr></thead><tbody id="tt-tbody-'+r+'"></tbody></table></div></div>';
+      document.getElementById('sub-'+r+'-tracking').innerHTML='<div class="section"><div class="section-header">🎯 素材追踪录入</div><div class="form-grid"><div class="form-group"><label>开始日期</label><input type="date" id="tts-'+r+'"></div><div class="form-group"><label>结束日期</label><input type="date" id="tte-'+r+'"></div><div class="form-group"><label>SPK新增</label><input type="number" id="ttsu-'+r+'" placeholder="0"></div><div class="form-group"><label>总新增</label><input type="number" id="tttu-'+r+'" placeholder="0"></div><div class="form-group"><label>SPK消耗</label><input type="number" id="ttsc-'+r+'" placeholder="0" step="0.01"></div><div class="form-group"><label>总消耗</label><input type="number" id="tttc-'+r+'" placeholder="0" step="0.01"></div></div><button class="btn btn-primary" onclick="saveTracking(\''+r+'\')">保存追踪记录</button><div class="table-wrap" style="margin-top:1rem;"><table><thead><tr><th>时间段</th><th>SPK新增</th><th>总新增</th><th>新增占比</th><th>新增环比</th><th>SPK消耗</th><th>总消耗</th><th>消耗占比</th><th>消耗环比</th><th>SPK CPR</th><th>总CPR</th><th>操作</th></tr></thead><tbody id="tt-tbody-'+r+'"></tbody></table></div></div>';
     }
     // 初始化日期
     var today=new Date().toISOString().slice(0,10);
@@ -304,21 +304,37 @@ function filterData(r){
   else if(sd)filtered=filtered.filter(function(x){var d=x.date.indexOf(' 至 ')>-1?x.date.split(' 至 ')[0]:x.date;return d>=sd;});
   else if(ed)filtered=filtered.filter(function(x){var d=x.date.indexOf(' 至 ')>-1?x.date.split(' 至 ')[1]:x.date;return d<=ed;});
   var tc=sum(filtered,'cost'),tu=sum(filtered,'users'),tco=sum(filtered,'count');
+  // 计算期间总播放量
+  var totalViews=0;
+  vpRecords.filter(function(v){return v.region===r;}).forEach(function(v){
+    var vs=v.mode==='single'?v.date:v.date.split(' 至 ')[0];
+    var ve=v.mode==='single'?v.date:v.date.split(' 至 ')[1];
+    if(sd&&ed){if(vs<=ed&&ve>=sd)totalViews+=v.views;}
+    else if(sd){if(ve>=sd)totalViews+=v.views;}
+    else if(ed){if(vs<=ed)totalViews+=v.views;}
+    else{totalViews+=v.views;}
+  });
   document.getElementById('fm-'+r).innerHTML=[
-    {l:'总消耗',v:'$'+tc.toLocaleString()},{l:'总新增',v:tu.toLocaleString()+' 人'},{l:'推广条数',v:tco+' 条'},{l:'CPA',v:tu>0?'$'+(tc/tu).toFixed(2):'—'}
+    {l:'总消耗',v:'$'+tc.toLocaleString()},{l:'总新增',v:tu.toLocaleString()+' 人'},
+    {l:'总播放量',v:totalViews.toLocaleString()+' 次'},{l:'CPA',v:tu>0?'$'+(tc/tu).toFixed(2):'—'}
   ].map(function(x){return'<div class="metric-card"><div class="metric-label">'+x.l+'</div><div class="metric-value" style="font-size:18px;">'+x.v+'</div></div>';}).join('');
   // 按天汇总
   var daily={};
   filtered.forEach(function(x){
     var d=x.date.indexOf(' 至 ')>-1?x.date:x.date.slice(0,10);
-    if(!daily[d])daily[d]={cost:0,users:0,channels:[]};
+    if(!daily[d])daily[d]={cost:0,users:0,views:0,channels:[]};
     daily[d].cost+=parseFloat(x.cost)||0;
     daily[d].users+=parseFloat(x.users)||0;
     daily[d].channels.push(x.channel+'/'+x.contentType);
   });
+  // 添加每日播放量
+  vpRecords.filter(function(v){return v.region===r;}).forEach(function(v){
+    if(v.mode==='single'){if(daily[v.date])daily[v.date].views+=v.views;}
+    else{var p=v.date.split(' 至 ');Object.keys(daily).forEach(function(d){if(d>=p[0]&&d<=p[1])daily[d].views+=v.views;});}
+  });
   var keys=Object.keys(daily).sort().reverse();
-  document.getElementById('ft-'+r).innerHTML=keys.length===0?'<tr><td colspan="4" class="empty">无数据</td></tr>':keys.map(function(d){
-    return'<tr><td>'+d+'</td><td><strong>$'+daily[d].cost.toFixed(2)+'</strong></td><td><strong>'+daily[d].users+' 人</strong></td><td style="font-size:11px;color:var(--text2);">'+daily[d].channels.join(', ')+'</td></tr>';
+  document.getElementById('ft-'+r).innerHTML=keys.length===0?'<tr><td colspan="5" class="empty">无数据</td></tr>':keys.map(function(d){
+    return'<tr><td>'+d+'</td><td><strong>$'+daily[d].cost.toFixed(2)+'</strong></td><td><strong>'+daily[d].users.toLocaleString()+' 人</strong></td><td><strong>'+daily[d].views.toLocaleString()+' 次</strong></td><td style="font-size:11px;color:var(--text2);">'+daily[d].channels.join(', ')+'</td></tr>';
   }).join('');
 }
 function resetFilter(r){document.getElementById('df-'+r+'-s').value='';document.getElementById('df-'+r+'-e').value='';var container=document.getElementById('sub-'+r+'-data');container.querySelectorAll('.filter-row .btn').forEach(function(b){b.classList.remove('active');});filterData(r);}
@@ -386,7 +402,15 @@ function saveTracking(r){
 function renderTrackingTable(r){
   var list=trackingRecords.filter(function(x){return x.region===r;});
   list.sort(function(a,b){return b.range.localeCompare(a.range);});
-  document.getElementById('tt-tbody-'+r).innerHTML=list.length===0?'<tr><td colspan="6" class="empty">暂无数据</td></tr>':list.map(function(x){return'<tr><td>'+x.range+'</td><td>'+x.spkUsers.toLocaleString()+'</td><td>'+x.totalUsers.toLocaleString()+'</td><td>$'+x.spkCost.toLocaleString()+'</td><td>$'+x.totalCost.toLocaleString()+'</td><td><button class="action-btn del" onclick="trackingRecords=trackingRecords.filter(function(t){return t.id!==\''+x.id+'\';});persistTrackingRecords();renderTrackingTable(\''+r+'\');">✕</button></td></tr>';}).join('');
+  document.getElementById('tt-tbody-'+r).innerHTML=list.length===0?'<tr><td colspan="12" class="empty">暂无数据</td></tr>':list.map(function(x,i){
+    var prev=i<list.length-1?list[i+1]:null;
+    var ur=x.totalUsers>0?(x.spkUsers/x.totalUsers*100).toFixed(1)+'%':'—';
+    var cr=x.totalCost>0?(x.spkCost/x.totalCost*100).toFixed(1)+'%':'—';
+    var scpr=x.spkUsers>0?'$'+(x.spkCost/x.spkUsers).toFixed(2):'—';
+    var tcpr=x.totalUsers>0?'$'+(x.totalCost/x.totalUsers).toFixed(2):'—';
+    function w(curr,pv){if(!pv||pv===0)return'<span style="color:var(--text2);">—</span>';var ch=((curr-pv)/pv*100);return'<span class="'+(ch>=0?'up':'dn')+'">'+(ch>=0?'↑':'↓')+Math.abs(ch).toFixed(1)+'%</span>';}
+    return'<tr><td>'+x.range+'</td><td>'+x.spkUsers.toLocaleString()+'</td><td>'+x.totalUsers.toLocaleString()+'</td><td>'+ur+'</td><td>'+w(x.spkUsers,prev?prev.spkUsers:null)+'</td><td>$'+x.spkCost.toLocaleString()+'</td><td>$'+x.totalCost.toLocaleString()+'</td><td>'+cr+'</td><td>'+w(x.spkCost,prev?prev.spkCost:null)+'</td><td>'+scpr+'</td><td>'+tcpr+'</td><td><button class="action-btn del" onclick="trackingRecords=trackingRecords.filter(function(t){return t.id!==\''+x.id+'\';});persistTrackingRecords();renderTrackingTable(\''+r+'\');">✕</button></td></tr>';
+  }).join('');
 }
 
 function handleFileUpload(e,r){
