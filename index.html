@@ -175,7 +175,7 @@ function showRegion(r){
     // 看板
     document.getElementById('sub-'+r+'-dashboard').innerHTML='<div class="metrics-grid" id="m-'+r+'"></div><div class="two-col"><div class="section"><div class="section-header">📈 消耗趋势</div><div class="chart-wrap"><canvas id="ch-cost-'+r+'"></canvas></div></div><div class="section"><div class="section-header">👥 新增用户趋势</div><div class="chart-wrap"><canvas id="ch-users-'+r+'"></canvas></div></div></div><div class="two-col"><div class="section"><div class="section-header">📡 渠道消耗分布</div><div class="chart-wrap"><canvas id="ch-channel-'+r+'"></canvas></div></div><div class="section"><div class="section-header">📈 每日播放量</div><div class="chart-wrap"><canvas id="ch-views-'+r+'"></canvas></div></div></div>';
     // 数据筛选
-    document.getElementById('sub-'+r+'-data').innerHTML='<div class="section"><div class="section-header">🔍 周期筛选</div><div class="filter-row"><label>开始</label><input type="date" id="df-'+r+'-s"><label>结束</label><input type="date" id="df-'+r+'-e"><button class="btn btn-primary btn-sm" onclick="filterData(\''+r+'\')">查询</button><button class="btn btn-sm" onclick="resetFilter(\''+r+'\')">重置</button></div><div class="metrics-grid" id="fm-'+r+'"></div><div class="table-wrap"><table><thead><tr><th>日期</th><th>渠道</th><th>形式</th><th>数量</th><th>消耗</th><th>新增</th><th>备注</th></tr></thead><tbody id="ft-'+r+'"></tbody></table></div></div>';
+    document.getElementById('sub-'+r+'-data').innerHTML='<div class="section"><div class="section-header">📋 推广详情</div><div class="filter-row"><button class="btn btn-sm sub-tab active" onclick="quickFilter(\''+r+'\',\'week\',this)">本周</button><button class="btn btn-sm" onclick="quickFilter(\''+r+'\',\'lastweek\',this)">上周</button><button class="btn btn-sm" onclick="quickFilter(\''+r+'\',\'month\',this)">本月</button><label style="margin-left:12px;">开始</label><input type="date" id="df-'+r+'-s"><label>结束</label><input type="date" id="df-'+r+'-e"><button class="btn btn-primary btn-sm" onclick="filterData(\''+r+'\')">查询</button><button class="btn btn-sm" onclick="resetFilter(\''+r+'\')">重置</button></div><div class="metrics-grid" id="fm-'+r+'"></div><div class="table-wrap"><table><thead><tr><th>日期</th><th>消耗</th><th>新增用户</th><th>渠道明细</th></tr></thead><tbody id="ft-'+r+'"></tbody></table></div></div>';
     // 录入
     var chOpts=ALL_CHANNELS[r].map(function(c){return'<option value="'+c+'">'+c+'</option>';}).join('');
     document.getElementById('sub-'+r+'-input').innerHTML='<div class="section"><div class="section-header">📂 批量上传</div><div class="upload-box" onclick="document.getElementById(\'fupload-'+r+'\').click()"><p>点击上传CSV/Excel</p><input type="file" id="fupload-'+r+'" accept=".csv,.xlsx,.xls" onchange="handleFileUpload(event,\''+r+'\')"></div></div><div class="section"><div class="section-header">📝 推广数据录入</div><div class="form-grid"><div class="form-group"><label>日期模式</label><select onchange="toggleDateMode(this.value,\''+r+'\')"><option value="single">单日</option><option value="range">周期</option></select></div><div class="form-group" id="dw-'+r+'"><label>日期</label><input type="date" id="fd-'+r+'"></div><div class="form-group"><label>渠道</label><select id="fch-'+r+'" onchange="updateContentTypes(\''+r+'\')">'+chOpts+'</select></div><div class="form-group"><label>内容形式</label><select id="fct-'+r+'"></select></div><div class="form-group"><label>推广数量</label><input type="number" id="fc-'+r+'" placeholder="1"></div><div class="form-group"><label>消耗(USD)</label><input type="number" id="fco-'+r+'" placeholder="0" step="0.01"></div><div class="form-group"><label>备注</label><input type="text" id="fn-'+r+'"></div></div><button class="btn btn-primary" onclick="saveRecord(\''+r+'\')">保存</button></div><div class="section"><div class="section-header">👤 新增用户录入</div><div class="form-grid"><div class="form-group"><label>日期</label><input type="date" id="fu-'+r+'"></div><div class="form-group"><label>新增用户</label><input type="number" id="fuc-'+r+'" placeholder="0"></div><div class="form-group"><label>备注</label><input type="text" id="fun-'+r+'"></div></div><button class="btn btn-primary" style="background:#10b981;border-color:#10b981;" onclick="saveUsers(\''+r+'\')">保存新增用户</button></div><div class="section"><div class="section-header">🎬 播放量录入</div><div class="form-grid"><div class="form-group"><label>日期模式</label><select onchange="toggleVpDateMode(this.value,\''+r+'\')"><option value="single">单日</option><option value="range">周期</option></select></div><div class="form-group" id="vpw-'+r+'"><label>日期</label><input type="date" id="vp-'+r+'"></div><div class="form-group"><label>播放量</label><input type="number" id="vpc-'+r+'" placeholder="0"></div></div><button class="btn btn-primary" style="background:#f59e0b;border-color:#f59e0b;" onclick="saveViews(\''+r+'\')">保存播放量</button></div>';
@@ -202,7 +202,7 @@ function switchSubTab(r,tab){
   var el=document.getElementById('sub-'+r+'-'+tab);
   if(el)el.style.display='block';
   if(tab==='dashboard')renderDashboard(r);
-  if(tab==='data'){document.getElementById('df-'+r+'-s').value='';document.getElementById('df-'+r+'-e').value='';filterData(r);}
+  if(tab==='data'){quickFilter(r,'week');}
   if(tab==='tracking')renderTrackingTable(r);
 }
 
@@ -280,6 +280,23 @@ function renderDashboard(r){
   charts['ch-channel-'+r]=new Chart(document.getElementById('ch-channel-'+r),{type:'doughnut',data:{labels:chs,datasets:[{data:chs.map(function(c){return sum(base.filter(function(x){return x.channel===c;}),'cost');}),backgroundColor:chs.map(function(c){return CHANNEL_COLORS[c]||'#6c757d';})}]},options:{responsive:true,maintainAspectRatio:false}});
 }
 
+function quickFilter(r,type,btn){
+  var container=document.getElementById('sub-'+r+'-data');
+  container.querySelectorAll('.filter-row .btn').forEach(function(b){b.classList.remove('active');});
+  if(btn)btn.classList.add('active');
+  var td=new Date(),sd,ed;
+  if(type==='week'){
+    var dow=td.getDay()||7;sd=new Date(td);sd.setDate(td.getDate()-dow+1);ed=new Date(sd);ed.setDate(sd.getDate()+6);
+  }else if(type==='lastweek'){
+    var dow=td.getDay()||7;ed=new Date(td);ed.setDate(td.getDate()-dow);sd=new Date(ed);sd.setDate(ed.getDate()-6);
+  }else if(type==='month'){
+    sd=new Date(td.getFullYear(),td.getMonth(),1);ed=new Date(td.getFullYear(),td.getMonth()+1,0);
+  }
+  document.getElementById('df-'+r+'-s').value=sd.toISOString().slice(0,10);
+  document.getElementById('df-'+r+'-e').value=ed.toISOString().slice(0,10);
+  filterData(r);
+}
+
 function filterData(r){
   var sd=document.getElementById('df-'+r+'-s').value,ed=document.getElementById('df-'+r+'-e').value;
   var filtered=records.filter(function(x){return x.region===r;});
@@ -290,10 +307,21 @@ function filterData(r){
   document.getElementById('fm-'+r).innerHTML=[
     {l:'总消耗',v:'$'+tc.toLocaleString()},{l:'总新增',v:tu.toLocaleString()+' 人'},{l:'推广条数',v:tco+' 条'},{l:'CPA',v:tu>0?'$'+(tc/tu).toFixed(2):'—'}
   ].map(function(x){return'<div class="metric-card"><div class="metric-label">'+x.l+'</div><div class="metric-value" style="font-size:18px;">'+x.v+'</div></div>';}).join('');
-  filtered.sort(function(a,b){return b.date.localeCompare(a.date);});
-  document.getElementById('ft-'+r).innerHTML=filtered.slice(0,50).map(function(x){return'<tr><td>'+x.date+'</td><td>'+x.channel+'</td><td>'+x.contentType+'</td><td>'+x.count+'</td><td>$'+x.cost.toFixed(2)+'</td><td>'+x.users+'</td><td>'+(x.note||'')+'</td></tr>';}).join('')||'<tr><td colspan="7" class="empty">无数据</td></tr>';
+  // 按天汇总
+  var daily={};
+  filtered.forEach(function(x){
+    var d=x.date.indexOf(' 至 ')>-1?x.date:x.date.slice(0,10);
+    if(!daily[d])daily[d]={cost:0,users:0,channels:[]};
+    daily[d].cost+=parseFloat(x.cost)||0;
+    daily[d].users+=parseFloat(x.users)||0;
+    daily[d].channels.push(x.channel+'/'+x.contentType);
+  });
+  var keys=Object.keys(daily).sort().reverse();
+  document.getElementById('ft-'+r).innerHTML=keys.length===0?'<tr><td colspan="4" class="empty">无数据</td></tr>':keys.map(function(d){
+    return'<tr><td>'+d+'</td><td><strong>$'+daily[d].cost.toFixed(2)+'</strong></td><td><strong>'+daily[d].users+' 人</strong></td><td style="font-size:11px;color:var(--text2);">'+daily[d].channels.join(', ')+'</td></tr>';
+  }).join('');
 }
-function resetFilter(r){document.getElementById('df-'+r+'-s').value='';document.getElementById('df-'+r+'-e').value='';filterData(r);}
+function resetFilter(r){document.getElementById('df-'+r+'-s').value='';document.getElementById('df-'+r+'-e').value='';var container=document.getElementById('sub-'+r+'-data');container.querySelectorAll('.filter-row .btn').forEach(function(b){b.classList.remove('active');});filterData(r);}
 
 function saveRecord(r){
   var modeEl=document.getElementById('dw-'+r).querySelector('input');
