@@ -1,16 +1,14 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>KOL推广数据管理系统-charli</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js">
-  </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
-  </script>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>KOL推广数据管理系统</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#fff;--bg2:#f8f9fa;--bg3:#f1f3f5;--text:#212529;--text2:#6c757d;
   --border:rgba(0,0,0,.06);--border2:rgba(0,0,0,.12);--radius:10px;--radius-lg:16px;
@@ -20,27 +18,20 @@
   :root{--bg:#1a1b1e;--bg2:#25262b;--bg3:#101113;--text:#c1c2c5;--text2:#909296;--border:rgba(255,255,255,.05);--border2:rgba(255,255,255,.12);--primary-light:rgba(59,130,246,.12);--shadow:0 1px 3px rgba(0,0,0,.2);}
 }
 body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg3);color:var(--text);min-height:100vh}
-.container{max-width:1200px;margin:0 auto;padding:2rem 1rem}
+.container{max-width:1300px;margin:0 auto;padding:1.5rem 1rem}
 
-/* 通用选择器 & 输入框 */
 select,input[type="text"],input[type="number"],input[type="date"]{
   appearance:none;-webkit-appearance:none;
-  padding:9px 36px 9px 14px;
-  border:1.5px solid var(--border);border-radius:var(--radius);
+  padding:9px 36px 9px 14px;border:1.5px solid var(--border);border-radius:var(--radius);
   background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;
   cursor:pointer;transition:all .2s;box-shadow:var(--shadow);
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236c757d' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 12px center;
 }
-input[type="text"],input[type="number"],input[type="date"]{
-  background-image:none;padding-right:14px;
-}
+input[type="text"],input[type="number"],input[type="date"]{background-image:none;padding-right:14px}
 select:hover,input:hover{border-color:var(--primary)}
 select:focus,input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light)}
-/* 日期输入框特殊处理 */
-input[type="date"]{padding-right:14px;background-image:none}
 
-/* 按钮 */
 .btn{
   display:inline-flex;align-items:center;gap:6px;padding:9px 18px;
   border-radius:var(--radius);border:1.5px solid var(--border2);background:var(--bg);
@@ -50,769 +41,358 @@ input[type="date"]{padding-right:14px;background-image:none}
 .btn:hover{background:var(--bg2);border-color:var(--primary);transform:translateY(-1px)}
 .btn-primary{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 2px 8px rgba(59,130,246,.25)}
 .btn-primary:hover{background:#2563eb;border-color:#2563eb}
+.btn-sm{padding:6px 12px;font-size:12px}
 
-/* 标签页 */
-.tabs{display:flex;gap:4px;background:var(--bg2);border-radius:var(--radius);padding:5px;margin-bottom:2rem;flex-wrap:wrap}
+.tabs{display:flex;gap:4px;background:var(--bg2);border-radius:var(--radius);padding:5px;margin-bottom:1.5rem;flex-wrap:wrap}
 .tab{padding:8px 18px;border-radius:7px;border:none;background:transparent;cursor:pointer;font-size:13px;color:var(--text2);font-family:inherit;transition:all .2s}
 .tab.active{background:var(--bg);color:var(--primary);font-weight:600;box-shadow:var(--shadow)}
 .tab:hover:not(.active){color:var(--text)}
 
-/* 地区标签 */
-.region-tabs{display:flex;gap:8px;margin-bottom:2rem;flex-wrap:wrap;align-items:center}
-.rtab{
-  padding:7px 16px;border-radius:20px;border:1.5px solid var(--border);
-  background:var(--bg);cursor:pointer;font-size:13px;color:var(--text2);
-  white-space:nowrap;font-family:inherit;transition:all .2s;
-}
-.rtab:hover{border-color:var(--primary);color:var(--text)}
-.rtab.active{border-color:var(--primary);color:var(--text);font-weight:600;background:var(--primary-light)}
-
-/* 卡片 */
-.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:1.5rem}
-.metric-card{
-  background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);
-  padding:1rem 1.2rem;transition:all .2s;
-}
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:1.5rem}
+.metric-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.2rem;transition:all .2s}
 .metric-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.06)}
-.metric-label{font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:500}
-.metric-value{font-size:22px;font-weight:700}
-.metric-sub{font-size:12px;color:var(--text2);margin-top:4px}
+.metric-label{font-size:11px;color:var(--text2);margin-bottom:6px;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+.metric-value{font-size:20px;font-weight:700}
+.metric-sub{font-size:11px;color:var(--text2);margin-top:4px}
 
-.section{
-  background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);
-  padding:1.25rem;margin-bottom:1rem;
-}
-.section-header{font-size:14px;font-weight:600;margin-bottom:1rem;color:var(--text)}
-
+.section{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1rem}
+.section-header{font-size:14px;font-weight:600;margin-bottom:1rem;color:var(--text);display:flex;align-items:center;gap:8px}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
 @media(max-width:900px){.two-col{grid-template-columns:1fr}}
+.chart-wrap{height:260px}
 
-.chart-wrap{height:240px}
-
-/* 表格 */
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{text-align:left;padding:10px 12px;color:var(--text2);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);background:var(--bg2)}
 td{padding:10px 12px;border-bottom:1px solid var(--border)}
 tr:hover td{background:var(--bg2)}
 .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:1rem}
 
-/* 徽章 */
 .badge{display:inline-block;padding:3px 10px;border-radius:14px;font-size:11px;font-weight:600}
 .b-TR{background:#d3f9d8;color:#0ca678}.b-TW{background:#fff4e6;color:#f76707}
 .b-ES{background:#edf2ff;color:#4c6ef5}.b-BR{background:#fff0f6;color:#d6336c}
 
-/* 表单 */
-.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:1rem}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1rem}
 .form-group{display:flex;flex-direction:column;gap:5px}
 .form-group label{font-size:11px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
 
-/* 上传 */
-.upload-box{
-  border:2px dashed var(--primary);border-radius:var(--radius-lg);padding:2rem;
-  text-align:center;cursor:pointer;margin-bottom:1rem;transition:all .2s;
-  background:var(--primary-light);
-}
+.upload-box{border:2px dashed var(--primary);border-radius:var(--radius-lg);padding:1.5rem;text-align:center;cursor:pointer;margin-bottom:1rem;transition:all .2s;background:var(--primary-light)}
 .upload-box:hover{background:rgba(59,130,246,.15);border-color:#2563eb}
 .upload-box input{display:none}
 
-/* 视图切换 */
 .view{display:none}.view.active{display:block}
 
-/* 提示 */
-.toast{
-  position:fixed;bottom:32px;left:50%;transform:translateX(-50%);
-  background:#212529;color:#fff;padding:12px 24px;border-radius:var(--radius);
-  font-size:13px;z-index:9999;opacity:0;transition:opacity .3s;box-shadow:0 8px 24px rgba(0,0,0,.2);
-}
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);background:#212529;color:#fff;padding:12px 24px;border-radius:var(--radius);font-size:13px;z-index:9999;opacity:0;transition:opacity .3s;box-shadow:0 8px 24px rgba(0,0,0,.2)}
 .toast.show{opacity:1}
 
-/* 操作按钮 */
 .action-btn{background:none;border:none;cursor:pointer;color:var(--text2);font-size:15px;padding:4px 8px;border-radius:6px;transition:all .15s}
 .action-btn.del:hover{color:#c92a2a;background:rgba(201,42,42,.1)}
-.action-btn.edit:hover{color:var(--primary);background:var(--primary-light)}
 
-/* 空状态 */
 .empty{text-align:center;padding:2rem;color:var(--text2)}
-
-/* 分页 */
-.pagination{display:flex;align-items:center;gap:6px;margin-top:1rem;justify-content:center}
-.page-btn{
-  min-width:32px;height:32px;border-radius:var(--radius);border:1.5px solid var(--border2);
-  background:var(--bg);color:var(--text);cursor:pointer;font-size:13px;transition:all .15s;
-}
-.page-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
-.page-btn:disabled{opacity:.4;cursor:not-allowed}
-.page-btn:hover:not(.active):not(:disabled){border-color:var(--primary)}
-
-/* 涨跌 */
 .up{color:#2b8a3e}.dn{color:#c92a2a}
 
-/* 对比 */
-.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
-.compare-card{border:1px solid var(--border);border-radius:var(--radius);padding:1rem;background:var(--bg2)}
-.compare-card-title{font-size:12px;color:var(--text2);font-weight:600;margin-bottom:8px}
-.compare-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid var(--border)}
-.compare-row:last-child{border-bottom:none}.compare-row .label{color:var(--text2)}.compare-row .value{font-weight:600}
-.diff-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:12px}.diff-badge.up{background:#d3f9d8;color:#2b8a3e}.diff-badge.dn{background:#ffe3e3;color:#c92a2a}
-
-/* 总览时间列 */
-.dashboard-period-row{display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap}.period-block{flex:1;min-width:260px}
-
-/* Topbar */
-.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;flex-wrap:wrap;gap:16px}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:16px}
 .topbar h1{font-size:22px;font-weight:700}
-  </style>
+
+.sub-tabs{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap}
+.sub-tab{padding:6px 14px;border-radius:20px;border:1px solid var(--border2);background:var(--bg);cursor:pointer;font-size:12px;color:var(--text2);font-family:inherit;transition:all .2s}
+.sub-tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.filter-row{display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+</style>
 </head>
 <body>
 <div class="container">
-  <div class="topbar">
-    <div><h1>📊 KOL 推广 · 数据管理系统</h1></div>
-    <div style="display: flex; gap: 0.8rem;">
-      <button class="btn" onclick="exportCSV()"><i class="ti ti-download"></i> 导出报表</button>
-      <button class="btn btn-primary" onclick="showView('add')"><i class="ti ti-plus"></i> 录入数据</button>
-    </div>
+<div class="topbar">
+  <div><h1>📊 KOL 推广数据管理</h1></div>
+  <div style="display:flex;gap:0.8rem">
+    <button class="btn" onclick="exportCSV()"><i class="ti ti-download"></i>导出</button>
   </div>
-
-  <div class="tabs">
-    <button class="tab active" onclick="showView('dashboard')"><i class="ti ti-layout-dashboard" style="font-size:1rem;"></i> 总览</button>
-    <button class="tab" onclick="showView('weekly')"><i class="ti ti-calendar-stats"></i> 周/月度</button>
-    <button class="tab" onclick="showView('views_panel')"><i class="ti ti-eye"></i> 播放量</button>
-    <button class="tab" onclick="showView('tracking')"><i class="ti ti-target"></i> 追踪</button>
-    <button class="tab" onclick="showView('add')"><i class="ti ti-edit"></i> 录入</button>
-  </div>
-
-  <div id="view-dashboard" class="view active">
-    <div class="region-tabs">
-      <button class="rtab active" onclick="setRegion('all')">🌍 全部地区</button>
-      <button class="rtab" onclick="setRegion('TR')">🇹🇷 土耳其</button>
-      <button class="rtab" onclick="setRegion('TW')">🔷 台湾</button>
-      <button class="rtab" onclick="setRegion('ES')">🌎 西语</button>
-      <button class="rtab" onclick="setRegion('BR')">🇧🇷 巴西</button>
-      <select id="dashboard-month-filter" onchange="renderDashboard()" style="margin-left:auto;padding:0.5rem 1.2rem;border-radius:30px;border:1px solid var(--border2);background:var(--bg);color:var(--text);">
-        <option value="">全部月份</option>
-      </select>
-    </div>
-    <div class="dashboard-period-row">
-      <div class="period-block"><div class="section"><div class="section-header">📅 本月核心指标</div><div class="metrics-grid" id="month-metrics-grid"></div></div></div>
-      <div class="period-block"><div class="section"><div class="section-header">📆 本周核心指标</div><div class="metrics-grid" id="week-metrics-grid"></div></div></div>
-    </div>
-    <div class="two-col">
-<div class="section"><div class="section-header">📡 渠道消耗分布</div><div class="chart-wrap"><canvas id="chart-channels"></canvas></div></div>
-<div class="section"><div class="section-header">📈 每日播放量趋势</div><div class="chart-wrap"><canvas id="chart-daily-views"></canvas></div></div>
-</div>
-    <div class="two-col">
-      <div class="section"><div class="section-header">👥 新增用户趋势</div><div class="chart-wrap"><canvas id="chart-users"></canvas></div></div>
-      <div class="section"><div class="section-header">💰 消耗趋势</div><div class="chart-wrap"><canvas id="chart-cost"></canvas></div></div>
-    </div>
-  </div>
-
-  <div id="view-weekly" class="view">
-    <div class="section"><div class="section-header">📈 周消耗走势</div><div class="chart-wrap"><canvas id="chart-weekly"></canvas></div></div>
-    <div class="section">
-      <div class="section-header">📋 周核算表</div>
-      <div style="display:flex; gap:1rem; margin-bottom:1rem;">
-        <select id="weekly-filter-region" onchange="renderWeekly()"><option value="">全部地区</option><option value="TR">土耳其</option><option value="TW">台湾</option><option value="ES">西语</option><option value="BR">巴西</option></select>
-        <select id="weekly-filter-range" onchange="renderWeekly()"><option value="">全部周</option></select>
-      </div>
-      <div class="table-wrap"><table><thead><tr><th>周范围</th><th>地区</th><th>推广条数</th><th>消耗 (USD)</th><th>新增用户</th><th>播放量</th><th>CPA</th></tr></thead><tbody id="weekly-tbody"></tbody></table></div>
-    </div>
-    <div class="section"><div class="section-header">🔄 月度对比分析</div>
-      <div style="display:flex; gap:1.5rem; flex-wrap:wrap; margin-bottom:1rem;">
-        <div>A: <select id="compare-month-a" onchange="renderMonthlyCompare()"></select> vs B: <select id="compare-month-b" onchange="renderMonthlyCompare()"></select></div>
-        <div>C: <select id="compare-month-c" onchange="renderMonthlyCompare()"></select> vs D: <select id="compare-month-d" onchange="renderMonthlyCompare()"></select></div>
-      </div>
-      <div id="monthly-compare-body"></div>
-    </div>
-    <div class="section">
-  <div class="section-header">📊 周报分析</div>
-  <div style="display:flex;gap:1rem;margin-bottom:1rem;align-items:center;flex-wrap:wrap;">
-    <select id="weekly-report-week" onchange="renderWeeklyReport()"><option value="">选择周</option></select>
-    <select id="weekly-report-region" onchange="renderWeeklyReport()"><option value="all">全部地区</option><option value="TR">土耳其</option><option value="TW">台湾</option><option value="ES">西语</option><option value="BR">巴西</option></select>
-    <button class="btn btn-primary" onclick="copyWeeklyReport()">📋 复制周报</button>
-  </div>
-  <div id="weekly-report-body" style="background:var(--bg2);border-radius:var(--radius);padding:1.5rem;line-height:1.8;font-size:14px;white-space:pre-wrap;"></div>
-</div>
-  </div>
-
-  <div id="view-views_panel" class="view">
-    <div class="two-col">
-      <div class="section"><div class="section-header">➕ 录入播放量</div>
-        <select id="vp-mode" onchange="toggleVpDateMode()"><option value="single">单日</option><option value="range">周期</option></select>
-        <div id="vp-date-wrapper"><input type="date" id="vp-date"></div>
-        <select id="vp-region"><option value="TR">土耳其</option><option value="TW">台湾</option><option value="ES">西语</option><option value="BR">巴西</option></select>
-        <input type="number" id="vp-count" placeholder="播放量" style="width:100%; margin:6px 0;">
-        <button class="btn btn-primary" onclick="saveVpRecord()">保存播放量</button>
-        <div style="margin-top:1.2rem;"><div class="section-header">📤 上传播放量表格</div><div class="upload-box" onclick="document.getElementById('vp-file-input').click()"><p>点击上传 (日期/播放量/国家)</p><input type="file" id="vp-file-input" accept=".csv,.xlsx,.xls" onchange="handleVpFileSelect(event)"></div></div>
-      </div>
-      <div class="section"><div class="section-header">📊 播放量统计</div><div class="table-wrap"><table><thead><tr><th>地区</th><th>单日记录</th><th>周期记录</th><th>总播放量</th></tr></thead><tbody id="vp-summary-tbody"></tbody></table></div><div id="vp-clear-btns" style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;"></div></div>
-    </div>
-    <div class="section"><div class="section-header">📜 播放量台账</div><div class="table-wrap"><table><thead><tr><th>模式</th><th>日期</th><th>地区</th><th>播放量</th><th>操作</th></tr></thead><tbody id="vp-tbody"></tbody></table></div><div id="vp-pagination" class="pagination"></div></div>
-  </div>
-
-  <div id="view-tracking" class="view">
-    <div class="section"><div class="section-header">🎯 素材追踪录入</div>
-      <div class="form-grid">
-        <div class="form-group"><label>地区</label><select id="t-region"><option value="TW">台湾</option><option value="TR">土耳其</option></select></div>
-        <div class="form-group"><label>开始日期</label><input type="date" id="t-range-start"></div>
-        <div class="form-group"><label>结束日期</label><input type="date" id="t-range-end"></div>
-        <div class="form-group"><label>SPK新增</label><input type="number" id="t-tt-spk-users" placeholder="0"></div>
-        <div class="form-group"><label>总新增</label><input type="number" id="t-tt-total-users" placeholder="0"></div>
-        <div class="form-group"><label>SPK消耗</label><input type="number" id="t-tt-spk-cost" placeholder="0" step="0.01"></div>
-        <div class="form-group"><label>总消耗</label><input type="number" id="t-tt-total-cost" placeholder="0" step="0.01"></div>
-      </div>
-      <button class="btn btn-primary" onclick="saveTrackingRecord()">保存追踪记录</button>
-    </div>
-    <div id="tracking-tw-block"></div>
-    <div id="tracking-tr-block"></div>
-    <div class="section"><div class="section-header">📅 月度分析</div>
-      <select id="tracking-month-filter" onchange="renderTrackingMonthly()"><option value="">全部</option></select>
-      <div class="table-wrap"><table><thead><tr><th>月</th><th>地区</th><th>SPK新增</th><th>总新增</th><th>SPK消耗</th><th>总消耗</th><th>SPK新增%</th><th>SPK消耗%</th><th>SPK CPR</th><th>总CPR</th></tr></thead><tbody id="tracking-monthly-tbody"></tbody></table></div>
-    </div>
-  </div>
-
- <div id="view-add" class="view">
-<div class="section"><div class="section-header">📂 表格上传</div><div class="upload-box" onclick="document.getElementById('file-input').click()"><p>拖拽或点击上传CSV/Excel</p><input type="file" id="file-input" accept=".csv,.xlsx,.xls" onchange="handleFileSelect(event)"></div></div>
-
-<div class="section"><div class="section-header">📝 推广数据录入 (数量+消耗)</div>
-<input type="hidden" id="f-id">
-<div class="form-grid">
-<div class="form-group"><label>日期模式</label><select id="f-date-mode" onchange="toggleDateInputMode()"><option value="single">单日</option><option value="range">周期</option></select></div>
-<div class="form-group" id="date-input-wrapper"><label>日期</label><input type="date" id="f-date"></div>
-<div class="form-group"><label>地区</label><select id="f-region"><option value="TR">土耳其</option><option value="TW">台湾</option><option value="ES">西语</option><option value="BR">巴西</option></select></div>
-<div class="form-group"><label>渠道</label><select id="f-channel"><option value="TikTok">TikTok</option><option value="YouTube">YouTube</option><option value="Instagram">Instagram</option></select></div>
-<div class="form-group"><label>内容形式</label><select id="f-content-type"><option value="video">video</option><option value="reel">reel</option><option value="story">story</option><option value="comment">comment</option></select></div>
-<div class="form-group"><label>推广数量</label><input type="number" id="f-count" placeholder="1"></div>
-<div class="form-group"><label>消耗(USD)</label><input type="number" id="f-cost" placeholder="0" step="0.01"></div>
-<div class="form-group"><label>备注</label><input type="text" id="f-note"></div>
-</div>
-<button class="btn btn-primary" onclick="saveRecord()">保存推广数据</button>
 </div>
 
-<div class="section"><div class="section-header">👤 新增用户录入</div>
-<div class="form-grid">
-<div class="form-group"><label>日期模式</label><select id="f-user-date-mode" onchange="toggleUserDateMode()"><option value="single">单日</option><option value="range">周期</option></select></div>
-<div class="form-group" id="user-date-wrapper"><label>日期</label><input type="date" id="f-user-date"></div>
-<div class="form-group"><label>地区</label><select id="f-user-region"><option value="TR">土耳其</option><option value="TW">台湾</option><option value="ES">西语</option><option value="BR">巴西</option></select></div>
-<div class="form-group"><label>新增用户量</label><input type="number" id="f-user-count" placeholder="0"></div>
-<div class="form-group"><label>备注</label><input type="text" id="f-user-note"></div>
-</div>
-<button class="btn btn-primary" style="background:#10b981;border-color:#10b981;" onclick="saveUsersOnly()">保存新增用户</button>
+<div class="tabs">
+  <button class="tab active" onclick="showRegion('overview')">📊 总览</button>
+  <button class="tab" onclick="showRegion('TR')">🇹🇷 土耳其</button>
+  <button class="tab" onclick="showRegion('TW')">🔷 台湾</button>
+  <button class="tab" onclick="showRegion('ES')">🌎 西语</button>
+  <button class="tab" onclick="showRegion('BR')">🇧🇷 巴西</button>
 </div>
 
-<div class="section"><div class="section-header">📋 最近录入记录</div><div class="table-wrap"><table><thead><tr><th>日期</th><th>地区</th><th>渠道</th><th>形式</th><th>数量</th><th>消耗</th><th>新增</th><th>备注</th><th>操作</th></tr></thead><tbody id="recent-tbody"></tbody></table></div></div>
+<!-- 总览 -->
+<div id="region-overview" class="view active">
+  <div class="section"><div class="section-header">📅 本月四地区对比</div><div class="metrics-grid" id="overview-month-metrics"></div></div>
+  <div class="two-col">
+    <div class="section"><div class="section-header">💰 消耗趋势对比</div><div class="chart-wrap"><canvas id="overview-cost-chart"></canvas></div></div>
+    <div class="section"><div class="section-header">👥 新增用户趋势对比</div><div class="chart-wrap"><canvas id="overview-users-chart"></canvas></div></div>
+  </div>
+  <div class="section"><div class="section-header">📋 地区明细表</div><div class="table-wrap"><table><thead><tr><th>地区</th><th>月消耗</th><th>月新增</th><th>月播放量</th><th>月CPA</th><th>推广条数</th></tr></thead><tbody id="overview-table-body"></tbody></table></div></div>
+</div>
+
+<!-- 地区页面 -->
+<div id="region-TR" class="view"></div>
+<div id="region-TW" class="view"></div>
+<div id="region-ES" class="view"></div>
+<div id="region-BR" class="view"></div>
+
 </div>
 <div class="toast" id="toast"></div>
+
 <script>
-  var REGIONS={TR:{name:'土耳其',flag:'🇹🇷',color:'#0ca678',keywords:['土耳其','TR','TURKEY']},TW:{name:'台湾',flag:'🔷',color:'#f76707',keywords:['台湾','TW','TAIWAN']},ES:{name:'西语',flag:'🌎',color:'#4c6ef5',keywords:['西语','ES','SPANISH']},BR:{name:'巴西',flag:'🇧🇷',color:'#d6336c',keywords:['巴西','BR','BRAZIL']}};
-  var CHANNEL_COLORS={TikTok:'#1e293b',YouTube:'#3b82f6',Instagram:'#8b5cf6'};
-  var CT_COLORS={video:'#3b82f6',reel:'#8b5cf6',story:'#f59e0b',comment:'#10b981'};
-  var records=[],trackingRecords=[],vpRecords=[],currentRegion='all',charts={},vpCurrentPage=1;
+var REGIONS={TR:{name:'土耳其',flag:'🇹🇷',color:'#0ca678'},TW:{name:'台湾',flag:'🔷',color:'#f76707'},ES:{name:'西语',flag:'🌎',color:'#4c6ef5'},BR:{name:'巴西',flag:'🇧🇷',color:'#d6336c'}};
+var CHANNELS={TikTok:['video','comment'],Instagram:['reel','story','post'],YouTube:['shorts','comment'],Threads:['video','post'],Facebook:['video','post']};
+var ALL_CHANNELS={TR:['TikTok','YouTube','Instagram'],TW:['TikTok','YouTube','Instagram','Threads','Facebook'],ES:['TikTok','YouTube','Instagram'],BR:['TikTok','YouTube','Instagram']};
+var CHANNEL_COLORS={TikTok:'#1e293b',YouTube:'#3b82f6',Instagram:'#8b5cf6',Threads:'#0ca678',Facebook:'#f76707'};
+var records=[],trackingRecords=[],vpRecords=[],currentRegion='overview',charts={},regionSubTab={};
 
-  function loadRecords(){try{records=JSON.parse(localStorage.getItem('kol_records_v10')||'[]');trackingRecords=JSON.parse(localStorage.getItem('kol_tracking_v10')||'[]');vpRecords=JSON.parse(localStorage.getItem('kol_vp_v10')||'[]');}catch(e){records=[];trackingRecords=[];vpRecords=[];}}
-  function persistRecords(){localStorage.setItem('kol_records_v10',JSON.stringify(records));}
-  function persistTrackingRecords(){localStorage.setItem('kol_tracking_v10',JSON.stringify(trackingRecords));}
-  function persistVp(){localStorage.setItem('kol_vp_v10',JSON.stringify(vpRecords));}
-  function sum(a,k){return a.reduce(function(s,r){return s+(parseFloat(r[k])||0);},0);}
-  function pct(a,b){return b===0?0:Math.round((a-b)/b*100);}
-  function toast(m){var e=document.getElementById('toast');e.textContent=m;e.classList.add('show');clearTimeout(window._tt);window._tt=setTimeout(function(){e.classList.remove('show');},3000);}
+function loadRecords(){try{records=JSON.parse(localStorage.getItem('kol_records_v10')||'[]');trackingRecords=JSON.parse(localStorage.getItem('kol_tracking_v10')||'[]');vpRecords=JSON.parse(localStorage.getItem('kol_vp_v10')||'[]');}catch(e){records=[];trackingRecords=[];vpRecords=[];}}
+function persistRecords(){localStorage.setItem('kol_records_v10',JSON.stringify(records));}
+function persistTrackingRecords(){localStorage.setItem('kol_tracking_v10',JSON.stringify(trackingRecords));}
+function persistVp(){localStorage.setItem('kol_vp_v10',JSON.stringify(vpRecords));}
+function sum(a,k){return a.reduce(function(s,r){return s+(parseFloat(r[k])||0);},0);}
+function pct(a,b){return b===0?0:Math.round((a-b)/b*100);}
+function toast(m){var e=document.getElementById('toast');e.textContent=m;e.classList.add('show');clearTimeout(window._tt);window._tt=setTimeout(function(){e.classList.remove('show');},3000);}
+function getWeekStr(d){var dd=new Date(d.indexOf(' 至 ')>-1?d.split(' 至 ')[0]:d);if(isNaN(dd))return'?';var j1=new Date(dd.getFullYear(),0,1);return dd.getFullYear()+'-W'+String(Math.ceil(((dd-j1)/86400000+j1.getDay()+1)/7)).padStart(2,'0');}
 
-  function getWeekStr(d){var dd=new Date(d.indexOf(' 至 ')>-1?d.split(' 至 ')[0]:d);if(isNaN(dd))return'?';var j1=new Date(dd.getFullYear(),0,1);return dd.getFullYear()+'-W'+String(Math.ceil(((dd-j1)/86400000+j1.getDay()+1)/7)).padStart(2,'0');}
-  function getWeekLabel(w){if(!w||w.indexOf('-W')===-1)return w;var p=w.split('-W'),y=+p[0],wk=+p[1];var j4=new Date(y,0,4),dow=j4.getDay()||7;var mon=new Date(j4.getTime()-(dow-1)*86400000+(wk-1)*7*86400000);var sun=new Date(mon.getTime()+6*86400000);return(mon.getMonth()+1)+'/'+mon.getDate()+'-'+(sun.getMonth()+1)+'/'+sun.getDate();}
-
-  function toggleDateInputMode(){var m=document.getElementById('f-date-mode').value,w=document.getElementById('date-input-wrapper');if(m==='single'){w.innerHTML='<label>日期</label><input type="date" id="f-date">';document.getElementById('f-date').value=new Date().toISOString().slice(0,10);}else{w.innerHTML='<label>周期</label><div style="display:flex;gap:8px;"><input type="date" id="f-date-start"><input type="date" id="f-date-end"></div>';var t=new Date().toISOString().slice(0,10);document.getElementById('f-date-start').value=t;document.getElementById('f-date-end').value=t;}}
-  function toggleUserDateMode(){var m=document.getElementById('f-user-date-mode').value,w=document.getElementById('user-date-wrapper');if(m==='single'){w.innerHTML='<label>日期</label><input type="date" id="f-user-date">';document.getElementById('f-user-date').value=new Date().toISOString().slice(0,10);}else{w.innerHTML='<label>周期</label><div style="display:flex;gap:8px;"><input type="date" id="f-user-date-start"><input type="date" id="f-user-date-end"></div>';var t=new Date().toISOString().slice(0,10);document.getElementById('f-user-date-start').value=t;document.getElementById('f-user-date-end').value=t;}}
-  function toggleVpDateMode(){var m=document.getElementById('vp-mode').value,w=document.getElementById('vp-date-wrapper');if(m==='single')w.innerHTML='<input type="date" id="vp-date">';else w.innerHTML='<div style="display:flex;gap:8px;"><input type="date" id="vp-start"><input type="date" id="vp-end"></div>';}
-
-  function showView(v){
-    document.querySelectorAll('.view').forEach(function(e){e.classList.remove('active');});
-    document.getElementById('view-'+v).classList.add('active');
-    var tabs=['dashboard','weekly','views_panel','tracking','add'];
-    document.querySelectorAll('.tab').forEach(function(t,i){t.classList.toggle('active',tabs[i]===v);});
-    if(v==='dashboard'){updateDashboardMonthFilter();renderDashboard();}
-    if(v==='weekly'){updateWeeklyFilters();renderWeekly();updateMonthSelectors();renderMonthlyCompare();updateWeeklyReportSelect();}
-    if(v==='views_panel')renderVpView();
-    if(v==='tracking'){renderTrackingView();updateTrackingMonthFilter();renderTrackingMonthly();}
-    if(v==='add'){toggleDateInputMode();renderRecent();}
-  }
-  function setRegion(r){currentRegion=r;document.querySelectorAll('.rtab').forEach(function(t){t.classList.remove('active');var x=t.textContent.trim();if((r==='all'&&x.includes('全部'))||(r==='TR'&&x.includes('土耳其'))||(r==='TW'&&x.includes('台湾'))||(r==='ES'&&x.includes('西语'))||(r==='BR'&&x.includes('巴西'))){t.classList.add('active');t.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});}});renderDashboard();}
-
-  function updateDashboardMonthFilter(){
-    var months=new Set();
-    records.forEach(function(r){var m=r.date.match(/(\d{4})-(\d{2})/);if(m)months.add(m[1]+'-'+m[2]);});
-    vpRecords.forEach(function(v){var m=v.date.match(/(\d{4})-(\d{2})/);if(m)months.add(m[1]+'-'+m[2]);});
-    var sel=document.getElementById('dashboard-month-filter'),cur=sel.value;
-    sel.innerHTML='<option value="">全部月份</option>';
-    Array.from(months).sort().forEach(function(m){var o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
-    if(months.has(cur))sel.value=cur;
-  }
-
-  function getFilteredBase(){
-    var base=currentRegion==='all'?records:records.filter(function(r){return r.region===currentRegion;});
-    var mf=document.getElementById('dashboard-month-filter').value;
-    if(mf)base=base.filter(function(r){return r.date.indexOf(mf)>-1;});
-    return base;
-  }
-
-  function getVpSum(dates,rf){
-    var t=0,vb=rf==='all'?vpRecords:vpRecords.filter(function(v){return v.region===rf;});
-    vb.forEach(function(v){if(v.mode==='single'&&dates.indexOf(v.date)>-1)t+=v.views;if(v.mode==='range'){var p=v.date.split(' 至 ');if(dates.some(function(d){return d>=p[0]&&d<=p[1];}))t+=v.views;}});
-    return t;
-  }
-
-  function renderDashboard(){
-    var base=getFilteredBase(),mf=document.getElementById('dashboard-month-filter').value;
-    var td=new Date(),ty=td.getFullYear(),tm=td.getMonth();
-    if(mf){var p=mf.split('-');ty=+p[0];tm=+p[1]-1;}
-    function dm(y,m){var a=[];var d=new Date(y,m,1);while(d.getMonth()===m){a.push(d.toISOString().slice(0,10));d.setDate(d.getDate()+1);}return a;}
-    function dw(o){var a=[],dow=td.getDay()||7,mon=new Date(td);mon.setDate(td.getDate()-dow+1+o*7);for(var i=0;i<7;i++){var d=new Date(mon);d.setDate(mon.getDate()+i);a.push(d.toISOString().slice(0,10));}return a;}
-    var md=dm(ty,tm),wd=dw(0),pmd=dm(ty,tm-1),pwd=dw(-1);
-    var mr=base.filter(function(r){return md.indexOf(r.date.slice(0,10))>-1;});
-    var wr=base.filter(function(r){return wd.indexOf(r.date.slice(0,10))>-1;});
-    var pmr=base.filter(function(r){return pmd.indexOf(r.date.slice(0,10))>-1;});
-    var pwr=base.filter(function(r){return pwd.indexOf(r.date.slice(0,10))>-1;});
-    var mc=sum(mr,'cost'),mu=sum(mr,'users'),wc=sum(wr,'cost'),wu=sum(wr,'users');
-    var pmc=sum(pmr,'cost'),pwc=sum(pwr,'cost');
-    var mv=getVpSum(md,currentRegion),wv=getVpSum(wd,currentRegion);
-    var dmStr=mf||(ty+'-'+String(tm+1).padStart(2,'0'));
-    document.getElementById('month-metrics-grid').innerHTML=[
-      {l:'月度总消耗',v:'$'+mc.toLocaleString(),s:(pmc>0?'<span class="'+(mc>=pmc?'up':'dn')+'">'+(mc>=pmc?'↑':'↓')+Math.abs(pct(mc,pmc))+'%</span> vs 上月':'')},
-      {l:'月度新增用户',v:mu.toLocaleString()+' 人',s:dmStr+' 累计'},
-      {l:'月度播放量',v:mv.toLocaleString()+' 次',s:''},
-      {l:'月度CPA',v:mu>0?'$'+(mc/mu).toFixed(2):'—',s:''}
-    ].map(function(x){return'<div class="metric-card"><div class="metric-label">'+x.l+'</div><div class="metric-value">'+x.v+'</div><div class="metric-sub">'+x.s+'</div></div>';}).join('');
-    document.getElementById('week-metrics-grid').innerHTML=[
-      {l:'本周总消耗',v:'$'+wc.toLocaleString(),s:(pwc>0?'<span class="'+(wc>=pwc?'up':'dn')+'">'+(wc>=pwc?'↑':'↓')+Math.abs(pct(wc,pwc))+'%</span> vs 上周':'')},
-      {l:'本周新增用户',v:wu.toLocaleString()+' 人',s:''},
-      {l:'本周播放量',v:wv.toLocaleString()+' 次',s:''},
-      {l:'本周CPA',v:wu>0?'$'+(wc/wu).toFixed(2):'—',s:''}
-    ].map(function(x){return'<div class="metric-card"><div class="metric-label">'+x.l+'</div><div class="metric-value">'+x.v+'</div><div class="metric-sub">'+x.s+'</div></div>';}).join('');
-    renderTrendCharts();renderDistCharts();
-  }
-
-  function renderTrendCharts(){
-    var base=getFilteredBase(),dates=[];
-    for(var i=6;i>=0;i--){var d=new Date();d.setDate(d.getDate()-i);dates.push(d.toISOString().slice(0,10));}
-    var labels=dates.map(function(d){return d.slice(5);});
-    var rks=currentRegion==='all'?Object.keys(REGIONS):[currentRegion];
-    var isDark=matchMedia('(prefers-color-scheme:dark)').matches;
-    var gc=isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)',tc=isDark?'#909296':'#6c757d';
-    function ds(key){return rks.map(function(r){return{label:REGIONS[r].name,data:dates.map(function(d){return sum(base.filter(function(x){return x.date.indexOf(d)>-1&&x.region===r;}),key);}),borderColor:REGIONS[r].color,backgroundColor:REGIONS[r].color+'15',tension:.3,pointRadius:3,borderWidth:2,fill:rks.length===1};});}
-    ['chart-users','chart-cost'].forEach(function(id){if(charts[id])charts[id].destroy();});
-    var opts={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc}}}};
-    charts['chart-users']=new Chart(document.getElementById('chart-users'),{type:'line',data:{labels:labels,datasets:ds('users')},options:opts});
-    charts['chart-cost']=new Chart(document.getElementById('chart-cost'),{type:'line',data:{labels:labels,datasets:ds('cost')},options:opts});
-  }
-
-  function renderDistCharts(){
-  var base=getFilteredBase(),tc=matchMedia('(prefers-color-scheme:dark)').matches?'#909296':'#6c757d';
-  var isDark=matchMedia('(prefers-color-scheme:dark)').matches;
-  var gc=isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)';
-  
-  // 渠道消耗分布（保留）
-  var chs=['TikTok','YouTube','Instagram'];
-  if(charts['chart-channels'])charts['chart-channels'].destroy();
-  charts['chart-channels']=new Chart(document.getElementById('chart-channels'),{type:'doughnut',data:{labels:chs,datasets:[{data:chs.map(function(c){return sum(base.filter(function(r){return r.channel===c;}),'cost');}),backgroundColor:chs.map(function(c){return CHANNEL_COLORS[c];})}]},options:{responsive:true,maintainAspectRatio:false}});
-  
-  // 每日播放量趋势（新增）
-  var dates=[];
-  for(var i=6;i>=0;i--){var d=new Date();d.setDate(d.getDate()-i);dates.push(d.toISOString().slice(0,10));}
-  var labels=dates.map(function(d){return d.slice(5);});
-  var viewsData=dates.map(function(d){
-    var total=0;
-    vpRecords.forEach(function(v){
-      if(currentRegion!=='all'&&v.region!==currentRegion)return;
-      if(v.mode==='single'&&v.date===d)total+=v.views;
-      if(v.mode==='range'){var p=v.date.split(' 至 ');if(d>=p[0]&&d<=p[1])total+=v.views;}
-    });
-    return total;
+function showRegion(r){
+  currentRegion=r;
+  document.querySelectorAll('.view').forEach(function(e){e.classList.remove('active');});
+  document.getElementById('region-'+r).classList.add('active');
+  document.querySelectorAll('.tab').forEach(function(t,i){
+    var regions=['overview','TR','TW','ES','BR'];
+    t.classList.toggle('active',regions[i]===r);
   });
-  if(charts['chart-daily-views'])charts['chart-daily-views'].destroy();
-  charts['chart-daily-views']=new Chart(document.getElementById('chart-daily-views'),{
-    type:'bar',
-    data:{
-      labels:labels,
-      datasets:[{
-        label:'播放量',
-        data:viewsData,
-        backgroundColor:'#3b82f6',
-        borderRadius:6
-      }]
-    },
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      plugins:{legend:{display:false}},
-      scales:{
-        x:{grid:{display:false},ticks:{color:tc}},
-        y:{grid:{color:gc},ticks:{color:tc}}
-      }
-    }
-  });
-}
-function updateWeeklyFilters(){
-  var s=new Set();records.forEach(function(r){s.add(getWeekStr(r.date));});
-  var sel=document.getElementById('weekly-filter-range');sel.innerHTML='<option value="">全部周</option>';
-  Array.from(s).sort().forEach(function(w){var o=document.createElement('option');o.value=w;o.textContent=getWeekLabel(w);sel.appendChild(o);});
-}
-  function renderWeekly(){
-    var tc=matchMedia('(prefers-color-scheme:dark)').matches?'#909296':'#6c757d';
-    var wf=document.getElementById('weekly-filter-range').value,rf=document.getElementById('weekly-filter-region').value;
-    var wm={};records.forEach(function(r){var wk=getWeekStr(r.date);if(!wm[wk])wm[wk]={};if(!wm[wk][r.region])wm[wk][r.region]={count:0,cost:0,users:0};wm[wk][r.region].count+=(+r.count||0);wm[wk][r.region].cost+=(+r.cost||0);wm[wk][r.region].users+=(+r.users||0);});
-    var aw=Object.keys(wm).sort(),cw=aw.slice(-6),rks=Object.keys(REGIONS);
-    if(charts['chart-weekly'])charts['chart-weekly'].destroy();
-    charts['chart-weekly']=new Chart(document.getElementById('chart-weekly'),{type:'bar',data:{labels:cw.map(function(w){return getWeekLabel(w);}),datasets:rks.map(function(r){return{label:REGIONS[r].name,data:cw.map(function(w){return wm[w]&&wm[w][r]?wm[w][r].cost:0;}),backgroundColor:REGIONS[r].color+'cc'};})},options:{responsive:true,maintainAspectRatio:false,scales:{x:{ticks:{color:tc}},y:{ticks:{color:tc}}}}});
-    var rows='';aw.slice().reverse().forEach(function(w){if(wf&&w!==wf)return;rks.forEach(function(r){if(rf&&r!==rf)return;var d=wm[w]&&wm[w][r];if(!d)return;var wv=0;vpRecords.filter(function(v){return v.region===r;}).forEach(function(v){if(v.mode==='single'&&getWeekStr(v.date)===w)wv+=v.views;if(v.mode==='range'){var p=v.date.split(' 至 ');var yw=w.split('-W');var mon=new Date(yw[0],0,4);mon.setDate(mon.getDate()-(mon.getDay()||7)+1+(yw[1]-1)*7);for(var i=0;i<7;i++){var cd=new Date(mon);cd.setDate(mon.getDate()+i);if(cd.toISOString().slice(0,10)>=p[0]&&cd.toISOString().slice(0,10)<=p[1])wv+=v.views;}}});rows+='<tr><td>'+getWeekLabel(w)+'</td><td><span class="badge b-'+r+'">'+REGIONS[r].flag+' '+REGIONS[r].name+'</span></td><td>'+d.count+'</td><td>$'+d.cost.toLocaleString()+'</td><td>'+d.users.toLocaleString()+'</td><td>'+wv.toLocaleString()+'</td><td>'+(d.users>0?'$'+(d.cost/d.users).toFixed(2):'—')+'</td></tr>';});});
-    document.getElementById('weekly-tbody').innerHTML=rows||'<tr><td colspan="7" class="empty">无数据</td></tr>';
-  }
-
-  function updateMonthSelectors(){
-    var s=new Set();function add(d){var m=d.match(/(\d{4})-(\d{2})/);if(m)s.add(m[1]+'-'+m[2]);}
-    records.forEach(function(r){if(r.date.indexOf(' 至 ')>-1)r.date.split(' 至 ').forEach(add);else add(r.date);});
-    vpRecords.forEach(function(v){if(v.date.indexOf(' 至 ')>-1)v.date.split(' 至 ').forEach(add);else add(v.date);});
-    var list=Array.from(s).sort();
-    ['compare-month-a','compare-month-b','compare-month-c','compare-month-d'].forEach(function(id,i){
-      var el=document.getElementById(id),saved=el.value;el.innerHTML='<option value="">—</option>';
-      list.forEach(function(m){var o=document.createElement('option');o.value=m;o.textContent=m;el.appendChild(o);});
-      if(list.length>0){if(list.indexOf(saved)>-1)el.value=saved;else{if(i===0||i===2)el.value=list[list.length-2]||list[0];if(i===1||i===3)el.value=list[list.length-1]||list[0];}}
-    });
-  }
-
-  function getMonthStats(m,reg){
-    if(!m)return{cost:0,users:0,views:0,cpa:null};
-    var sub=records.filter(function(r){return r.region===reg&&r.date.indexOf(m)>-1;});
-    var vw=0;vpRecords.filter(function(v){return v.region===reg&&v.date.indexOf(m)>-1;}).forEach(function(v){vw+=v.views;});
-    var tc=sum(sub,'cost'),tu=sum(sub,'users');
-    return{cost:tc,users:tu,views:vw,cpa:tu>0?tc/tu:null};
-  }
-
-  function buildCompareRows(s,p,showDiff){
-    var rows=[{l:'总消耗',v:'$'+s.cost.toLocaleString(),c:s.cost,pr:p?p.cost:null},{l:'新增用户',v:s.users.toLocaleString()+' 人',c:s.users,pr:p?p.users:null},{l:'播放量',v:s.views.toLocaleString()+' 次',c:s.views,pr:p?p.views:null},{l:'CPA',v:s.cpa?'$'+s.cpa.toFixed(2):'—',c:s.cpa,pr:p&&p.cpa?p.cpa:null}];
-    var h='';
-    for(var i=0;i<rows.length;i++){
-      var r=rows[i],df='';
-      if(showDiff&&p&&r.pr!==null&&r.c!==null&&r.pr!==0){var ch=((r.c-r.pr)/r.pr*100);df=' <span class="diff-badge '+(ch>=0?'up':'dn')+'">'+(ch>=0?'↑':'↓')+Math.abs(ch).toFixed(1)+'%</span>';}
-      h+='<div class="compare-row"><span class="label">'+r.l+'</span><span class="value">'+r.v+df+'</span></div>';
-    }
-    return h;
-  }
-
-  function renderMonthlyCompare(){
-    var ma=document.getElementById('compare-month-a').value,mb=document.getElementById('compare-month-b').value;
-    var mc=document.getElementById('compare-month-c').value,md=document.getElementById('compare-month-d').value;
-    var body=document.getElementById('monthly-compare-body');
-    if(!ma&&!mb&&!mc&&!md){body.innerHTML='<div class="empty">请选择月份</div>';return;}
-    var h='';
-    Object.keys(REGIONS).forEach(function(r){
-      var sa=getMonthStats(ma,r),sb=getMonthStats(mb,r),sc=getMonthStats(mc,r),sd=getMonthStats(md,r);
-      var has=(ma&&(sa.cost>0||sa.users>0))||(mb&&(sb.cost>0||sb.users>0))||(mc&&(sc.cost>0||sc.users>0))||(md&&(sd.cost>0||sd.users>0));
-      if(!has)return;
-      h+='<div class="section"><div class="section-header">'+REGIONS[r].flag+' '+REGIONS[r].name+'</div>';
-      if(ma&&mb){h+='<div style="font-weight:700;color:#3b82f6;margin-bottom:8px;">对比组1: '+ma+' vs '+mb+'</div><div class="compare-grid"><div class="compare-card"><div class="compare-card-title">基准月: '+ma+'</div>'+buildCompareRows(sa,null,false)+'</div><div class="compare-card"><div class="compare-card-title">对比月: '+mb+'</div>'+buildCompareRows(sb,sa,true)+'</div></div>';}
-      if(mc&&md){h+='<div style="font-weight:700;color:#10b981;margin-bottom:8px;">对比组2: '+mc+' vs '+md+'</div><div class="compare-grid"><div class="compare-card"><div class="compare-card-title">基准月: '+mc+'</div>'+buildCompareRows(sc,null,false)+'</div><div class="compare-card"><div class="compare-card-title">对比月: '+md+'</div>'+buildCompareRows(sd,sc,true)+'</div></div>';}
-      h+='</div>';
-    });
-    body.innerHTML=h||'<div class="empty">无数据</div>';
-  }
-
-  function saveVpRecord(){
-    var mode=document.getElementById('vp-mode').value,region=document.getElementById('vp-region').value;
-    var cv=parseFloat(document.getElementById('vp-count').value)||0,ds='';
-    if(mode==='single'){ds=document.getElementById('vp-date').value;if(!ds){toast('请选择日期');return;}}
-    else{var sD=document.getElementById('vp-start').value,eD=document.getElementById('vp-end').value;if(!sD||!eD){toast('周期不完整');return;}ds=sD+' 至 '+eD;}
-    if(cv<=0){toast('播放量不合法');return;}
-    var ex=vpRecords.findIndex(function(v){return v.mode===mode&&v.date===ds&&v.region===region;});
-    if(ex>-1){vpRecords[ex].views=cv;toast('已覆盖');}else{vpRecords.push({id:'vp_'+Date.now(),mode:mode,date:ds,region:region,views:cv});toast('保存成功');}
-    persistVp();document.getElementById('vp-count').value='';renderVpView();updateMonthSelectors();updateDashboardMonthFilter();
-  }
-  function deleteVpRecord(id){if(confirm('删除？')){vpRecords=vpRecords.filter(function(v){return v.id!==id;});vpCurrentPage=1;persistVp();renderVpView();updateMonthSelectors();updateDashboardMonthFilter();toast('已删除');}}
-
-  function renderVpView(){
-    document.getElementById('vp-summary-tbody').innerHTML=Object.keys(REGIONS).map(function(r){var sub=vpRecords.filter(function(v){return v.region===r;});return'<tr><td><span class="badge b-'+r+'">'+REGIONS[r].flag+' '+REGIONS[r].name+'</span></td><td>'+sub.filter(function(v){return v.mode==='single';}).length+'</td><td>'+sub.filter(function(v){return v.mode==='range';}).length+'</td><td>'+sum(sub,'views').toLocaleString()+'</td></tr>';}).join('');
-    var ps=10,tp=Math.ceil(vpRecords.length/ps);if(vpCurrentPage>tp)vpCurrentPage=tp||1;
-    var st=(vpCurrentPage-1)*ps,pd=vpRecords.slice().reverse().slice(st,st+ps);
-    document.getElementById('vp-tbody').innerHTML=vpRecords.length===0?'<tr><td colspan="5" class="empty">无数据</td></tr>':pd.map(function(v){return'<tr><td>'+(v.mode==='single'?'单日':'周期')+'</td><td>'+v.date+'</td><td><span class="badge b-'+v.region+'">'+(REGIONS[v.region]?REGIONS[v.region].flag+' '+REGIONS[v.region].name:v.region)+'</span></td><td>'+v.views.toLocaleString()+'</td><td><button class="action-btn del" onclick="deleteVpRecord(\''+v.id+'\')">✕</button></td></tr>';}).join('');
-    var ph='';if(tp>1){ph+='<button class="page-btn" onclick="vpCurrentPage=1;renderVpView();" '+(vpCurrentPage===1?'disabled':'')+'>«</button>';for(var i=Math.max(1,vpCurrentPage-2);i<=Math.min(tp,vpCurrentPage+2);i++){ph+='<button class="page-btn'+(i===vpCurrentPage?' active':'')+'" onclick="vpCurrentPage='+i+';renderVpView();">'+i+'</button>';}ph+='<button class="page-btn" onclick="vpCurrentPage='+tp+';renderVpView();" '+(vpCurrentPage===tp?'disabled':'')+'>»</button>';ph+='<span style="font-size:12px;margin-left:8px;">'+vpCurrentPage+'/'+tp+' ('+vpRecords.length+'条)</span>';}
-    document.getElementById('vp-pagination').innerHTML=ph;
-    var cb='<button class="btn" style="background:#ef4444;color:#fff;font-size:11px;" onclick="if(confirm(\'清空全部？\')){vpRecords=[];vpCurrentPage=1;persistVp();renderVpView();updateMonthSelectors();updateDashboardMonthFilter();}">清空全部</button>';
-    Object.keys(REGIONS).forEach(function(r){var c=vpRecords.filter(function(v){return v.region===r;}).length;cb+='<button class="btn" style="font-size:11px;border-color:'+REGIONS[r].color+';color:'+REGIONS[r].color+';" onclick="if(confirm(\'清空'+REGIONS[r].name+'？\')){vpRecords=vpRecords.filter(function(v){return v.region!==\''+r+'\';});vpCurrentPage=1;persistVp();renderVpView();updateMonthSelectors();updateDashboardMonthFilter();}">'+REGIONS[r].flag+'('+c+')</button>';});
-    document.getElementById('vp-clear-btns').innerHTML=cb;
-  }
-
-  function handleVpFileSelect(e){if(e.target.files.length)processVpFile(e.target.files[0]);}
-  function processVpFile(file){
-    var reader=new FileReader();reader.onload=function(e){
-      try{
-        var rows=[],ext=file.name.split('.').pop().toLowerCase();
-        if(ext==='csv'){var t=new TextDecoder('utf-8').decode(e.target.result);rows=t.split('\n').map(function(l){return l.split(',').map(function(c){return c.trim().replace(/^"|"$/g,'');});});}
-        else{var wb=XLSX.read(e.target.result,{type:'array',cellDates:true,dateNF:'yyyy/mm/dd'});rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:false,dateNF:'yyyy/mm/dd'});}
-        if(rows.length<2){toast('无数据');return;}
-        function td(v){if(!v)return null;if(typeof v==='number'){var d=new Date((v-25569)*86400000);if(!isNaN(d))return d.toISOString().slice(0,10);}var s=String(v).trim(),m=s.match(/(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})/);if(m)return m[1]+'-'+String(+m[2]).padStart(2,'0')+'-'+String(+m[3]).padStart(2,'0');return null;}
-        var hd=rows[0].map(function(h){return String(h||'').trim().toUpperCase();});
-        var iD=hd.findIndex(function(h){return h.indexOf('日期')>-1||h.indexOf('DATE')>-1;});
-        var iV=hd.findIndex(function(h){return h.indexOf('播放')>-1||h.indexOf('VIEWS')>-1;});
-        var iR=hd.findIndex(function(h){return h.indexOf('国家')>-1||h.indexOf('地区')>-1||h.indexOf('REGION')>-1;});
-        if(iD===-1||iV===-1){toast('表头需含日期/播放量');return;}
-        var added=0,updated=0;
-        for(var i=1;i<rows.length;i++){var row=rows[i];if(!row||row[iD]==null)continue;var ds=td(row[iD]);if(!ds)continue;var vv=parseFloat(row[iV])||0;var rr=iR>-1?String(row[iR]).trim().toUpperCase():'BR';var mr='BR';for(var k in REGIONS){if(REGIONS[k].keywords.some(function(kw){return rr.indexOf(kw)>-1;})){mr=k;break;}}if(vv<=0)continue;var ex=vpRecords.find(function(v){return v.mode==='single'&&v.date===ds&&v.region===mr;});if(ex){ex.views=vv;updated++;}else{vpRecords.push({id:'vp_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),mode:'single',date:ds,region:mr,views:vv});added++;}}
-        vpCurrentPage=1;persistVp();renderVpView();updateMonthSelectors();updateDashboardMonthFilter();toast('导入完成！新增'+added+'条，更新'+updated+'条');
-      }catch(err){toast('解析错误');}
-    };reader.readAsArrayBuffer(file);
-  }
-
-  function saveTrackingRecord(){
-    var region=document.getElementById('t-region').value;
-    var sd=document.getElementById('t-range-start').value,ed=document.getElementById('t-range-end').value;
-    if(!sd||!ed){toast('请选择日期');return;}
-    if(sd>ed){toast('开始日期不能晚于结束日期');return;}
-    var range=sd+' 至 '+ed;
-    var spkU=parseFloat(document.getElementById('t-tt-spk-users').value)||0;
-    var totU=parseFloat(document.getElementById('t-tt-total-users').value)||0;
-    var spkC=parseFloat(document.getElementById('t-tt-spk-cost').value)||0;
-    var totC=parseFloat(document.getElementById('t-tt-total-cost').value)||0;
-    var ex=trackingRecords.findIndex(function(r){return r.region===region&&r.range===range;});
-    if(ex>-1){trackingRecords[ex].spkUsers=spkU;trackingRecords[ex].totalUsers=totU;trackingRecords[ex].spkCost=spkC;trackingRecords[ex].totalCost=totC;toast('已更新');}
-    else{trackingRecords.push({id:'t_'+Date.now(),region:region,range:range,spkUsers:spkU,totalUsers:totU,spkCost:spkC,totalCost:totC});toast('保存成功');}
-    persistTrackingRecords();renderTrackingView();updateTrackingMonthFilter();renderTrackingMonthly();
-    document.getElementById('t-range-start').value='';document.getElementById('t-range-end').value='';
-    document.getElementById('t-tt-spk-users').value='';document.getElementById('t-tt-total-users').value='';
-    document.getElementById('t-tt-spk-cost').value='';document.getElementById('t-tt-total-cost').value='';
-  }
-
-  function renderTrackingRegionBlock(rk){
-    var list=trackingRecords.filter(function(r){return r.region===rk;});
-    list.sort(function(a,b){var as=a.range.split(' 至 ')[0].trim().replace(/\//g,'-').replace(/\./g,'-');var bs=b.range.split(' 至 ')[0].trim().replace(/\//g,'-').replace(/\./g,'-');return bs.localeCompare(as);});
-    var spkU=sum(list,'spkUsers'),totU=sum(list,'totalUsers'),spkC=sum(list,'spkCost'),totC=sum(list,'totalCost');
-    var container=document.getElementById(rk==='TW'?'tracking-tw-block':'tracking-tr-block');
-    if(!container)return;
-    var nm=REGIONS[rk].name,fl=REGIONS[rk].flag,cl=REGIONS[rk].color;
-    var h='<div class="section"><div class="section-header">'+fl+' '+nm+' 汇总</div>';
-    h+='<div class="metrics-grid">';
-    h+='<div class="metric-card" style="border-left:4px solid '+cl+';"><div class="metric-label">SPK新增占比</div><div class="metric-value">'+(totU>0?(spkU/totU*100).toFixed(1)+'%':'0%')+'</div></div>';
-    h+='<div class="metric-card" style="border-left:4px solid '+cl+';"><div class="metric-label">SPK消耗占比</div><div class="metric-value">'+(totC>0?(spkC/totC*100).toFixed(1)+'%':'0%')+'</div></div>';
-    h+='<div class="metric-card" style="border-left:4px solid '+cl+';"><div class="metric-label">SPK CPR</div><div class="metric-value">'+(spkU>0?'$'+(spkC/spkU).toFixed(2):'—')+'</div></div>';
-    h+='<div class="metric-card" style="border-left:4px solid '+cl+';"><div class="metric-label">总CPR</div><div class="metric-value">'+(totU>0?'$'+(totC/totU).toFixed(2):'—')+'</div></div>';
-    h+='</div><div class="table-wrap"><table><thead><tr><th>时间段</th><th>SPK新增</th><th>总新增</th><th>新增占比</th><th>SPK消耗</th><th>总消耗</th><th>消耗占比</th><th>SPK CPR</th><th>总CPR</th><th>新增环比</th><th>消耗环比</th><th>操作</th></tr></thead><tbody>';
-    if(list.length===0){h+='<tr><td colspan="12" class="empty">暂无数据</td></tr>';}
-    else{
-      for(var i=0;i<list.length;i++){
-        var r=list[i];
-        var ur=r.totalUsers>0?(r.spkUsers/r.totalUsers*100).toFixed(1)+'%':'—';
-        var cr=r.totalCost>0?(r.spkCost/r.totalCost*100).toFixed(1)+'%':'—';
-        var scpr=r.spkUsers>0?'$'+(r.spkCost/r.spkUsers).toFixed(2):'—';
-        var tcpr=r.totalUsers>0?'$'+(r.totalCost/r.totalUsers).toFixed(2):'—';
-        var prev=i<list.length-1?list[i+1]:null;
-        function w(curr,pv){if(!pv||pv===0)return'<span style="color:var(--text2);">—</span>';var ch=((curr-pv)/pv*100);return'<span class="'+(ch>=0?'up':'dn')+'">'+(ch>=0?'↑':'↓')+Math.abs(ch).toFixed(1)+'%</span>';}
-        h+='<tr><td>'+r.range+'</td><td>'+r.spkUsers.toLocaleString()+'</td><td>'+r.totalUsers.toLocaleString()+'</td><td>'+ur+'</td><td>$'+r.spkCost.toLocaleString()+'</td><td>$'+r.totalCost.toLocaleString()+'</td><td>'+cr+'</td><td>'+scpr+'</td><td>'+tcpr+'</td><td>'+w(r.spkUsers,prev?prev.spkUsers:null)+'</td><td>'+w(r.spkCost,prev?prev.spkCost:null)+'</td><td><button class="action-btn del" onclick="trackingRecords=trackingRecords.filter(function(x){return x.id!==\''+r.id+'\';});persistTrackingRecords();renderTrackingView();updateTrackingMonthFilter();renderTrackingMonthly();">✕</button></td></tr>';
-      }
-    }
-    h+='</tbody></table></div></div>';
+  if(r==='overview'){renderOverview();return;}
+  if(!regionSubTab[r])regionSubTab[r]='dashboard';
+  var container=document.getElementById('region-'+r);
+  if(!container.innerHTML){
+    var hasTracking=(r==='TR'||r==='TW');
+    var h='<div class="sub-tabs"><button class="sub-tab active" onclick="switchSubTab(\''+r+'\',\'dashboard\')">📊 看板</button><button class="sub-tab" onclick="switchSubTab(\''+r+'\',\'data\')">📋 数据筛选</button><button class="sub-tab" onclick="switchSubTab(\''+r+'\',\'input\')">📝 录入</button>';
+    if(hasTracking)h+='<button class="sub-tab" onclick="switchSubTab(\''+r+'\',\'tracking\')">🎯 素材追踪</button>';
+    h+='</div>';
+    h+='<div id="sub-'+r+'-dashboard" class="sub-view active"></div>';
+    h+='<div id="sub-'+r+'-data" class="sub-view" style="display:none;"></div>';
+    h+='<div id="sub-'+r+'-input" class="sub-view" style="display:none;"></div>';
+    if(hasTracking)h+='<div id="sub-'+r+'-tracking" class="sub-view" style="display:none;"></div>';
     container.innerHTML=h;
+    // 看板
+    document.getElementById('sub-'+r+'-dashboard').innerHTML='<div class="metrics-grid" id="m-'+r+'"></div><div class="two-col"><div class="section"><div class="section-header">📈 消耗趋势</div><div class="chart-wrap"><canvas id="ch-cost-'+r+'"></canvas></div></div><div class="section"><div class="section-header">👥 新增用户趋势</div><div class="chart-wrap"><canvas id="ch-users-'+r+'"></canvas></div></div></div><div class="two-col"><div class="section"><div class="section-header">📡 渠道消耗分布</div><div class="chart-wrap"><canvas id="ch-channel-'+r+'"></canvas></div></div><div class="section"><div class="section-header">📈 每日播放量</div><div class="chart-wrap"><canvas id="ch-views-'+r+'"></canvas></div></div></div>';
+    // 数据筛选
+    document.getElementById('sub-'+r+'-data').innerHTML='<div class="section"><div class="section-header">🔍 周期筛选</div><div class="filter-row"><label>开始</label><input type="date" id="df-'+r+'-s"><label>结束</label><input type="date" id="df-'+r+'-e"><button class="btn btn-primary btn-sm" onclick="filterData(\''+r+'\')">查询</button><button class="btn btn-sm" onclick="resetFilter(\''+r+'\')">重置</button></div><div class="metrics-grid" id="fm-'+r+'"></div><div class="table-wrap"><table><thead><tr><th>日期</th><th>渠道</th><th>形式</th><th>数量</th><th>消耗</th><th>新增</th><th>备注</th></tr></thead><tbody id="ft-'+r+'"></tbody></table></div></div>';
+    // 录入
+    var chOpts=ALL_CHANNELS[r].map(function(c){return'<option value="'+c+'">'+c+'</option>';}).join('');
+    document.getElementById('sub-'+r+'-input').innerHTML='<div class="section"><div class="section-header">📂 批量上传</div><div class="upload-box" onclick="document.getElementById(\'fupload-'+r+'\').click()"><p>点击上传CSV/Excel</p><input type="file" id="fupload-'+r+'" accept=".csv,.xlsx,.xls" onchange="handleFileUpload(event,\''+r+'\')"></div></div><div class="section"><div class="section-header">📝 推广数据录入</div><div class="form-grid"><div class="form-group"><label>日期模式</label><select onchange="toggleDateMode(this.value,\''+r+'\')"><option value="single">单日</option><option value="range">周期</option></select></div><div class="form-group" id="dw-'+r+'"><label>日期</label><input type="date" id="fd-'+r+'"></div><div class="form-group"><label>渠道</label><select id="fch-'+r+'" onchange="updateContentTypes(\''+r+'\')">'+chOpts+'</select></div><div class="form-group"><label>内容形式</label><select id="fct-'+r+'"></select></div><div class="form-group"><label>推广数量</label><input type="number" id="fc-'+r+'" placeholder="1"></div><div class="form-group"><label>消耗(USD)</label><input type="number" id="fco-'+r+'" placeholder="0" step="0.01"></div><div class="form-group"><label>备注</label><input type="text" id="fn-'+r+'"></div></div><button class="btn btn-primary" onclick="saveRecord(\''+r+'\')">保存</button></div><div class="section"><div class="section-header">👤 新增用户录入</div><div class="form-grid"><div class="form-group"><label>日期</label><input type="date" id="fu-'+r+'"></div><div class="form-group"><label>新增用户</label><input type="number" id="fuc-'+r+'" placeholder="0"></div><div class="form-group"><label>备注</label><input type="text" id="fun-'+r+'"></div></div><button class="btn btn-primary" style="background:#10b981;border-color:#10b981;" onclick="saveUsers(\''+r+'\')">保存新增用户</button></div><div class="section"><div class="section-header">🎬 播放量录入</div><div class="form-grid"><div class="form-group"><label>日期模式</label><select onchange="toggleVpDateMode(this.value,\''+r+'\')"><option value="single">单日</option><option value="range">周期</option></select></div><div class="form-group" id="vpw-'+r+'"><label>日期</label><input type="date" id="vp-'+r+'"></div><div class="form-group"><label>播放量</label><input type="number" id="vpc-'+r+'" placeholder="0"></div></div><button class="btn btn-primary" style="background:#f59e0b;border-color:#f59e0b;" onclick="saveViews(\''+r+'\')">保存播放量</button></div>';
+    if(hasTracking){
+      document.getElementById('sub-'+r+'-tracking').innerHTML='<div class="section"><div class="section-header">🎯 素材追踪录入</div><div class="form-grid"><div class="form-group"><label>开始日期</label><input type="date" id="tts-'+r+'"></div><div class="form-group"><label>结束日期</label><input type="date" id="tte-'+r+'"></div><div class="form-group"><label>SPK新增</label><input type="number" id="ttsu-'+r+'" placeholder="0"></div><div class="form-group"><label>总新增</label><input type="number" id="tttu-'+r+'" placeholder="0"></div><div class="form-group"><label>SPK消耗</label><input type="number" id="ttsc-'+r+'" placeholder="0" step="0.01"></div><div class="form-group"><label>总消耗</label><input type="number" id="tttc-'+r+'" placeholder="0" step="0.01"></div></div><button class="btn btn-primary" onclick="saveTracking(\''+r+'\')">保存追踪记录</button><div class="table-wrap" style="margin-top:1rem;"><table><thead><tr><th>时间段</th><th>SPK新增</th><th>总新增</th><th>SPK消耗</th><th>总消耗</th><th>操作</th></tr></thead><tbody id="tt-tbody-'+r+'"></tbody></table></div></div>';
+    }
+    // 初始化日期
+    var today=new Date().toISOString().slice(0,10);
+    var els=document.getElementById('sub-'+r+'-input').querySelectorAll('input[type="date"]');
+    els.forEach(function(el){if(!el.value)el.value=today;});
+    updateContentTypes(r);
   }
-  function renderTrackingView(){renderTrackingRegionBlock('TW');renderTrackingRegionBlock('TR');}
-
-  function updateTrackingMonthFilter(){
-    var months=new Set();
-    trackingRecords.forEach(function(r){
-      var rng=r.range.replace(/\//g,'-').replace(/\./g,'-');
-      var parts=rng.split(' 至 ');
-      if(parts.length===2){
-        var m1=parts[0].trim().match(/(\d{4})-(\d{1,2})/);if(m1)months.add(m1[1]+'-'+String(+m1[2]).padStart(2,'0'));
-        var m2=parts[1].trim().match(/(\d{4})-(\d{1,2})/);if(m2)months.add(m2[1]+'-'+String(+m2[2]).padStart(2,'0'));
-      }
-    });
-    var sel=document.getElementById('tracking-month-filter'),cur=sel.value;
-    sel.innerHTML='<option value="">全部月份</option>';
-    Array.from(months).sort().forEach(function(m){var o=document.createElement('option');o.value=m;o.textContent=m;sel.appendChild(o);});
-    if(months.has(cur))sel.value=cur;
-  }
-
-  function renderTrackingMonthly(){
-    var fm=document.getElementById('tracking-month-filter').value;
-    var data=fm?trackingRecords.filter(function(r){
-      var rng=r.range.replace(/\//g,'-').replace(/\./g,'-');
-      var parts=rng.split(' 至 ');if(parts.length===2){var m1=parts[0].trim().match(/(\d{4})-(\d{1,2})/);var m2=parts[1].trim().match(/(\d{4})-(\d{1,2})/);if(m1&&m1[1]+'-'+String(+m1[2]).padStart(2,'0')===fm)return true;if(m2&&m2[1]+'-'+String(+m2[2]).padStart(2,'0')===fm)return true;}return false;
-    }):trackingRecords;
-    var monthly={};
-    data.forEach(function(r){
-      var rng=r.range.replace(/\//g,'-').replace(/\./g,'-');
-      var parts=rng.split(' 至 '),mk='';
-      if(parts.length===2){var m=parts[0].trim().match(/(\d{4})-(\d{1,2})/);if(m)mk=m[1]+'-'+String(+m[2]).padStart(2,'0');}
-      if(!mk)return;
-      var key=mk+'_'+r.region;
-      if(!monthly[key])monthly[key]={month:mk,region:r.region,spkU:0,totU:0,spkC:0,totC:0};
-      monthly[key].spkU+=r.spkUsers;monthly[key].totU+=r.totalUsers;monthly[key].spkC+=r.spkCost;monthly[key].totC+=r.totalCost;
-    });
-    var rows=Object.values(monthly).sort(function(a,b){return a.month.localeCompare(b.month);});
-    document.getElementById('tracking-monthly-tbody').innerHTML=rows.length===0?'<tr><td colspan="10" class="empty">暂无数据</td></tr>':rows.map(function(m){
-      return'<tr><td>'+m.month+'</td><td><span class="badge b-'+m.region+'">'+(REGIONS[m.region]?REGIONS[m.region].name:m.region)+'</span></td><td>'+m.spkU.toLocaleString()+'</td><td>'+m.totU.toLocaleString()+'</td><td>$'+m.spkC.toLocaleString()+'</td><td>$'+m.totC.toLocaleString()+'</td><td>'+(m.totU>0?(m.spkU/m.totU*100).toFixed(1)+'%':'—')+'</td><td>'+(m.totC>0?(m.spkC/m.totC*100).toFixed(1)+'%':'—')+'</td><td>'+(m.spkU>0?'$'+(m.spkC/m.spkU).toFixed(2):'—')+'</td><td>'+(m.totU>0?'$'+(m.totC/m.totU).toFixed(2):'—')+'</td></tr>';
-    }).join('');
-  }
-
-  function saveUsersOnly(){
-  var mode=document.getElementById('f-user-date-mode').value,dl='';
-  if(mode==='single'){dl=document.getElementById('f-user-date').value;if(!dl){toast('请选择日期');return;}}
-  else{var ds=document.getElementById('f-user-date-start').value,de=document.getElementById('f-user-date-end').value;if(!ds||!de){toast('周期不完整');return;}dl=ds+' 至 '+de;}
-  var reg=document.getElementById('f-user-region').value,users=parseFloat(document.getElementById('f-user-count').value)||0;
-  var note=document.getElementById('f-user-note').value.trim()||'纯用户新增';
-  if(users<=0){toast('请输入新增用户量');return;}
-  // 找到当天该地区所有记录，清空它们的users
-  var allRecs=records.filter(function(r){return r.date===dl&&r.region===reg;});
-  allRecs.forEach(function(r){r.users=0;});
-  // 优先用大盘渠道，否则用第一条
-  var ex=allRecs.find(function(r){return r.channel==='大盘渠道';})||allRecs[0];
-  if(ex){ex.users=users;ex.note=note;toast('已覆盖');}
-  else{records.push({id:'r_'+Date.now(),date:dl,region:reg,channel:'大盘渠道',contentType:'大盘转化',count:0,cost:0,users:users,note:note});toast('保存成功');}
-  persistRecords();document.getElementById('f-user-count').value='';document.getElementById('f-user-note').value='';renderRecent();updateMonthSelectors();updateDashboardMonthFilter();
+  switchSubTab(r,regionSubTab[r]);
 }
 
-  function saveRecord(){
-  var id=document.getElementById('f-id').value,mode=document.getElementById('f-date-mode').value,dl='';
-  if(mode==='single'){dl=document.getElementById('f-date').value;if(!dl){toast('请选择日期');return;}}
-  else{var ds=document.getElementById('f-date-start').value,de=document.getElementById('f-date-end').value;if(!ds||!de){toast('周期不完整');return;}dl=ds+' 至 '+de;}
-  var reg=document.getElementById('f-region').value,ch=document.getElementById('f-channel').value;
-  var ct=document.getElementById('f-content-type').value,count=parseFloat(document.getElementById('f-count').value)||1;
-  var cost=parseFloat(document.getElementById('f-cost').value)||0,note=document.getElementById('f-note').value.trim();
-  var dup=records.findIndex(function(r){return r.date===dl&&r.region===reg&&r.channel===ch&&r.contentType===ct;});
+function switchSubTab(r,tab){
+  regionSubTab[r]=tab;
+  var container=document.getElementById('region-'+r);
+  container.querySelectorAll('.sub-tab').forEach(function(t,i){
+    var tabs=r==='TR'||r==='TW'?['dashboard','data','input','tracking']:['dashboard','data','input'];
+    t.classList.toggle('active',tabs[i]===tab);
+  });
+  container.querySelectorAll('.sub-view').forEach(function(v){v.style.display='none';});
+  var el=document.getElementById('sub-'+r+'-'+tab);
+  if(el)el.style.display='block';
+  if(tab==='dashboard')renderDashboard(r);
+  if(tab==='data'){document.getElementById('df-'+r+'-s').value='';document.getElementById('df-'+r+'-e').value='';filterData(r);}
+  if(tab==='tracking')renderTrackingTable(r);
+}
+
+function toggleDateMode(m,r){
+  var w=document.getElementById('dw-'+r);
+  if(m==='single')w.innerHTML='<label>日期</label><input type="date" id="fd-'+r+'" value="'+new Date().toISOString().slice(0,10)+'">';
+  else w.innerHTML='<label>周期</label><div style="display:flex;gap:8px;"><input type="date" id="fd-'+r+'-s" value="'+new Date().toISOString().slice(0,10)+'"><input type="date" id="fd-'+r+'-e" value="'+new Date().toISOString().slice(0,10)+'"></div>';
+}
+function toggleVpDateMode(m,r){
+  var w=document.getElementById('vpw-'+r);
+  if(m==='single')w.innerHTML='<label>日期</label><input type="date" id="vp-'+r+'" value="'+new Date().toISOString().slice(0,10)+'">';
+  else w.innerHTML='<label>周期</label><div style="display:flex;gap:8px;"><input type="date" id="vp-'+r+'-s" value="'+new Date().toISOString().slice(0,10)+'"><input type="date" id="vp-'+r+'-e" value="'+new Date().toISOString().slice(0,10)+'"></div>';
+}
+
+function updateContentTypes(r){
+  var ch=document.getElementById('fch-'+r).value;
+  var types=CHANNELS[ch]||['video'];
+  var sel=document.getElementById('fct-'+r);
+  sel.innerHTML=types.map(function(t){return'<option value="'+t+'">'+t+'</option>';}).join('');
+}
+
+function renderOverview(){
+  var td=new Date(),ty=td.getFullYear(),tm=td.getMonth();
+  var md=[];var d=new Date(ty,tm,1);while(d.getMonth()===tm){md.push(d.toISOString().slice(0,10));d.setDate(d.getDate()+1);}
+  var rks=Object.keys(REGIONS);
+  var data={};
+  rks.forEach(function(r){
+    var sub=records.filter(function(x){return x.region===r&&md.indexOf(x.date.slice(0,10))>-1;});
+    var vw=0;vpRecords.filter(function(v){return v.region===r&&md.some(function(dd){return v.mode==='single'?v.date===dd:(v.date.split(' 至 ')[0]<=dd&&v.date.split(' 至 ')[1]>=dd);});}).forEach(function(v){vw+=v.views;});
+    data[r]={cost:sum(sub,'cost'),users:sum(sub,'users'),views:vw,count:sum(sub,'count'),cpa:sum(sub,'users')>0?sum(sub,'cost')/sum(sub,'users'):null};
+  });
+  document.getElementById('overview-month-metrics').innerHTML=rks.map(function(r){var d=data[r];return'<div class="metric-card" style="border-left:4px solid '+REGIONS[r].color+';"><div class="metric-label">'+REGIONS[r].flag+' '+REGIONS[r].name+'</div><div class="metric-value">$'+d.cost.toLocaleString()+'</div><div style="font-size:12px;color:var(--text2);">新增 '+d.users.toLocaleString()+' | CPA '+(d.cpa?'$'+d.cpa.toFixed(2):'—')+' | 播放 '+d.views.toLocaleString()+'</div></div>';}).join('');
+  document.getElementById('overview-table-body').innerHTML=rks.map(function(r){var d=data[r];return'<tr><td><span class="badge b-'+r+'">'+REGIONS[r].flag+' '+REGIONS[r].name+'</span></td><td>$'+d.cost.toLocaleString()+'</td><td>'+d.users.toLocaleString()+'</td><td>'+d.views.toLocaleString()+'</td><td>'+(d.cpa?'$'+d.cpa.toFixed(2):'—')+'</td><td>'+d.count+'</td></tr>';}).join('');
+  var dates=[];for(var i=6;i>=0;i--){var dd=new Date();dd.setDate(dd.getDate()-i);dates.push(dd.toISOString().slice(0,10));}
+  var labels=dates.map(function(dd){return dd.slice(5);});
+  var isDark=matchMedia('(prefers-color-scheme:dark)').matches;
+  var tc=isDark?'#909296':'#6c757d',gc=isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)';
+  function makeDS(key){return rks.map(function(r){return{label:REGIONS[r].name,data:dates.map(function(dd){return sum(records.filter(function(x){return x.date.indexOf(dd)>-1&&x.region===r;}),key);}),borderColor:REGIONS[r].color,backgroundColor:REGIONS[r].color+'15',tension:.3,pointRadius:2,borderWidth:2};});}
+  ['overview-cost-chart','overview-users-chart'].forEach(function(id){if(charts[id])charts[id].destroy();});
+  var opts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc}}}};
+  charts['overview-cost-chart']=new Chart(document.getElementById('overview-cost-chart'),{type:'line',data:{labels:labels,datasets:makeDS('cost')},options:opts});
+  charts['overview-users-chart']=new Chart(document.getElementById('overview-users-chart'),{type:'line',data:{labels:labels,datasets:makeDS('users')},options:opts});
+}
+
+function renderDashboard(r){
+  var td=new Date(),ty=td.getFullYear(),tm=td.getMonth();
+  var md=[];var d=new Date(ty,tm,1);while(d.getMonth()===tm){md.push(d.toISOString().slice(0,10));d.setDate(d.getDate()+1);}
+  var wd=[];var dow=td.getDay()||7;var mon=new Date(td);mon.setDate(td.getDate()-dow+1);for(var i=0;i<7;i++){var cd=new Date(mon);cd.setDate(mon.getDate()+i);wd.push(cd.toISOString().slice(0,10));}
+  var base=records.filter(function(x){return x.region===r;});
+  var mr=base.filter(function(x){return md.indexOf(x.date.slice(0,10))>-1;});
+  var wr=base.filter(function(x){return wd.indexOf(x.date.slice(0,10))>-1;});
+  var mc=sum(mr,'cost'),mu=sum(mr,'users'),wc=sum(wr,'cost'),wu=sum(wr,'users');
+  function gv(arr){var t=0;vpRecords.filter(function(v){return v.region===r&&arr.some(function(dd){return v.mode==='single'?v.date===dd:(v.date.split(' 至 ')[0]<=dd&&v.date.split(' 至 ')[1]>=dd);});}).forEach(function(v){t+=v.views;});return t;}
+  var mv=gv(md),wv=gv(wd);
+  document.getElementById('m-'+r).innerHTML=[
+    {l:'本月消耗',v:'$'+mc.toLocaleString()},{l:'本月新增',v:mu.toLocaleString()+' 人'},
+    {l:'本月播放',v:mv.toLocaleString()+' 次'},{l:'本月CPA',v:mu>0?'$'+(mc/mu).toFixed(2):'—'},
+    {l:'本周消耗',v:'$'+wc.toLocaleString()},{l:'本周新增',v:wu.toLocaleString()+' 人'},
+    {l:'本周播放',v:wv.toLocaleString()+' 次'},{l:'本周CPA',v:wu>0?'$'+(wc/wu).toFixed(2):'—'}
+  ].map(function(x){return'<div class="metric-card"><div class="metric-label">'+x.l+'</div><div class="metric-value" style="font-size:18px;">'+x.v+'</div></div>';}).join('');
+  
+  var dates=[];for(var i=6;i>=0;i--){var dd=new Date();dd.setDate(dd.getDate()-i);dates.push(dd.toISOString().slice(0,10));}
+  var labels=dates.map(function(dd){return dd.slice(5);});
+  var isDark=matchMedia('(prefers-color-scheme:dark)').matches;
+  var tc=isDark?'#909296':'#6c757d',gc=isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)';
+  var costData=dates.map(function(dd){return sum(base.filter(function(x){return x.date.indexOf(dd)>-1;}),'cost');});
+  var usersData=dates.map(function(dd){return sum(base.filter(function(x){return x.date.indexOf(dd)>-1;}),'users');});
+  var viewsData=dates.map(function(dd){var t=0;vpRecords.filter(function(v){return v.region===r;}).forEach(function(v){if(v.mode==='single'&&v.date===dd)t+=v.views;if(v.mode==='range'){var p=v.date.split(' 至 ');if(dd>=p[0]&&dd<=p[1])t+=v.views;}});return t;});
+  ['ch-cost-'+r,'ch-users-'+r,'ch-views-'+r,'ch-channel-'+r].forEach(function(id){if(charts[id])charts[id].destroy();});
+  var opts={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc}}}};
+  charts['ch-cost-'+r]=new Chart(document.getElementById('ch-cost-'+r),{type:'bar',data:{labels:labels,datasets:[{data:costData,backgroundColor:REGIONS[r].color,borderRadius:6}]},options:opts});
+  charts['ch-users-'+r]=new Chart(document.getElementById('ch-users-'+r),{type:'line',data:{labels:labels,datasets:[{data:usersData,borderColor:REGIONS[r].color,backgroundColor:REGIONS[r].color+'20',tension:.3,fill:true,pointRadius:3,borderWidth:2}]},options:opts});
+  charts['ch-views-'+r]=new Chart(document.getElementById('ch-views-'+r),{type:'line',data:{labels:labels,datasets:[{data:viewsData,borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.15)',tension:.3,fill:true,pointRadius:3,borderWidth:2}]},options:opts});
+  var chs=ALL_CHANNELS[r];
+  charts['ch-channel-'+r]=new Chart(document.getElementById('ch-channel-'+r),{type:'doughnut',data:{labels:chs,datasets:[{data:chs.map(function(c){return sum(base.filter(function(x){return x.channel===c;}),'cost');}),backgroundColor:chs.map(function(c){return CHANNEL_COLORS[c]||'#6c757d';})}]},options:{responsive:true,maintainAspectRatio:false}});
+}
+
+function filterData(r){
+  var sd=document.getElementById('df-'+r+'-s').value,ed=document.getElementById('df-'+r+'-e').value;
+  var filtered=records.filter(function(x){return x.region===r;});
+  if(sd&&ed)filtered=filtered.filter(function(x){var d=x.date.indexOf(' 至 ')>-1?x.date.split(' 至 ')[0]:x.date;return d>=sd&&d<=ed;});
+  else if(sd)filtered=filtered.filter(function(x){var d=x.date.indexOf(' 至 ')>-1?x.date.split(' 至 ')[0]:x.date;return d>=sd;});
+  else if(ed)filtered=filtered.filter(function(x){var d=x.date.indexOf(' 至 ')>-1?x.date.split(' 至 ')[1]:x.date;return d<=ed;});
+  var tc=sum(filtered,'cost'),tu=sum(filtered,'users'),tco=sum(filtered,'count');
+  document.getElementById('fm-'+r).innerHTML=[
+    {l:'总消耗',v:'$'+tc.toLocaleString()},{l:'总新增',v:tu.toLocaleString()+' 人'},{l:'推广条数',v:tco+' 条'},{l:'CPA',v:tu>0?'$'+(tc/tu).toFixed(2):'—'}
+  ].map(function(x){return'<div class="metric-card"><div class="metric-label">'+x.l+'</div><div class="metric-value" style="font-size:18px;">'+x.v+'</div></div>';}).join('');
+  filtered.sort(function(a,b){return b.date.localeCompare(a.date);});
+  document.getElementById('ft-'+r).innerHTML=filtered.slice(0,50).map(function(x){return'<tr><td>'+x.date+'</td><td>'+x.channel+'</td><td>'+x.contentType+'</td><td>'+x.count+'</td><td>$'+x.cost.toFixed(2)+'</td><td>'+x.users+'</td><td>'+(x.note||'')+'</td></tr>';}).join('')||'<tr><td colspan="7" class="empty">无数据</td></tr>';
+}
+function resetFilter(r){document.getElementById('df-'+r+'-s').value='';document.getElementById('df-'+r+'-e').value='';filterData(r);}
+
+function saveRecord(r){
+  var modeEl=document.getElementById('dw-'+r).querySelector('input');
+  var mode=modeEl&&modeEl.id.indexOf('-s')>-1?'range':'single',dl='';
+  if(mode==='single')dl=document.getElementById('fd-'+r).value;
+  else dl=document.getElementById('fd-'+r+'-s').value+' 至 '+document.getElementById('fd-'+r+'-e').value;
+  if(!dl||(dl.indexOf(' 至 ')>-1&&(!document.getElementById('fd-'+r+'-s').value||!document.getElementById('fd-'+r+'-e').value))){toast('请选择日期');return;}
+  var ch=document.getElementById('fch-'+r).value,ct=document.getElementById('fct-'+r).value;
+  var count=parseFloat(document.getElementById('fc-'+r).value)||1;
+  var cost=parseFloat(document.getElementById('fco-'+r).value)||0;
+  var note=document.getElementById('fn-'+r).value.trim();
+  var dup=records.findIndex(function(x){return x.date===dl&&x.region===r&&x.channel===ch&&x.contentType===ct;});
   if(dup>-1){records[dup].count=count;records[dup].cost=cost;records[dup].note=note;toast('已覆盖');}
-  else{var p={id:'r_'+Date.now(),date:dl,region:reg,channel:ch,contentType:ct,count:count,cost:cost,users:0,note:note};if(id){var idx=records.findIndex(function(r){return r.id===id;});if(idx>-1)records[idx]=p;}else{records.push(p);}toast('保存成功');}
-  persistRecords();document.getElementById('f-id').value='';document.getElementById('f-count').value='';document.getElementById('f-cost').value='';document.getElementById('f-note').value='';renderRecent();updateMonthSelectors();updateDashboardMonthFilter();
+  else{records.push({id:'r_'+Date.now(),date:dl,region:r,channel:ch,contentType:ct,count:count,cost:cost,users:0,note:note});toast('保存成功');}
+  persistRecords();document.getElementById('fc-'+r).value='';document.getElementById('fco-'+r).value='';document.getElementById('fn-'+r).value='';
 }
 
-  function editRecord(id){
-    var r=records.find(function(x){return x.id===id;});if(!r)return;
-    showView('add');document.getElementById('f-id').value=r.id;
-    if(r.date.indexOf(' 至 ')>-1){document.getElementById('f-date-mode').value='range';toggleDateInputMode();var p=r.date.split(' 至 ');document.getElementById('f-date-start').value=p[0];document.getElementById('f-date-end').value=p[1];}
-    else{document.getElementById('f-date-mode').value='single';toggleDateInputMode();document.getElementById('f-date').value=r.date;}
-    document.getElementById('f-region').value=r.region;document.getElementById('f-channel').value=r.channel;
-    document.getElementById('f-content-type').value=r.contentType;document.getElementById('f-count').value=r.count;
-    document.getElementById('f-cost').value=r.cost;document.getElementById('f-note').value=r.note||'';
-  }
-function renderRecent(){
-  var list=records.slice().sort(function(a,b){return b.id.localeCompare(a.id);});
-  var html=list.slice(0,10).map(function(r){
-    return'<tr><td>'+r.date+'</td><td><span class="badge b-'+r.region+'">'+(REGIONS[r.region]?REGIONS[r.region].name:r.region)+'</span></td><td>'+r.channel+'</td><td>'+r.contentType+'</td><td>'+r.count+'</td><td>$'+r.cost.toFixed(2)+'</td><td>'+r.users+'</td><td>'+(r.note||'')+'</td><td><button class="action-btn edit" onclick="editRecord(\''+r.id+'\')">✎</button><button class="action-btn del" onclick="if(confirm(\'删除？\')){records=records.filter(function(x){return x.id!==\''+r.id+'\';});persistRecords();renderRecent();updateMonthSelectors();updateDashboardMonthFilter();}">✕</button></td></tr>';
-  }).join('');
-  document.getElementById('recent-tbody').innerHTML=html||'<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text2);">暂无数据，请先录入</td></tr>';
-}
-  function handleFileSelect(e){if(e.target.files.length)processFile(e.target.files[0]);}
-  function processFile(file){
-    var reader=new FileReader();reader.onload=function(e){
-      try{
-        var rows=[],ext=file.name.split('.').pop().toLowerCase();
-        if(ext==='csv'){var t=new TextDecoder('utf-8').decode(e.target.result);rows=t.split('\n').map(function(l){return l.split(',').map(function(c){return c.trim().replace(/^"|"$/g,'');});});}
-        else{var wb=XLSX.read(e.target.result,{type:'array'});rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1});}
-        if(rows.length<2){toast('无数据');return;}
-        var hd=rows[0].map(function(h){return String(h||'').trim().toUpperCase();});
-        var iD=hd.findIndex(function(h){return h.indexOf('日期')>-1||h.indexOf('DATE')>-1;});
-        var iR=hd.findIndex(function(h){return h.indexOf('国家')>-1||h.indexOf('地区')>-1||h.indexOf('REGION')>-1;});
-        var iC=hd.findIndex(function(h){return h.indexOf('消耗')>-1||h.indexOf('COST')>-1;});
-        var iU=hd.findIndex(function(h){return h.indexOf('新增')>-1||h.indexOf('用户')>-1||h.indexOf('USERS')>-1;});
-        if(iD===-1){toast('未找到日期列');return;}
-        var added=0,merged=0;
-        for(var i=1;i<rows.length;i++){var row=rows[i];if(!row||!row[iD])continue;var rd=String(row[iD]).trim().split('(')[0].replace(/\//g,'-');var rr=iR>-1?String(row[iR]).trim().toUpperCase():'BR';var mr='BR';for(var k in REGIONS){if(REGIONS[k].keywords.some(function(kw){return rr.indexOf(kw)>-1;})){mr=k;break;}}var cv=iC>-1?parseFloat(row[iC])||0:0,uv=iU>-1?parseFloat(row[iU])||0:0;if(iC===-1&&iU>-1){var ex=records.find(function(x){return x.date===rd&&x.region===mr&&x.channel==='大盘渠道';});if(ex){ex.users=Math.max(ex.users,uv);merged++;}else{records.push({id:'imp_'+Date.now(),date:rd,region:mr,channel:'大盘渠道',contentType:'大盘转化',count:0,cost:0,users:uv,note:'外部导入'});added++;}}else{var ex2=records.find(function(x){return x.date===rd&&x.region===mr;});if(ex2){ex2.cost=Math.max(ex2.cost,cv);ex2.users=Math.max(ex2.users,uv);merged++;}else{records.push({id:'imp_'+Date.now(),date:rd,region:mr,channel:'TikTok',contentType:'video',count:1,cost:cv,users:uv,note:'外部导入'});added++;}}}
-        persistRecords();renderRecent();updateMonthSelectors();updateDashboardMonthFilter();toast('导入完成！新增'+added+'条，合并'+merged+'条');
-      }catch(err){toast('解析错误');}
-    };reader.readAsArrayBuffer(file);
-  }
-function updateWeeklyReportSelect(){
-  var s=new Set();records.forEach(function(r){s.add(getWeekStr(r.date));});
-  vpRecords.forEach(function(v){
-    var d=v.mode==='single'?v.date:v.date.split(' 至 ')[0];
-    s.add(getWeekStr(d));
-  });
-  var sel=document.getElementById('weekly-report-week'),cur=sel.value;
-  sel.innerHTML='<option value="">选择周</option>';
-  var arr=Array.from(s).sort().reverse();
-  arr.forEach(function(w){var o=document.createElement('option');o.value=w;o.textContent=getWeekLabel(w);sel.appendChild(o);});
-  if(s.has(cur))sel.value=cur;else if(arr.length>0)sel.value=arr[0];
-  if(arr.length>0)renderWeeklyReport();
+function saveUsers(r){
+  var dl=document.getElementById('fu-'+r).value;
+  if(!dl){toast('请选择日期');return;}
+  var users=parseFloat(document.getElementById('fuc-'+r).value)||0;
+  if(users<=0){toast('请输入新增用户量');return;}
+  var note=document.getElementById('fun-'+r).value.trim()||'用户新增';
+  var allRecs=records.filter(function(x){return x.date===dl&&x.region===r;});
+  allRecs.forEach(function(x){x.users=0;});
+  var ex=allRecs.find(function(x){return x.channel==='大盘渠道';})||allRecs[0];
+  if(ex){ex.users=users;ex.note=note;toast('已覆盖');}
+  else{records.push({id:'r_'+Date.now(),date:dl,region:r,channel:'大盘渠道',contentType:'大盘转化',count:0,cost:0,users:users,note:note});toast('保存成功');}
+  persistRecords();document.getElementById('fuc-'+r).value='';document.getElementById('fun-'+r).value='';
 }
 
-function renderWeeklyReport(){
-  var wk=document.getElementById('weekly-report-week').value;
-  var rf=document.getElementById('weekly-report-region').value;
-  var body=document.getElementById('weekly-report-body');
-  if(!wk){body.innerHTML='<span style="color:var(--text2);">请选择周</span>';return;}
-  
-  var wLabel=getWeekLabel(wk);
-  var yw=wk.split('-W'),y=+yw[0],wn=+yw[1];
-  var j4=new Date(y,0,4),dow=j4.getDay()||7;
-  var mon=new Date(j4.getTime()-(dow-1)*86400000+(wn-1)*7*86400000);
-  var sun=new Date(mon.getTime()+6*86400000);
-  var weekDates=[];
-  for(var i=0;i<7;i++){var cd=new Date(mon);cd.setDate(mon.getDate()+i);weekDates.push(cd.toISOString().slice(0,10));}
-  
-  var regs=rf==='all'?Object.keys(REGIONS):[rf];
-  
-  var totalCost=0,totalUsers=0,totalVideos=0,totalViews=0;
-  var regionData={};
-  
-  regs.forEach(function(r){
-    var cost=0,users=0,videos=0;
-    records.forEach(function(rec){
-      if(rec.region!==r)return;
-      var recWeek=getWeekStr(rec.date);
-      if(recWeek===wk){cost+=parseFloat(rec.cost)||0;users+=parseFloat(rec.users)||0;videos+=parseFloat(rec.count)||0;}
-    });
-    var views=0;
-    vpRecords.filter(function(v){return v.region===r;}).forEach(function(v){
-      if(v.mode==='single'&&weekDates.indexOf(v.date)>-1)views+=v.views;
-      if(v.mode==='range'){var p=v.date.split(' 至 ');if(weekDates.some(function(d){return d>=p[0]&&d<=p[1];}))views+=v.views;}
-    });
-    regionData[r]={cost:cost,users:users,videos:videos,views:views};
-    totalCost+=cost;totalUsers+=users;totalVideos+=videos;totalViews+=views;
-  });
-  
-  var cpa=totalUsers>0?'$'+(totalCost/totalUsers).toFixed(2):'—';
-  var cpv=totalViews>0?'$'+(totalCost/totalViews*1000).toFixed(2):'—';
-  
-  var report='📅 周报：'+wLabel+'（'+mon.getMonth()+1+'/'+mon.getDate()+' - '+sun.getMonth()+1+'/'+sun.getDate()+'）\n';
-  report+='━━━━━━━━━━━━━━━━\n\n';
-  report+='📊 整体数据\n';
-  report+='  • 总消耗：$'+totalCost.toLocaleString()+'\n';
-  report+='  • 新增用户：'+totalUsers.toLocaleString()+' 人\n';
-  report+='  • 推广视频：'+totalVideos+' 条\n';
-  report+='  • 总播放量：'+totalViews.toLocaleString()+' 次\n';
-  report+='  • CPA：'+cpa+'\n';
-  report+='  • CPM：'+cpv+'\n\n';
-  
-  regs.forEach(function(r){
-    var d=regionData[r];
-    if(d.cost===0&&d.users===0&&d.views===0)return;
-    report+='🌍 '+REGIONS[r].flag+' '+REGIONS[r].name+'\n';
-    report+='  • 消耗：$'+d.cost.toLocaleString()+'（'+(totalCost>0?(d.cost/totalCost*100).toFixed(1):'0')+'%）\n';
-    report+='  • 新增：'+d.users.toLocaleString()+' 人\n';
-    report+='  • 视频：'+d.videos+' 条\n';
-    report+='  • 播放：'+d.views.toLocaleString()+' 次\n';
-    report+='  • CPA：'+(d.users>0?'$'+(d.cost/d.users).toFixed(2):'—')+'\n\n';
-  });
-  
-  if(totalUsers>0||totalCost>0){
-    report+='💡 本周小结\n';
-    var bestRegion='',bestCpa=Infinity;
-    regs.forEach(function(r){var d=regionData[r];if(d.users>0&&d.cost/d.users<bestCpa){bestCpa=d.cost/d.users;bestRegion=r;}});
-    if(bestRegion)report+='  • 最佳CPA地区：'+REGIONS[bestRegion].flag+' '+REGIONS[bestRegion].name+'（$'+bestCpa.toFixed(2)+'）\n';
-    report+='  • 周同比：请切换至上周对比查看\n';
-  }
-  
-  body.textContent=report;
+function saveViews(r){
+  var modeEl=document.getElementById('vpw-'+r).querySelector('input');
+  var mode=modeEl&&modeEl.id.indexOf('-s')>-1?'range':'single',dl='';
+  if(mode==='single')dl=document.getElementById('vp-'+r).value;
+  else dl=document.getElementById('vp-'+r+'-s').value+' 至 '+document.getElementById('vp-'+r+'-e').value;
+  if(!dl||(dl.indexOf(' 至 ')>-1&&(!document.getElementById('vp-'+r+'-s').value||!document.getElementById('vp-'+r+'-e').value))){toast('请选择日期');return;}
+  var views=parseFloat(document.getElementById('vpc-'+r).value)||0;
+  if(views<=0){toast('请输入播放量');return;}
+  var ex=vpRecords.findIndex(function(v){return v.mode===mode&&v.date===dl&&v.region===r;});
+  if(ex>-1){vpRecords[ex].views=views;toast('已覆盖');}else{vpRecords.push({id:'vp_'+Date.now(),mode:mode,date:dl,region:r,views:views});toast('保存成功');}
+  persistVp();document.getElementById('vpc-'+r).value='';
 }
 
-function copyWeeklyReport(){
-  var body=document.getElementById('weekly-report-body');
-  var text=body.textContent;
-  if(!text||text.indexOf('选择周')>-1){toast('请先生成周报');return;}
-  navigator.clipboard.writeText(text).then(function(){toast('已复制周报到剪贴板');}).catch(function(){toast('复制失败，请手动复制');});
+function saveTracking(r){
+  var sd=document.getElementById('tts-'+r).value,ed=document.getElementById('tte-'+r).value;
+  if(!sd||!ed){toast('请选择日期');return;}
+  var range=sd+' 至 '+ed;
+  var spkU=parseFloat(document.getElementById('ttsu-'+r).value)||0;
+  var totU=parseFloat(document.getElementById('tttu-'+r).value)||0;
+  var spkC=parseFloat(document.getElementById('ttsc-'+r).value)||0;
+  var totC=parseFloat(document.getElementById('tttc-'+r).value)||0;
+  var ex=trackingRecords.findIndex(function(x){return x.region===r&&x.range===range;});
+  if(ex>-1){trackingRecords[ex].spkUsers=spkU;trackingRecords[ex].totalUsers=totU;trackingRecords[ex].spkCost=spkC;trackingRecords[ex].totalCost=totC;toast('已更新');}
+  else{trackingRecords.push({id:'t_'+Date.now(),region:r,range:range,spkUsers:spkU,totalUsers:totU,spkCost:spkC,totalCost:totC});toast('保存成功');}
+  persistTrackingRecords();renderTrackingTable(r);
+  document.getElementById('tts-'+r).value='';document.getElementById('tte-'+r).value='';
+  document.getElementById('ttsu-'+r).value='';document.getElementById('tttu-'+r).value='';
+  document.getElementById('ttsc-'+r).value='';document.getElementById('tttc-'+r).value='';
 }
-  function exportCSV(){
-    var h='日期,地区,渠道,内容形式,推广数量,消耗(USD),新增用户,备注';
-    var rows=records.map(function(r){return r.date+','+r.region+','+r.channel+','+r.contentType+','+r.count+','+r.cost+','+r.users+',"'+r.note+'"';});
-    var a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+h+'\n'+rows.join('\n')],{type:'text/csv;charset=utf-8'}));
-    a.download='KOL_Export.csv';a.click();
-  }
 
-  loadRecords();
-  window.onload=function(){updateDashboardMonthFilter();renderDashboard();updateTrackingMonthFilter();renderTrackingView();};
+function renderTrackingTable(r){
+  var list=trackingRecords.filter(function(x){return x.region===r;});
+  list.sort(function(a,b){return b.range.localeCompare(a.range);});
+  document.getElementById('tt-tbody-'+r).innerHTML=list.length===0?'<tr><td colspan="6" class="empty">暂无数据</td></tr>':list.map(function(x){return'<tr><td>'+x.range+'</td><td>'+x.spkUsers.toLocaleString()+'</td><td>'+x.totalUsers.toLocaleString()+'</td><td>$'+x.spkCost.toLocaleString()+'</td><td>$'+x.totalCost.toLocaleString()+'</td><td><button class="action-btn del" onclick="trackingRecords=trackingRecords.filter(function(t){return t.id!==\''+x.id+'\';});persistTrackingRecords();renderTrackingTable(\''+r+'\');">✕</button></td></tr>';}).join('');
+}
+
+function handleFileUpload(e,r){
+  var file=e.target.files[0];if(!file)return;
+  var reader=new FileReader();reader.onload=function(ev){
+    try{
+      var rows=[],ext=file.name.split('.').pop().toLowerCase();
+      if(ext==='csv'){var t=new TextDecoder('utf-8').decode(ev.target.result);rows=t.split('\n').map(function(l){return l.split(',').map(function(c){return c.trim().replace(/^"|"$/g,'');});});}
+      else{var wb=XLSX.read(ev.target.result,{type:'array'});rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1});}
+      if(rows.length<2){toast('无数据');return;}
+      var hd=rows[0].map(function(h){return String(h||'').trim().toUpperCase();});
+      var iD=hd.findIndex(function(h){return h.indexOf('日期')>-1||h.indexOf('DATE')>-1;});
+      var iCh=hd.findIndex(function(h){return h.indexOf('渠道')>-1||h.indexOf('CHANNEL')>-1;});
+      var iCt=hd.findIndex(function(h){return h.indexOf('形式')>-1||h.indexOf('TYPE')>-1;});
+      var iCo=hd.findIndex(function(h){return h.indexOf('数量')>-1||h.indexOf('COUNT')>-1;});
+      var iCst=hd.findIndex(function(h){return h.indexOf('消耗')>-1||h.indexOf('COST')>-1;});
+      var iU=hd.findIndex(function(h){return h.indexOf('新增')>-1||h.indexOf('用户')>-1||h.indexOf('USERS')>-1;});
+      if(iD===-1){toast('未找到日期列');return;}
+      var added=0,updated=0;
+      for(var i=1;i<rows.length;i++){var row=rows[i];if(!row||!row[iD])continue;var rd=String(row[iD]).trim().replace(/\//g,'-');var ch=iCh>-1?String(row[iCh]).trim():'TikTok';var ct=iCt>-1?String(row[iCt]).trim():'video';var count=iCo>-1?parseFloat(row[iCo])||1:1;var cost=iCst>-1?parseFloat(row[iCst])||0:0;var users=iU>-1?parseFloat(row[iU])||0:0;var dup=records.findIndex(function(x){return x.date===rd&&x.region===r&&x.channel===ch&&x.contentType===ct;});if(dup>-1){records[dup].count=count;records[dup].cost=cost;if(users>0)records[dup].users=users;updated++;}else{records.push({id:'imp_'+Date.now()+'_'+i,date:rd,region:r,channel:ch,contentType:ct,count:count,cost:cost,users:users,note:'导入'});added++;}}
+      persistRecords();toast('导入完成！新增'+added+'条，更新'+updated+'条');
+    }catch(err){toast('解析错误');}
+  };reader.readAsArrayBuffer(file);
+}
+
+function exportCSV(){
+  var h='日期,地区,渠道,内容形式,推广数量,消耗(USD),新增用户,备注';
+  var rows=records.map(function(r){return r.date+','+r.region+','+r.channel+','+r.contentType+','+r.count+','+r.cost+','+r.users+',"'+r.note+'"';});
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+h+'\n'+rows.join('\n')],{type:'text/csv;charset=utf-8'}));
+  a.download='KOL_Export.csv';a.click();
+}
+
+loadRecords();
+window.onload=function(){renderOverview();};
 </script>
 </body>
 </html>
