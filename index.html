@@ -196,7 +196,8 @@ document.getElementById('sub-'+r+'-input').innerHTML='<div class="section"><div 
     updateContentTypes(r);
   }
   switchSubTab(r,regionSubTab[r]);
-
+  
+}
 function switchSubTab(r,tab){
   regionSubTab[r]=tab;
   var container=document.getElementById('region-'+r);
@@ -296,12 +297,7 @@ function renderOverview(){
   var labels=dates.map(function(dd){return dd.slice(5);});
   var isDark=matchMedia('(prefers-color-scheme:dark)').matches;
   var tc=isDark?'#909296':'#6c757d',gc=isDark?'rgba(255,255,255,0.05)':'rgba(0,0,0,0.04)';
-  function makeDS(key){return rks.map(function(r){return{label:REGIONS[r].name,data:dates.map(function(dd){return sum(records.filter(function(x){return x.date.indexOf(dd)>-1&&x.region===r;}),key);}),borderColor:REGIONS[r].color,backgroundColor:REGIONS[r].color+'15',tension:.3,pointRadius:2,borderWidth:2};});}
-  ['overview-cost-chart','overview-users-chart'].forEach(function(id){if(charts[id])charts[id].destroy();});
-  var opts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc}}}};
-  charts['overview-cost-chart']=new Chart(document.getElementById('overview-cost-chart'),{type:'line',data:{labels:labels,datasets:makeDS('cost')},options:opts});
-  charts['overview-users-chart']=new Chart(document.getElementById('overview-users-chart'),{type:'line',data:{labels:labels,datasets:makeDS('users')},options:opts});
-}
+  
   function makeDS(key){return rks.map(function(r){return{label:REGIONS[r].name,data:dates.map(function(dd){return sum(records.filter(function(x){return x.date.indexOf(dd)>-1&&x.region===r;}),key);}),borderColor:REGIONS[r].color,backgroundColor:REGIONS[r].color+'15',tension:.3,pointRadius:2,borderWidth:2};});}
   ['overview-cost-chart','overview-users-chart'].forEach(function(id){if(charts[id])charts[id].destroy();});
   var opts={responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:10}}}},scales:{x:{grid:{display:false},ticks:{color:tc}},y:{grid:{color:gc},ticks:{color:tc}}}};
