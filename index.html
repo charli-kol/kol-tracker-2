@@ -468,8 +468,8 @@ function renderTrackingTable(r){
     var prev=i<list.length-1?list[i+1]:null;
     var ur=x.totalUsers>0?(x.spkUsers/x.totalUsers*100).toFixed(1)+'%':'—';
     var cr=x.totalCost>0?(x.spkCost/x.totalCost*100).toFixed(1)+'%':'—';
-    var scpr=x.spkUsers>0?'$'+(x.spkCost/x.spkUsers).toFixed(2):'—';
-    var tcpr=x.totalUsers>0?'$'+(x.totalCost/x.totalUsers).toFixed(2):'—';
+    var scpr=x.spkCost>0?(x.spkUsers/x.spkCost).toFixed(2):'—';
+    var tcpr=x.totalCost>0?(x.totalUsers/x.totalCost).toFixed(2):'—';
     function w(curr,pv){if(!pv||pv===0)return'<span style="color:var(--text2);">—</span>';var ch=((curr-pv)/pv*100);return'<span class="'+(ch>=0?'up':'dn')+'">'+(ch>=0?'↑':'↓')+Math.abs(ch).toFixed(1)+'%</span>';}
     return'<tr><td>'+x.range+'</td><td>'+x.spkUsers.toLocaleString()+'</td><td>'+x.totalUsers.toLocaleString()+'</td><td>'+ur+'</td><td>'+w(x.spkUsers,prev?prev.spkUsers:null)+'</td><td>$'+x.spkCost.toLocaleString()+'</td><td>$'+x.totalCost.toLocaleString()+'</td><td>'+cr+'</td><td>'+w(x.spkCost,prev?prev.spkCost:null)+'</td><td>'+scpr+'</td><td>'+tcpr+'</td><td><button class="action-btn del" onclick="trackingRecords=trackingRecords.filter(function(t){return t.id!==\''+x.id+'\';});persistTrackingRecords();renderTrackingTable(\''+r+'\');">✕</button></td></tr>';
   }).join('');
